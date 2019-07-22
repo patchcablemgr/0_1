@@ -1,8 +1,6 @@
 {
 	"require": {
 		"sonata-project/google-authenticator": "dev-master",
-		"phpmailer/phpmailer": "^6.0",
-		"stripe/stripe-php": "^6.10",
-		"s1lentium/iptools": "*"
+		"phpmailer/phpmailer": "^6.0"
 	}
 }
