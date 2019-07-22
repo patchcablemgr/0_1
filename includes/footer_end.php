@@ -1,0 +1,76 @@
+<!-- google analytic code -->
+
+
+<!-- google analytic code ends here -->
+
+<!-- following js will activate the menu in left side bar based on url -->
+<script type="text/javascript">
+    // === following js will activate the menu in left side bar based on url ====
+    $(document).ready(function () {
+        $('.navigation-menu a').each(function () {
+            if (this.href == window.location.href) {
+                $(this).parent().addClass("active"); // add active to li of the current link
+                $(this).parent().parent().parent().addClass("active"); // add active class to an anchor
+                $(this).parent().parent().parent().parent().parent().addClass("active"); // add active class to an anchor
+            }
+        });
+		
+		$('#autocomplete').autocomplete({
+			minLength: 2,
+			source: 'https://otterm8.com/app/backend/process_search.php',
+			open: function(){
+				$(this).autocomplete('widget').css('z-index', 10000);
+				return false;
+			},
+			select: function(event, ui){
+				window.location.href = 'https://otterm8.com/app/backend/process_search.php?select='+ui.item.value;
+			}
+		});
+		
+		$('#searchForm').submit(function(event){
+			event.preventDefault();
+			$('#searchSubmit').click();
+		});
+    });
+	
+	function displayError(errMsg){
+		$('#alertMsg').empty();
+		$(errMsg).each(function(index, value){
+			var html = '<div class="alert alert-danger" role="alert">';
+			html += '<strong>Oops!</strong>  '+value;
+			html += '</div>';
+			$('#alertMsg').append(html);
+		});
+		$("html, body").animate({ scrollTop: 0 }, "slow");
+	}
+	
+	function displaySuccess(successMsg){
+		$('#alertMsg').empty();
+		var html = '<div class="alert alert-success" role="alert">';
+		html += '<strong>Success!</strong>  '+successMsg;
+		html += '</div>';
+		$('#alertMsg').append(html);
+	}
+	
+	function displaySuccessElement(successMsg, element){
+		$(element).empty();
+		var html = '<div class="alert alert-success" role="alert">';
+		html += '<strong>Success!</strong>  '+successMsg;
+		html += '</div>';
+		$(element).append(html);
+	}
+	
+	function displayErrorElement(errMsg, element){
+		$(element).empty();
+		$(errMsg).each(function(index, value){
+			var html = '<div class="alert alert-danger" role="alert">';
+			html += '<strong>Oops!</strong>  '+value;
+			html += '</div>';
+			$(element).append(html);
+		});
+	}
+
+</script>
+
+</body>
+</html>

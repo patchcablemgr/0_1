@@ -1,0 +1,573 @@
+<?php
+define('QUADODO_IN_SYSTEM', true);
+require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+?>
+
+<!DOCTYPE html>
+<!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!-->
+<html lang="en">
+<!--<![endif]-->
+
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115446168-1"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-115446168-1');
+	</script>
+	
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+
+    <title>Otterm8 User Guide</title>
+
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/stroke.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/animate.css">
+    <link rel="stylesheet" type="text/css" href="css/prettyPhoto.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+
+    <link rel="stylesheet" type="text/css" href="js/syntax-highlighter/styles/shCore.css" media="all">
+    <link rel="stylesheet" type="text/css" href="js/syntax-highlighter/styles/shThemeRDark.css" media="all">
+
+    <!-- CUSTOM -->
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <div class="container">
+
+            <section id="top" class="section docs-heading">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="big-title text-center">
+                            <h1>Otterm8 User Guide</h1>
+                            <p class="lead">Tame Your Patch Cable Nightmare</p>
+                        </div>
+                        <!-- end title -->
+                    </div>
+                    <!-- end 12 -->
+                </div>
+                <!-- end row -->
+
+                <hr>
+
+            </section>
+            <!-- end section -->
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    <nav class="docs-sidebar" data-spy="affix" data-offset-top="300" data-offset-bottom="200" role="navigation">
+                        <ul class="nav">
+							<?php
+								if($qls->user_info['username'] != '') {
+									echo '<li><a href="/app/">Dashboard</a></li>';
+								} else {
+									echo '<li><a href="/">Home</a></li>';
+								}
+							?>
+                            <li><a href="#gettingStarted">Getting Started</a></li>
+							<li><a href="#dashboard">Dashboard</a></li>
+							<li><a href="#build">Build</a>
+								<ul class="nav">
+									<li><a href="#templates">Templates</a></li>
+									<li><a href="#cabinets">Cabinets</a></li>
+								</ul>
+							</li>
+							<li><a href="#explore">Explore</a></li>
+							<li><a href="#purchasing">Purchasing</a>
+								<ul class="nav">
+									<li><a href="#order">Order</a></li>
+									<li><a href="#invoices">Invoices</a></li>
+								</ul>
+							</li>
+							<li><a href="#scan">Scan</a></li>
+							<li><a href="#cableInventory">Cable Inventory</a></li>
+							<li><a href="#admin">Admin</a></li>
+                        </ul>
+                    </nav >
+                </div>
+                <div class="col-md-9">
+                    <section class="welcome">
+
+                        <div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">Introduction<hr></h2>
+                                <div class="row">
+
+                                    <div class="col-md-12 full">
+
+                                        <hr>
+                                        <div>
+                                            <p>Thank you for your interest in Otterm8, a web based patch cable management application designed with simplicity and usability in mind.</p>
+
+                                            <p>This documentation will help you setup, maintain, and get the most out of your account.  If you have any questions, please contact <a href="mailto:support@otterm8.com">support@otterm8.com</a>.</p>
+
+                                            <h4>Requirements</h4>
+                                            <p>This short list of requirements is all you need to use Otterm8 in your organization.</p>
+                                            <ol>
+                                                <li><strong>Web Browser</strong></li>
+												<li><strong>Cable wraps</strong> to identify patch cable ends.  These can be purchased through Otterm8 or printed yourself.</li>
+                                                <li><strong>Mobile device (optional)</strong> with front facing camera and LED</li>
+                                            </ol>
+                                            <div class="intro2 clearfix">
+                                                <p><i class="fa fa-exclamation-triangle"></i> There are a few known bugs when working in IE11 which are still being worked out.
+                                                </p>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!-- end row -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="gettingStarted" class="section">
+
+                        <div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">Getting Started <a href="#top">#back to top</a><hr></h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p>There are 3 different ways to get started with an Otterm8 account:</p>
+								<ol>
+									<li><strong>Demo Account</strong>
+										<p>A demo account is intended to provide you with a prebuilt environment which allows you to immediately start working with the application to determine if it is right for your organization.</p>
+										<p>To create a demo account, enter a valid email address on the <a href="https://otterm8.com">landing page</a> and click the "Instant Demo" button.  An account with a prebuilt environment will be created for you and a temporary password sent to the email provided.</p>
+										<p>Some features are disabled in demo accounts.  You will not be able to invite users to join your organization, place purchase orders, or scan new cables into inventory.</p>
+										<p>While your account is in demo mode, you will see a yellow banner at the top of the page.  Converting your demo account to a live account is instant and free.  Click the "go live" link in the yellow demo banner to enable the features which are disabled in demo mode.</p>
+										<div class="intro2 clearfix">
+											<p><i class="fa fa-exclamation-triangle"></i> Converting a demo account to a live account will delete all cables in the cable inventory.  Other environment data will persist.
+											</p>
+										</div>
+									</li>
+									<li><strong>Live Account</strong>
+										<p>A live account is a clean slate for you to start building your environment with.  Live accounts are created with default templates and basic location structure.</p>
+										<p>To create a live account, click on the "Dashboard" button at the top of the <a href="https://otterm8.com">landing page</a>.  This will bring you to a login form with a <a href="https://otterm8.com/app/register.php">signup link</a> at the bottom.  Fill out the form and click "Join Now".  An unrestricted live account will be created and ready for you to login.</p>
+									</li>
+									<li><strong>Invitation</strong>
+										<p>Otterm8 supports role-based multiple user access.  When an administrator invites you to their organization, you will receive an email with a one time registration link.  Once you register, your account will be assigned to the organization for which you received the invitation from.  This allows you to view and manage the environment shared by other members of that organization.</p>
+									</li>
+								</ol>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+                    </section>
+                    <!-- end section -->
+					
+					<section id="dashboard" class="section">
+
+                        <div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/dashboard.png">
+									Dashboard <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p>The Dashboard provides a quick overview of your organization's environment.</p>
+								<p>The <strong>Cable Inventory</strong> donut chart displays a count of your organization's current patch cable inventory as well as the status which is defined below.</p>
+								<ul>
+                                    <li><strong>In-Use</strong> - Cables that are in-use have both ends connected to an object port.</li>
+                                    <li><strong>Not In-Use</strong> - Cables that are not in-use do not have either end connected to an object port.</li>
+									<li><strong>Dead Wood</strong> - Cables that only have one end connected to an object port.</li>
+                                    <li><strong>Pending Delivery</strong> - Cables that have been purchased through Otterm8 and have not yet been delivered.</li>
+                                </ul>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+                    </section>
+                    <!-- end section -->
+					
+					<section id="build" class="section">
+
+                        <div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/build.png">
+									Build <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+                        <div class="row">
+                            <div class="col-md-12">
+								<p>The Build menu group contains pages where your environment is modeled by creating object templates and installing them into cabinets.</p>
+                                <h4 id="templates">Templates - <a href="#top">#back to top</a></h4>
+                                <p>Use the Template page to create and edit custom templates which represent objects in your environment.  The template page is separated into 3 columns:</p>
+								<ol>
+                                    <li><strong>Properties</strong> - Sets the properties of the custom template.</li>
+                                    <li><strong>Preview</strong> - Displays the custom template as you build it.</li>
+									<li><strong>Template Details</strong> - Displays details about a template selected from the list of available templates.</li>
+                                </ol>
+								<ul>
+									<li>
+										<h4>Properties:</h4>
+										<ul>
+											<li><strong>Name</strong> - Defines the name of the template.</li>
+											<li><strong>Category</strong> - A category is user created and applies a color to the template as well as the ability to group similar templates together for easier access.</li>
+											<li><strong>Template Type</strong> - A stanadard template is one that can be installed in a cabinet by itself.  An insert is a template is installed in an existing object's enclosure partition.</li>
+											<li><strong>Template Size</strong> - Defines the Rack Unit size of the template.  Max is 25.</li>
+											<li><strong>Template Function</strong> - An endpoint template will always terminate a cable path (switch, router, server, etc.).  A passive template is part of the physical cable infrastructure (patch panel, fiber insert, etc.).</li>
+											<li><strong>Mounting Configuration</strong> - A 2-post template will only be visible on one side of the installed cabinet and can have another 2-post template installed behind it.  A 4-post template will have a front and a back which occupy both sides of the cabinet it is installed in.</li>
+											<li><strong>Add/Remove Partition</strong> - Partitions allow for the template layout to accurately reflect the object it is modeling.  A horizontal partition spans the entire width of the partition it is created in and can grow vertically.  A vertical partition spance the full height of the partition it is created in and can grow horizontally.</li>
+											<li><strong>Partition Size</strong> - Horizontal partitions grow vertically in 0.5 RU increments.  Vertical partitions grow horizontally in increments equal to 10% of the entire template width.</li>
+											<li><strong>Partition Type</strong> - Generic partitions have no properties and can be used as spacers or containers for other partitions.  Connectable partitions contain ports or interfaces.  Enclosure partitions can contain insert templates.</li>
+											<li><strong>Port ID</strong> - The format describing how the template ports will be identified.  Clicking the "Configure" button will open a window allowing you to add/change/delete fields that will be used to compile each port ID (ie "Port-1a").  You can configure up to 5 fields of 3 possible field types.
+												<ol>
+													<li>A <strong>"Static"</strong> field will be compiled into the port ID as it is defined by the user.</li>
+													<li>An <strong>"Incremental"</strong> field accepts a single alphanumeric character and will increment with the port numbers.</li>
+													<li>A <strong>"Series"</strong> field accepts a comma separated list of strings that will be cycled through when compiling the port ID.</li>
+												</ol>
+											</li>
+											<li><strong>Port Layout</strong> - Number of port columns and rows in the selected connectable partition.</li>
+											<li><strong>Port Orientation</strong> - Determines the direction in which port numbers are incremented.  Switches are typically ordered top to bottom while most RJ45 patch panels are ordered left to right.</li>
+											<li><strong>Port Type</strong> - The type of port for the selected connectable partition.  When connecting a cable end to an object port, the cable end type and port type must match.  The exception to this rule are SFP ports, which can accept any cable end type.</li>
+											<li><strong>Media Type</strong> - This configuration is exclusive to passive templates.  This refers to the cabling behind the passive object.  When trunking two passive objects, the media type must match.</li>
+											<li><strong>Enclosure Layout</strong> - This configuration is exclusive to enclosure partition types.  Enclosure layout columns and rows determine the slots available to install insert objects.</li>
+										</ul>
+									</li>
+									<li>
+										<h4>Preview:</h4>
+										<p class="columnContent">The preview card displays the template as it is created.  The "Front" and "Back" radio buttons toggle the face of the template being displayed.  A yellow highlight appears around the selected partition and indicates that any partition specific configuration will be applied to it.</p>
+									</li>
+									<li>
+										<h4>Template Details:</h4>
+										<p class="columnContent">The Selected Template card displays information about the template selected in the Available Templates card.  It also allows for some configuration as well as the ability to delete a selected template.</p>
+										<p class="columnContent">The Available Templates card lists all templates grouped by category.  Front and Back radio buttons toggle the face of all available templates.  Clicking on an object will highlight the selected partition and display information in the Selected Template card.<br><br>The Import button opens a window that allows you to browse a catalog of templates published by Otterm8.  Select a template and click "Import" to add it to your organization's list of available templates.</p>
+									</li>
+								</ul>
+							</div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+						<div class="row">
+                            <div class="col-md-12">
+                                <h4 id="cabinets">Cabinets - <a href="#top">#back to top</a></h4>
+                                <p>The Cabinets page allows you to create a hierarchical representation of your environment's locations, cabinets, and objects as well as their relationship to each other.  The Cabinets page is separated into 3 sections:</p>
+								<ol>
+                                    <li><strong>Locations and Cabinets</strong> - Create locations and cabinets.  Define relationships between cabinets.</li>
+                                    <li><strong>Cabinet</strong> - Displays the selected cabinet and objects installed.</li>
+									<li><strong>Object Details</strong> - Display details about selected objects and their partitions.</li>
+                                </ol>
+								<h4>Locations and Cabinets:</h4>
+								<p class="columnContent">The Environment Tree card contains an editable tree of locations and cabinets.  Right click on a location to rename, delete, or create a new location, pod, or cabinet nested within it.
+									<br>
+									A location can represent a physical region, building, floor, or room.  Locations can only be nested under other locations.
+									<br>
+									A pod represents a group of cabinets within a location.  Cabinets within the same pod can have left/right relationships with other cabinets.  Pods can only be nested under locations.
+									<br>
+									A cabinet represents a physical rack or cabinet that can contain objects.  Cabinets can be nested under locations or pods.
+								</p>
+								<p class="columnContent">The Cabinet card allows for cabinet properties to be edited.
+									<br>
+									RU size can grow up to 50 RU and shrink as long as the top RU is not occupied by an object.
+									<br>
+									Cable Paths can be added to represent usable cable paths between cabinets.  Consider a cable path as overhead cabletray, raised floor space, conduit, or any other path that patch cables can be ran.  A cable path can only be created between two cabinets in the same location.  Cable paths and their configured distances are considered when calculating possible cable paths with the path finder function.
+									<br>
+									Cabinet adjacencies can be configured to tell Otterm8 which cabinets neighbor the selected one.  A cabinet adjacency can only be created between two cabinets in the same pod.  Cabinet adjacencies are considered when calculating possible cable paths with the path finder function.
+								</p>
+								<h4>Cabinet:</h4>
+								<p class="columnContent">
+									The Cabinet card displays the selected cabinet and all of the objects it contains.  Toggling the Front and Back radio buttons switches the cabinet view.  To install an object in the cabinet displayed, drag and drop a template from the Available Templates section.
+								</p>
+								<h4>Object Detailst:</h4>
+								<p class="columnContent">
+									The Object Details card displays information about the selected object and partition as well as templates available to be installed.
+									<br>
+									The Selected Object section displays information about the object.  The Object Name and Trunked To properties are editable.  Connectable object partitions can be trunked to other connectable object partitions.  When trunking a passive object partition to another passive object partition, the number of ports must be equal and the media type must match.  When trunking a passive object partition to an endpoint object partition, the number of ports must be equal and the endpoint object partition port type must be RJ45.  An endpoint object partition cannot be trunked to another endpoint object partition.
+									<br>
+									The delete button will remove the selected object from the cabinet.
+									<br>
+									The Available Templates section displays a list of templates available to install in the cabinet grouped by category.  Drag and drop a template into the cabinet to install it as an object.  An insert template can only be installed in an enclosure partition of a standard object.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+					</section>
+
+					<section id="explore" class="section">
+
+                        <div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/explore.png">
+									Explore <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p>The Explore page allows you to navigate the environment and display information about objects and how they are connected.  The Explore page is separated into 3 sections:</p>
+								<ul>
+                                    <li><strong>Locations and Cabinets</strong> - Navigate environment locations and select cabinets.  Locations and cabinets are not editable from the Explore page.</li>
+                                    <li><strong>Cabinet</strong> - Displays the selected cabinet and objects installed.  Objects cannot be added, moved, or deleted from the Explore page.</li>
+									<li><strong>Object Details</strong> - Display details about selected objects and their partitions.  Object details are not editable from the Explore page.</li>
+                                </ul>
+								<h4>Locations and Cabinets:</h4>
+								<p class="columnContent">
+								The Environment Tree card contains a tree of locations and cabinets.
+								<br>
+								A location can represent a physical region, building, floor, or room.
+								<br>
+								A pod represents a group of cabinets within a location.
+								<br>
+								A cabinet represents a physical rack or cabinet that can contain objects.
+								</p>
+								<h4>Cabinet:</h4>
+								<p class="columnContent">
+								The Cabinet card displays the selected cabinet and all of the objects it contains.  Toggling the Front and Back radio buttons switches the cabinet view.
+								</p>
+								<h4>Object Details:</h4>
+								<p class="columnContent">
+								The Object Details section displays information about the selected object and partition as well as cable path details for a specific port.
+								<br>
+								The Selected Object card displays information about the object and partition.
+								<br>
+								The Path card displays cable path information about the selected port.  Select a port by clicking on an individual port in a connectable object partition.  The port drop down provides an alternative way to select a port after a connectable object partition has been selected.
+								<br>
+								The Populated checkbox allows you to flag a port as populated even though an Otterm8 managed patch cable has not been connected to it.  This is useful for when you have existing patch cables that have not yet been scanned into your Otterm8 inventory, or when it is not necessary for a patch cable to be managed by Otterm8.  Flagging a port as populated will take it out of consideration when calculating possible cable paths with the Path Finder function.
+								<br>
+								When an individual port is selected, its cable path will be displayed.  The cable path is represented by colored boxes containing the full name of the object.  <strong style="color:#039cfd;">Blue boxes</strong> represent passive objects, <strong style="color:#158c75;">green boxes</strong> represent endpoint objects and red boxes indicate a patch cable is not connected to an object.  A vertical double-ended arrow represents a trunk connection between two objects.  Curved arrows represent a patch cable connection indicating the length of the patch cable.  The currently selected object port is identified by a pin icon to the left of the object name.
+								<br><br>
+								Clicking the Path Finder button opens the path finder modal.  The path finder modal allows you to calculate all possible paths between two ports (Endpoint A and Endpoint B).  Endpoint A is determined by the currently selected port.  Use the navigation dropdowns to indicate Endpoint B, the far port you wish to find available paths to.  Once you've narrowed down the path selection dropdowns to an individual port, the Run Path Finder button becomes enabled.  Clicking the Run Path Funder button tells Otterm8 to begin calculating all available paths between the two endpoints.  Results are returned in a table indicating the number of patch cables required for each unique path.  The results table indicates the number of local (between objects in the same cabinet), adjacent (between objects in neighboring cabinets), path (between objects reachable via cable path), and total patch cables required to connect the endpoints.  Clicking on a path in the result table will display the full cable path.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+					</section>
+					
+					<section id="purchasing" class="section">
+					
+						<div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/purchasing.png">
+									Purchasing <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+					
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="columnContent">
+									The Purchasing page allows you to order patch cables and labels.  Patch cables ordered through Otterm8 come prelabeled and preloaded into your organization's Otterm8 inventory.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4 id="order">Order - <a href="#top">#back to top</a></h4>
+                                <p class="columnContent">
+									Select the appropriate product type, media type, length, color, and quantity to enable the checkout button.  Add or delete line items using the appropriate buttons.
+									<br><br>
+									The Notes field can be used for internal details or special instructions on how to fullfil the order.  Notes will be visible in the resulting invoice.
+									<br><br>
+									The Shipping Address dropdown field initially displays the default shipping address.  If no shipping addresses exist, you must create one.  Clicking on the shipping address editor button will open a modal popup where you can add, delete, or edit shipping addresses.
+									<br><br>
+									Click the Checkout button to enter payment details.  If the charge was successful, you will be redirected to the order confirmation page.  You can now track the progress of your order in the Invoices page.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4 id="invoices">Invoices - <a href="#top">#back to top</a></h4>
+                                <p class="columnContent">
+									The Invoices page displays a table of all orders and subscription payments.  Clicking on the view icon will display a printable invoice below.  Invoices can have one of the following statuses:
+								</p>
+								<ul>
+                                    <li><strong>Pending</strong> - An order has been placed and is pending review before fulfillment.</li>
+                                    <li><strong>Fulfillment</strong> - The order has been review and is being fulfilled before being shipped.</li>
+									<li><strong>Shipped</strong> - The order has been shipped.  A shipping confirmation email will be sent to all organization administrators with the courier and tracking number.</li>
+									<li><strong>Delivered</strong> - The order has been confirmed by the courier as delivered.  Any inventory purchased with a status of Delivered will be available for use in the Otterm8 App.</li>
+                                </ul>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+					</section>
+					
+					<section id="scan" class="section">
+						<div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/scan.png">
+									Scan <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="columnContent">
+									The Scan page allows you to request and edit data about a unique cable end identifier (UCEI).  Clicking the Scan button displays the scan modal.  Either scan the barcode, or switch to manual input to enter the UCEI.
+									<br><br>
+									When a valid UCEI has been scanned and has already been initialized, details about the cable and its local and remote ends will be populated.  To connect a cable end to an object port select the location path, object, and port using the navigation dropdowns.
+									<br><br>
+									When a valid UCEI has been scanned but has not already been initialized, you must scan the remote UCEI and define the cable length, media type, and local/remote connector types.  Once all cable properties have been defined, the Finalize button will be enabled.  Clicking the Finalize button disables the cable property inputs preventing the cable from being edited.
+									<br><br>
+									A UCEI is invalid when it does not exist in either the initialized cable table or Available Userspace table of the Cable Inventory page.
+									<br><br>
+									UCEIs are specific to an organization.  UCEIs must be unique with an organization.  UCEIs can be initialized in any order as long as they are listed in the Available Userspace table of the Cable Inventory page.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+					</section>
+					
+					<section id="cableInventory" class="section">
+						<div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/cable-inventory.png">
+									Cable Inventory <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="columnContent">
+									The Cable Inventory page displays all unique cable end identifiers (UCEI) that have been applied to a cable end and scanned into the application as well as unused UCEIs which are available.
+									<br><br>
+									The Initialized Cables table is separated into 3 column groups.  Each cable end column group contains details specific to that cable end.  The ID column which displays the base36 encoded UCEI as well as a barcode button.  Clicking the UCEI in the ID column will navigate to the scan page and display its properties as if it was scanned.  The barcode button displays the UCEI represented as a code39 barcode.  The Connector column displays the connector type.  The connected column indicates whether the cable end is connected to a port.
+									<br><br>
+									The Cable Properties columns display details specific to the entire cable.  The Finalized column indicates whether or not the cable is editable (it is suggested that all cables be finalized to prevent unwanted editing).  The Media column displays the cable media type.  The Length column displays the cable length (fiber length is displayed in meters, UTP length is displayed in feet).
+									<br><br>
+									The Available Userspace table lists all UCEIs that have not been initialized and are available to be attached to a cable end and scanned into the database for use in the application.  UCEIs are uppercase base36 encoded strings.  UCEIs are specific to each organization and must be unique within that organization.  Be cautious not to introduce duplicate UCEIs into your environment as this may cause unwanted behavior.  Each organization is allocated 100 userspace UCEIs upon creation.  Once the number of available UCEIs falls below 100, you may request additional UCEIs by clicking the Add More button.  UCEIs are allocated in sequence.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+					</section>
+					
+					<section id="admin" class="section">
+						<div class="row">
+                            <div class="col-md-12 left-align">
+                                <h2 class="dark-text">
+									<img src="/app/userGuide/images/admin.png">
+									Admin <a href="#top">#back to top</a><hr>
+								</h2>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+						
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="columnContent">
+									The Admin page allows organization administrators to perform privileged functions.
+									<br><br>
+									Subscription levels are shown listing their name, price, features, and an action button.  The action button for your current subscription level will say "Current" and be disabled.  To change subscription levels click the "Select" button.  If you do not already have a valid payment option associated with the organization, you will be prompted for payment information.  To cancel a paid subscription, select the free tier.  Your organization will continue to operate under the paid subscription tier until the end of the subscription period.  When transitioning between paid tiers, the subscription period remains the same and any payment that exceeds the amount owed for the new subscription tier will be credited.
+									<br><br>
+									The Subscription Payment Info displays the credit card information that is on file for your organization.  Clicking the Update button will prompt you for credit card information to be used for future payments.
+									<br><br>
+									The Invite User section allows you to send an invitation to an individual to join your organization.  Recipients will receive an email with a link to join.  Existing users can also accept the invitation from their user Profile and can revert back to their original organization at any time.  Invited users are added to your organization with "User" level privileges by default.
+									<br><br>
+									The Organization Name section allows an Administrator to change the organization name which is displayed a the top of the page and is visible by all users.
+									<br><br>
+									The Manage Users section allows you to remove or change roles of a user.  You cannot delete your own account, you cannot downgrade your role if you are the only administrator.  When deleting a user that accepted an invitation and already had an account, their account will be reverted back to the original organization and original role.
+								</p>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                    </section>
+                    <!-- end section -->
+
+                </div>
+                <!-- // end .col -->
+
+            </div>
+            <!-- // end .row -->
+
+        </div>
+        <!-- // end container -->
+
+    </div>
+    <!-- end wrapper -->
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/retina.js"></script>
+    <script src="js/jquery.fitvids.js"></script>
+    <script src="js/wow.js"></script>
+    <script src="js/jquery.prettyPhoto.js"></script>
+
+    <!-- CUSTOM PLUGINS -->
+    <script src="js/custom.js"></script>
+    <script src="js/main.js"></script>
+
+    <script src="js/syntax-highlighter/scripts/shCore.js"></script>
+    <script src="js/syntax-highlighter/scripts/shBrushXml.js"></script>
+    <script src="js/syntax-highlighter/scripts/shBrushCss.js"></script>
+    <script src="js/syntax-highlighter/scripts/shBrushJScript.js"></script>
+
+</body>
+
+</html>

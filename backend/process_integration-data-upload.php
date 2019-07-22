@@ -1,0 +1,2910 @@
+<?php
+define('QUADODO_IN_SYSTEM', true);
+require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/image-uploader.class.php';
+$qls->Security->check_auth_page('administrator.php');
+
+if($_SERVER['REQUEST_METHOD'] == 'POST'){
+	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	
+	$validate = new Validate($qls);
+	$validate->returnData['success'] = array();
+	
+	if ($validate->returnData['active'] == 'inactive') {
+		echo json_encode($validate->returnData);
+		return;
+	}
+	
+	if (!count($validate->returnData['error'])){
+		$uploader = new Uploader();
+		$filename = md5(time().$_SERVER['REMOTE_ADDR']);
+		$data = $uploader->upload($_FILES['files'], array(
+			'limit' => 1, //Maximum Limit of files. {null, Number}
+			'maxSize' => 2, //Maximum Size of files {null, Number(in MB's)}
+			'extensions' => array('zip'), //Whitelist for file extension. {null, Array(ex: array('jpg', 'png'))}
+			'required' => false, //Minimum one file is required for upload {Boolean}
+			'uploadDir' => $_SERVER['DOCUMENT_ROOT'].'/app/userUploads/', //Upload directory {String}
+			'title' => $filename, //New file name {null, String, Array} *please read documentation in README.md
+			'removeFiles' => true, //Enable file exclusion {Boolean(extra for jQuery.filer), String($_POST field name containing json data with file names)}
+			'perms' => null, //Uploaded file permisions {null, Number}
+			'onCheck' => null, //A callback function name to be called by checking a file for errors (must return an array) | ($file) | Callback
+			'onError' => null, //A callback function name to be called if an error occured (must return an array) | ($errors, $file) | Callback
+			'onSuccess' => null, //A callback function name to be called if all files were successfully uploaded | ($files, $metas) | Callback
+			'onUpload' => null, //A callback function name to be called if all files were successfully uploaded (must return an array) | ($file) | Callback
+			'onComplete' => null, //A callback function name to be called when upload is complete | ($file) | Callback
+			'onRemove' => 'onFilesRemoveCallback' //A callback function name to be called by removing files (must return an array) | ($removed_files) | Callback
+		));
+		
+		if($data['isComplete']){
+			$expectedFilenames = array(
+				'01 - Categories.csv',
+				'02 - Templates.csv',
+				'03 - Cabinets.csv',
+				'04 - Cabinet Cable Paths.csv',
+				'05 - Cabinet Objects.csv',
+				'06 - Object Inserts.csv',
+				'07 - Connections.csv'
+			);
+			
+			$zipFilename = $data['data']['metas'][0]['name'];
+			$zip = new ZipArchive;
+			$res = $zip->open($_SERVER['DOCUMENT_ROOT'].'/app/userUploads/'.$zipFilename);
+			if ($res === TRUE) {
+				// Get Filenames
+				$filenameArray = array();
+				for ($i=0; $i<$zip->numFiles; $i++) {
+					array_push($filenameArray, $zip->getNameIndex($i));
+				}
+				
+				foreach($expectedFilenames as $expectedFilename) {
+					if(!in_array($expectedFilename, $filenameArray)) {
+						$errMsg = 'File '.$expectedFilename.' does not exist.';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+				
+				// Extract Files
+				$zip->extractTo($_SERVER['DOCUMENT_ROOT'].'/app/userUploads/');
+				$zip->close();
+				
+// Prepare Required Data
+				
+				// Cabinet Adjacencies
+				$envAdjArray = array();
+				$query = $qls->app_SQL->select('*', 'table_cabinet_adj');
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					$envAdjArray[$row['left_cabinet_id']]['right'] = $row['right_cabinet_id'];
+					$envAdjArray[$row['right_cabinet_id']]['left'] = $row['left_cabinet_id'];
+				}
+				
+				// Get Env Tree
+				$envTreeArray = array();
+				$query = $qls->app_SQL->select('*', 'env_tree');
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					if($row['type'] != 'floorplan') {
+						$envTreeArray[$row['id']] = $row;
+					}
+				}
+				
+				// Generate nameString and nameHash for Environment Tree
+				foreach($envTreeArray as &$envTree) {
+					$parentID = $envTree['parent'];
+					$name = $envTree['name'];
+					while($parentID != '#') {
+						$name = $envTreeArray[$parentID]['name'].'.'.$name;
+						$parentID = $envTreeArray[$parentID]['parent'];
+					}
+					$nameHash = md5(strtolower($name));
+					$envTree['nameString'] = $name;
+					$envTree['nameHash'] = $nameHash;
+				}
+				
+				// Cable Paths
+				$tableCablePathArray = $qls->App->cablePathArray;
+				
+				// Categories
+				$tableCategoryArray = $qls->App->categoryArray;
+				
+				// Templates
+				$tableTemplateArray = array();
+				$query = $qls->app_SQL->select('*', 'table_object_templates');
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					if($row['id'] != 1 and $row['id'] != 2 and $row['id'] != 3) {
+						$tableTemplateArray[$row['id']] = $row;
+					}
+				}
+				
+				// Enclosure Compatibility
+				$tableEnclosureCompatibilityArray = array();
+				$query = $qls->app_SQL->select('*', 'table_object_compatibility');
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					$templateID = $row['template_id'];
+					$templateFace = $row['side'];
+					$templateDepth = $row['depth'];
+					
+					if($row['partitionType'] == 'Enclosure') {
+						if(!array_key_exists($templateID, $tableEnclosureCompatibilityArray)) {
+							$tableEnclosureCompatibilityArray[$templateID] = array(
+								$templateFace => array(
+									$templateDepth => $row
+							));
+						} else if(!array_key_exists($templateFace, $tableEnclosureCompatibilityArray[$templateID])) {
+							$tableEnclosureCompatibilityArray[$templateID][$templateFace] = array(
+								$templateDepth => $row
+							);
+						} else {
+							$tableEnclosureCompatibilityArray[$templateID][$templateFace][$templateDepth] = $row;
+						}
+					}
+				}
+				
+				// Objects
+				$tableObjectArray = array();
+				$query = $qls->app_SQL->select('*', 'table_object', array('parent_id' => array('=', 0)));
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
+						$tableObjectArray[$row['id']] = $row;
+					}
+				}
+				
+				// Inserts
+				$tableInsertArray = array();
+				$query = $qls->app_SQL->select('*', 'table_object', array('parent_id' => array('<>', 0)));
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					$tableInsertArray[$row['id']] = $row;
+				}
+				
+				// Get Cabinet Objects
+				$cabinetObjects = array();
+				$query = $qls->app_SQL->select('*', 'table_object');
+				while($row = $qls->app_SQL->fetch_assoc($query)) {
+					if(!isset($cabinetObjects[$row['env_tree_id']])) {
+						$cabinetObjects[$row['env_tree_id']] = array();
+					}
+					array_push($cabinetObjects[$row['env_tree_id']], $row);
+				}
+				
+				// Get Connections
+				//$connectionArray = $qls->App->inventoryAllArray;
+
+				// Build Existing Arrays
+				$existingCabinetArray = buildExistingCabinetArray($envTreeArray, $envAdjArray);
+				$existingPathArray = buildExistingPathArray($tableCablePathArray, $envTreeArray);
+				$existingCategoryArray = buildExistingCategoryArray($tableCategoryArray);
+				$existingTemplateArray = buildExistingTemplateArray($tableTemplateArray, $tableCategoryArray);
+				$existingObjectArray = buildExistingObjectArray($tableObjectArray, $envTreeArray, $tableTemplateArray);
+				$existingInsertArray = buildExistingInsertArray($tableInsertArray, $envTreeArray, $tableObjectArray, $tableEnclosureCompatibilityArray);
+				//$existingConnectionArray = buildExistingConnectionArray($qls, $connectionArray);
+				$occupancyArray = array();
+				
+				
+				$importedCabinetArray = array();
+				$importedPathArray = array();
+				$importedCategoryArray = array();
+				$importedTemplateArray = array();
+				$importedObjectArray = array();
+				$importedInsertArray = array();
+				$importedConnectionArray = array();
+				$importedCabinetOccupancyArray = array();
+				
+				foreach($expectedFilenames as $csvFilename) {
+					if($csvFile = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userUploads/'.$csvFilename, 'r')) {
+						if($csvFilename == '03 - Cabinets.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedCabinetArray($csvLine, $csvLineNumber, $csvFilename, $importedCabinetArray, $existingCabinetArray, $validate);
+								}
+							}
+						} else if($csvFilename == '04 - Cabinet Cable Paths.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedPathArray($csvLine, $csvLineNumber, $csvFilename, $importedPathArray, $validate);
+								}
+							}
+						} else if($csvFilename == '01 - Categories.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedCategoryArray($csvLine, $csvLineNumber, $csvFilename, $importedCategoryArray, $existingCategoryArray, $validate);
+								}
+							}
+						} else if($csvFilename == '02 - Templates.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedTemplateArray($csvLine, $csvLineNumber, $csvFilename, $importedTemplateArray, $existingTemplateArray);
+								}
+							}
+						} else if($csvFilename == '05 - Cabinet Objects.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, $importedObjectArray, $occupancyArray, $existingTemplateArray, $existingObjectArray, $validate);
+								}
+							}
+						} else if($csvFilename == '06 - Object Inserts.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedInsertArray($csvLine, $csvLineNumber, $csvFilename, $importedInsertArray, $existingInsertArray, $validate);
+								}
+							}
+						} else if($csvFilename == '07 - Connections.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, $importedConnectionArray, $existingConnectionArray);
+								}
+							}
+						}
+					} else {
+						$errMsg = 'Could not open '.$expectedFilename.'.';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+				
+				// Validation
+				validateImportedCabinets($importedCabinetArray, $existingCabinetArray, $occupancyArray, $validate);
+				validateImportedPaths($importedPathArray, $importedCabinetArray, $validate);
+				validateImportedCategories($importedCategoryArray, $existingCategoryArray, $validate);
+				validateImportedTemplates($importedTemplateArray, $existingTemplateArray, $importedCategoryArray, $validate);
+				validateImportedObjects($importedObjectArray, $existingObjectArray, $importedCabinetArray, $importedTemplateArray, $existingTemplateArray, $existingCabinetOccupancyArray, $validate);
+				validateImportedInserts($importedInsertArray, $existingInsertArray, $importedObjectArray, $importedTemplateArray, $validate);
+				
+				if(count($validate->returnData['error']) == 0) {
+					$qls->app_SQL->transaction('BEGIN');
+					
+					// Find Category Changes
+					$categoryAdds = findCategoryAdds($importedCategoryArray);
+					$categoryEdits = findCategoryEdits($importedCategoryArray, $existingCategoryArray);
+					$categoryDeletes = findCategoryDeletes($importedCategoryArray, $existingCategoryArray);
+					
+					// Process Category Changes
+					insertCategoryAdds($qls, $categoryAdds, $importedCategoryArray);
+					updateCategoryEdits($qls, $categoryEdits);
+					deleteCategoryDeletes($qls, $categoryDeletes);
+					
+					// Find Template Changes
+					$templateAdds = findTemplateAdds($importedTemplateArray);
+					$templateEdits = findTemplateEdits($importedTemplateArray, $existingTemplateArray);
+					$templateDeletes = findTemplateDeletes($importedTemplateArray, $existingTemplateArray);
+					
+					// Process Object Changes
+					insertTemplateAdds($qls, $templateAdds, $importedTemplateArray, $importedCategoryArray);
+					updateTemplateEdits($qls, $templateEdits, $importedCategoryArray);
+					deleteTemplateDeletes($qls, $templateDeletes);
+					
+					// Find Cabinet Changes
+					$cabinetAdds = findCabinetAdds($importedCabinetArray, $existingCabinetArray);
+					$cabinetEdits = findCabinetEdits($importedCabinetArray, $existingCabinetArray);
+					$cabinetDeletes = findCabinetDeletes($importedCabinetArray, $existingCabinetArray);
+					
+					// Process Cabinet Changes
+					insertCabinetAdds($qls, $cabinetAdds, $importedCabinetArray, $existingCabinetArray);
+					updateCabinetEdits($qls, $cabinetEdits, $importedCabinetArray, $existingCabinetArray);
+					deleteCabinetDeletes($qls, $cabinetDeletes, $cabinetObjects);
+					
+					
+					// Populate importedPathArray with cabinet IDs...
+					// ... this should be done after imported cabinets are inserted into the DB
+					populateImportedPathCabinetIDs($importedPathArray, $importedCabinetArray);
+					
+					
+					
+					// Find Path Changes
+					$pathAdds = findPathAdds($importedPathArray, $existingPathArray);
+					$pathEdits = findPathEdits($importedPathArray, $existingPathArray);
+					$pathDeletes = findPathDeletes($importedPathArray, $existingPathArray);
+					
+					// Process Path Changes
+					insertPathAdds($qls, $pathAdds, $importedCabinetArray);
+					updatePathEdits($qls, $pathEdits);
+					deletePathDeletes($qls, $pathDeletes);
+					
+					
+					// Populate importedObjectArray with cabinet IDs...
+					// ... this should be done after imported cabinets are inserted into the DB
+					populateImportedObjectCabinetIDs($importedObjectArray, $importedCabinetArray);
+					
+					
+					
+					// Find Object Changes
+					$objectAdds = findObjectAdds($importedObjectArray);
+					$objectEdits = findObjectEdits($importedObjectArray, $existingObjectArray);
+					$objectDeletes = findObjectDeletes($importedObjectArray, $existingObjectArray);
+					
+					// Process Object Changes
+					insertObjectAdds($qls, $objectAdds, $importedObjectArray, $importedCabinetArray, $importedTemplateArray);
+					updateObjectEdits($qls, $objectEdits, $importedCabinetArray, $existingTemplateArray);
+					deleteObjectDeletes($qls, $objectDeletes);
+					
+					
+					
+					// Find Insert Changes
+					$insertAdds = findInsertAdds($importedInsertArray);
+					$insertEdits = findInsertEdits($importedInsertArray, $existingInsertArray);
+					$insertDeletes = findInsertDeletes($importedInsertArray, $existingInsertArray);
+					
+					// Process Insert Changes
+					insertInsertAdds($qls, $insertAdds, $importedInsertArray, $importedObjectArray, $importedCabinetArray, $importedTemplateArray);
+					updateInsertEdits($qls, $insertEdits, $importedObjectArray, $importedCabinetArray);
+					deleteInsertDeletes($qls, $insertDeletes);
+					
+					
+					
+					// Validate and apply connection data
+					unset($qls->App);
+					$qls->App = new App($qls);
+					//$compatibilityArray = buildCompatibilityArray($qls);
+					//$objectArray = buildObjectArray($qls);
+					//$templateArray = buildTemplateArray($qls);
+					//$envTreeArray = buildEnvTreeArray($qls);
+					$portArray = buildPortArray($qls);
+					validateImportedConnections($qls, $importedConnectionArray, $portArray, $validate);
+					
+					//error_log(json_encode($importedConnectionArray));
+					//$connectionAdds = findConnectionAdds($qls, $importedConnectionArray, $portArray);
+					
+					if(count($validate->returnData['error']) == 0) {
+						processConnections($qls, $importedConnectionArray);
+						$qls->app_SQL->transaction('COMMIT');
+						$validate->returnData['success'] = 'Import finished successfully.';
+					} else {
+						$qls->app_SQL->transaction('ROLLBACK');
+					}
+				}
+				
+			} else {
+				array_push($validate->returnData['error'], $res);
+			}
+		}
+		
+		if($data['hasErrors']){
+			foreach($data['errors'] as $errMsg) {
+				array_push($validate->returnData['error'], $errMsg);
+			}
+		}
+	}
+	echo json_encode($validate->returnData);
+}
+
+// Cabinet Arrays
+function buildExistingCabinetArray($envTreeArray, $envAdjArray){
+	$return = array();
+	
+	foreach($envTreeArray as $row) {
+		$rowID = $row['id'];
+		$cabinetNameHash = $row['nameHash'];
+		$row['size'] = $row['type'] == 'cabinet' ? $row['size'] : null;
+		$row['name'] = $row['nameString'];
+		$row['nameHash'] = $cabinetNameHash;
+		$return[$cabinetNameHash] = $row;
+		$return[$cabinetNameHash]['left'] = isset($envAdjArray[$rowID]) ? $envTreeArray[$envAdjArray[$rowID]['left']]['nameString'] : null;
+		$return[$cabinetNameHash]['leftName'] = isset($envAdjArray[$rowID]) ? $envTreeArray[$envAdjArray[$rowID]['left']]['nameString'] : null;
+		$return[$cabinetNameHash]['leftNameHash'] = isset($envAdjArray[$rowID]) ? $envTreeArray[$envAdjArray[$rowID]['left']]['nameHash'] : null;
+		
+		$return[$cabinetNameHash]['right'] = isset($envAdjArray[$rowID]) ? $envTreeArray[$envAdjArray[$rowID]['right']]['nameString'] : null;
+		$return[$cabinetNameHash]['rightName'] = isset($envAdjArray[$rowID]) ? $envTreeArray[$envAdjArray[$rowID]['right']]['nameString'] : null;
+		$return[$cabinetNameHash]['rightNameHash'] = isset($envAdjArray[$rowID]) ? $envTreeArray[$envAdjArray[$rowID]['right']]['nameHash'] : null;
+	}
+	
+	return $return;
+}
+
+function buildImportedCabinetArray($csvLine, $csvLineNumber, $csvFilename, &$importedCabinetArray, $existingCabinetArray, &$validate){
+	$cabinetName = $csvLine[0];
+	$cabinetType = $csvLine[1];
+	$cabinetSize = $csvLine[2];
+	$cabinetLeft = $csvLine[3];
+	$cabinetRight = $csvLine[4];
+	$originalCabinetName = $csvLine[5];
+	$importedCabinetNameHash = md5(strtolower($cabinetName));
+	$originalCabinetNameHash = md5(strtolower($originalCabinetName));
+	$cabinetParent = explode('.', $cabinetName);
+	$name = array_pop($cabinetParent);
+	$cabinetParent = implode('.', $cabinetParent);
+	$cabinetParentHash = md5(strtolower($cabinetParent));
+	
+	if(array_key_exists($importedCabinetNameHash, $importedCabinetArray)) {
+		$errMsg = 'Duplicate name on line '.$csvLineNumber.' of '.$csvFilename;
+		array_push($validate->returnData['error'], $errMsg);
+	} else {
+		$importedCabinetArray[$importedCabinetNameHash] = array();
+	}
+	
+	if(array_key_exists($importedCabinetNameHash, $existingCabinetArray)) {
+		$importedCabinetArray[$importedCabinetNameHash]['id'] = $existingCabinetArray[$importedCabinetNameHash]['id'];
+	}
+	
+	$importedCabinetArray[$importedCabinetNameHash]['filename'] = $csvFilename;
+	$importedCabinetArray[$importedCabinetNameHash]['line'] = $csvLineNumber;
+	$importedCabinetArray[$importedCabinetNameHash]['nameString'] = $cabinetName;
+	$importedCabinetArray[$importedCabinetNameHash]['name'] = $name;
+	$importedCabinetArray[$importedCabinetNameHash]['nameHash'] = $importedCabinetNameHash;
+	$importedCabinetArray[$importedCabinetNameHash]['parentName'] = $cabinetParent;
+	$importedCabinetArray[$importedCabinetNameHash]['parentNameHash'] = $cabinetParentHash;
+	$importedCabinetArray[$importedCabinetNameHash]['type'] = $cabinetType != '' ? $cabinetType : null;
+	$importedCabinetArray[$importedCabinetNameHash]['size'] = $cabinetSize != '' ? $cabinetSize : null;
+	$importedCabinetArray[$importedCabinetNameHash]['left'] = $cabinetLeft != '' ? $cabinetLeft : null;
+	$importedCabinetArray[$importedCabinetNameHash]['leftHash'] = $cabinetLeft != '' ? md5(strtolower($cabinetLeft)) : null;
+	$importedCabinetArray[$importedCabinetNameHash]['right'] = $cabinetRight != '' ? $cabinetRight : null;
+	$importedCabinetArray[$importedCabinetNameHash]['rightHash'] = $cabinetRight != '' ? md5(strtolower($cabinetRight)) : null;
+	$importedCabinetArray[$importedCabinetNameHash]['originalCabinetName'] = $originalCabinetName;
+	$importedCabinetArray[$importedCabinetNameHash]['originalCabinetNameHash'] = $originalCabinetNameHash;
+	$importedCabinetArray[$importedCabinetNameHash]['id'] = $originalCabinetNameHash ? $existingCabinetArray[$originalCabinetNameHash]['id'] : null;
+}
+
+
+
+
+// Path Arrays
+function buildExistingPathArray($tableCablePathArray, $envTreeArray){
+	$return = array();
+	
+	foreach($tableCablePathArray as $row) {
+		$cabinetAID = $row['cabinet_a_id'];
+		$cabinetBID = $row['cabinet_b_id'];
+		$distance = $row['distance'];
+		$entracen = $row['path_entrance_ru'];
+		$notes = $row['notes'];
+		
+		$cabinetAName = $envTreeArray[$cabinetAID]['nameString'];
+		$cabinetBName = $envTreeArray[$cabinetBID]['nameString'];
+		
+		$cabinetANameHash = $envTreeArray[$cabinetAID]['nameHash'];
+		$cabinetBNameHash = $envTreeArray[$cabinetBID]['nameHash'];
+		
+		$cabinetComparison = strcasecmp($cabinetAName, $cabinetBName);
+		if($cabinetComparison < 0) {
+			$pathHash = md5(strtolower($cabinetAName.$cabinetBName));
+		} else if($cabinetComparison > 0) {
+			$pathHash = md5(strtolower($cabinetBName.$cabinetAName));
+		}
+		
+		$return[$pathHash] = $row;
+		$return[$pathHash]['cabinets'] = array(
+			$cabinetANameHash => array(
+				'column' => 'cabinetA',
+				'name' => $cabinetAName,
+				'nameHash' => $cabinetANameHash,
+				'id' => $cabinetAID
+			),
+			$cabinetBNameHash => array(
+				'column' => 'cabinetB',
+				'name' => $cabinetBName,
+				'nameHash' => $cabinetBNameHash,
+				'id' => $cabinetBID
+			)
+		);
+		$importedPathArray[$pathHash]['distance'] = $distance;
+		$importedPathArray[$pathHash]['entrance'] = $entrance;
+		$importedPathArray[$pathHash]['notes'] = $notes;
+	}
+	
+	return $return;
+}
+
+function buildImportedPathArray($csvLine, $csvLineNumber, $csvFilename, &$importedPathArray, &$validate){
+	$cabinetA = $csvLine[0];
+	$cabinetB = $csvLine[1];
+	$distance = $csvLine[2];
+	$notes = $csvLine[3];
+	$cabinetAHash = md5(strtolower($cabinetA));
+	$cabinetBHash = md5(strtolower($cabinetB));
+	
+	$cabinetComparison = strcasecmp($cabinetA, $cabinetB);
+	if($cabinetComparison < 0) {
+		$pathHash = md5(strtolower($cabinetA.$cabinetB));
+	} else if($cabinetComparison > 0) {
+		$pathHash = md5(strtolower($cabinetB.$cabinetA));
+	} else {
+		$pathHash = md5(strtolower($cabinetA.$cabinetB));
+		$errMsg = 'Cannot create a path with the same cabinet as both endpoints on line '.$csvLineNumber.' of '.$csvFilename;
+		array_push($validate->returnData['error'], $errMsg);
+	}
+	
+	if(array_key_exists($pathHash, $importedPathArray)) {
+		$errMsg = 'Duplicate path entry on line '.$csvLineNumber.' of '.$csvFilename;
+		array_push($validate->returnData['error'], $errMsg);
+	} else {
+		$importedPathArray[$pathHash] = array();
+	}
+	$importedPathArray[$pathHash]['cabinets'] = array(
+		$cabinetAHash => array(
+			'column' => 'cabinetA',
+			'attribute' => 'cabinet_a_id',
+			'name' => $cabinetA,
+			'nameHash' => $cabinetAHash
+		),
+		$cabinetBHash => array(
+			'column' => 'cabinetB',
+			'attribute' => 'cabinet_b_id',
+			'name' => $cabinetB,
+			'nameHash' => $cabinetBHash
+		)
+	);
+	$importedPathArray[$pathHash]['pathHash'] = $pathHash;
+	$importedPathArray[$pathHash]['distance'] = $distance;
+	$importedPathArray[$pathHash]['entrance'] = 42;
+	$importedPathArray[$pathHash]['notes'] = $notes;
+	$importedPathArray[$pathHash]['filename'] = $csvFilename;
+	$importedPathArray[$pathHash]['line'] = $csvLineNumber;
+}
+
+
+
+// Object Arrays
+function buildExistingObjectArray(&$tableObjectArray, $envTreeArray, $tableTemplateArray){
+	$return = array();
+	
+	foreach($tableObjectArray as &$object) {
+		$objectID = $object['id'];
+		$objectName = $object['name'];
+		$cabinetID = $object['env_tree_id'];
+		$cabinetNameString = $envTreeArray[$cabinetID]['nameString'];
+		$cabinetNameHash = $envTreeArray[$cabinetID]['nameHash'];
+		$objectNameString = $cabinetNameString.'.'.$objectName;
+		$objectNameHash = md5(strtolower($objectNameString));
+		$cabinetFace = $object['cabinet_front'] == 0 ? 'front' : 'rear';
+		$templateID = $object['template_id'];
+		$RUSize = $tableTemplateArray[$templateID]['templateRUSize'];
+		$topRU = $object['RU'];
+		$bottomRU = $topRU - ($RUSize - 1);
+		
+		$object['RU'] = $bottomRU;
+		$object['cabinetNameString'] = $cabinetNameString;
+		$object['cabinetNameHash'] = $cabinetNameHash;
+		$object['nameString'] = $objectNameString;
+		$object['nameHash'] = $objectNameHash;
+		$object['cabinetFace'] = $cabinetFace;
+		$return[$objectNameHash] = $object;
+	}
+	
+	return $return;
+}
+
+function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$importedObjectArray, &$occupancyArray, $existingTemplateArray, $existingObjectArray, &$validate){
+	$objectName = $csvLine[0];
+	$cabinetName = $csvLine[1];
+	$cabinetNameHash = md5(strtolower($cabinetName));
+	$objectNameString = $cabinetName.'.'.$objectName;
+	$objectNameHash = md5(strtolower($objectNameString));
+	$templateName = $csvLine[2];
+	$templateNameHash = md5(strtolower($templateName));
+	$RU = $csvLine[3];
+	$cabinetFace = strtolower($csvLine[4]);
+	$originalObjectName = $csvLine[5];
+	$originalObjectNameHash = md5(strtolower($originalObjectName));
+	$originalCabinetNameArray = explode('.', $originalObjectName);
+	array_pop($originalCabinetNameArray);
+	$originalCabinetName = implode('.', $originalCabinetNameArray);
+	$originalCabinetNameHash = md5(strtolower($originalCabinetName));
+	$template = $existingTemplateArray[$templateNameHash];
+	
+	if(!array_key_exists($objectNameHash, $importedObjectArray)) {
+		$importedObjectArray[$objectNameHash]['line'] = $csvLineNumber;
+		$importedObjectArray[$objectNameHash]['fileName'] = $csvFilename;
+		$importedObjectArray[$objectNameHash]['objectName'] = $objectName;
+		$importedObjectArray[$objectNameHash]['objectNameString'] = $objectNameString;
+		$importedObjectArray[$objectNameHash]['objectNameHash'] = $objectNameHash;
+		$importedObjectArray[$objectNameHash]['cabinetName'] = $cabinetName;
+		$importedObjectArray[$objectNameHash]['cabinetNameHash'] = $cabinetNameHash;
+		$importedObjectArray[$objectNameHash]['templateName'] = $templateName;
+		$importedObjectArray[$objectNameHash]['templateNameHash'] = $templateNameHash;
+		$importedObjectArray[$objectNameHash]['RU'] = $RU;
+		$importedObjectArray[$objectNameHash]['cabinetFace'] = $cabinetFace;
+		$importedObjectArray[$objectNameHash]['originalObjectName'] = $originalObjectName;
+		$importedObjectArray[$objectNameHash]['originalObjectNameHash'] = $originalObjectNameHash;
+		$importedObjectArray[$objectNameHash]['originalCabinetName'] = $originalCabinetName;
+		$importedObjectArray[$objectNameHash]['originalCabinetNameHash'] = $originalCabinetNameHash;
+		$importedObjectArray[$objectNameHash]['id'] = $originalObjectName ? $existingObjectArray[$originalObjectNameHash]['id'] : null;
+		
+		if($template) {
+			$RUSize = $template['templateRUSize'];
+			$mountConfig = $template['templateMountConfig'];
+			$bottomRU = $RU;
+			$topRU = $bottomRU + ($RUSize - 1);
+			
+			if(!array_key_exists($cabinetNameHash, $occupancyArray)) {
+				$occupancyArray[$cabinetNameHash] = array('topOccupiedRU' => 0, 'front' => array(), 'rear' => array());
+			}
+			
+			if($topRU > $occupancyArray[$cabinetNameHash]['topOccupiedRU']) {
+				$occupancyArray[$cabinetNameHash]['topOccupiedRU'] = $topRU;
+			}
+			
+			$errMsg = 'Object on line '.$csvLineNumber.' of"'.$csvFilename.'"overlaps with another object at RU ';
+			for($x=$bottomRU; $x<=$topRU; $x++) {
+				if($cabinetFace == 'front') {
+					if($mountConfig == 0) {
+						if(in_array($x, $occupancyArray[$cabinetNameHash]['front'])) {
+							array_push($validate->returnData['error'], $errMsg.' '.$x.'.');
+						}
+						array_push($occupancyArray[$cabinetNameHash]['front'], $x);
+					} else if($mountConfig == 1) {
+						if(in_array($x, $occupancyArray[$cabinetNameHash]['front']) or in_array($x, $occupancyArray[$cabinetNameHash]['rear'])) {
+							array_push($validate->returnData['error'], $errMsg.' '.$x.'.');
+						}
+						array_push($occupancyArray[$cabinetNameHash]['front'], $x);
+						array_push($occupancyArray[$cabinetNameHash]['rear'], $x);
+					}
+				} else if($cabinetFace == 'rear') {
+					if($mountConfig == 0) {
+						if(in_array($x, $occupancyArray[$cabinetNameHash]['front'])) {
+							array_push($validate->returnData['error'], $errMsg.' '.$x.'.');
+						}
+						array_push($occupancyArray[$cabinetNameHash]['rear'], $x);
+					} else if($mountConfig == 1) {
+						if(in_array($x, $occupancyArray[$cabinetNameHash]['front']) or in_array($x, $occupancyArray[$cabinetNameHash]['rear'])) {
+							array_push($validate->returnData['error'], $errMsg.' '.$x.'.');
+						}
+						array_push($occupancyArray[$cabinetNameHash]['front'], $x);
+						array_push($occupancyArray[$cabinetNameHash]['rear'], $x);
+					}
+				}
+			}
+		}
+	} else {
+		$errMsg = 'Duplicate original object on line '.$csvLineNumber.' of '.$csvFilename;
+		array_push($validate->returnData['error'], $errMsg);
+	}
+}
+
+
+
+// Insert Arrays
+function buildExistingInsertArray($tableInsertArray, $envTreeArray, $tableObjectArray, $tableEnclosureCompatibilityArray){
+	$return = array();
+	
+	foreach($tableInsertArray as $insert) {
+		$insertID = $insert['id'];
+		$insertName = $insert['name'];
+		$cabinetID = $insert['env_tree_id'];
+		$parentID = $insert['parent_id'];
+		$parentFaceID = $insert['parent_face'];
+		$parentFace = $parentFaceID == 0 ? 'Front' : 'Rear';
+		$parentDepth = $insert['parent_depth'];
+		$parentRow = $insert['insertSlotY'];
+		$parentCol = $insert['insertSlotX'];
+		$parentCompatibility = $tableEnclosureCompatibilityArray[$parentID][$parentFaceID][$parentDepth];
+		
+		$enc = $parentDepth;
+		$row = chr($parentRow+65);
+		$col = $parentCol + 1;
+		$slotID = 'Enc'.$enc.'Slot'.$row.$col;
+		
+		$cabinetNameString = $envTreeArray[$cabinetID]['nameString'];
+		$cabinetNameHash = $envTreeArray[$cabinetID]['nameHash'];
+		$objectNameString = $cabinetNameString.'.'.$tableObjectArray[$parentID]['name'];
+		$objectNameHash = md5(strtolower($objectNameString));
+		$insertNameString = $objectNameString.'.'.$parentFace.'.'.$slotID.'.'.$insertName;
+		$insertNameHash = md5(strtolower($insertNameString));
+		
+		$insert['cabinetNameString'] = $cabinetNameString;
+		$insert['cabinetNameHash'] = $cabinetNameHash;
+		$insert['objectNameString'] = $objectNameString;
+		$insert['objectNameHash'] = $objectNameHash;
+		$insert['slotID'] = $slotID;
+		$insert['insertName'] = $insertName;
+		$insert['insertNameString'] = $insertNameString;
+		$insert['insertNameHash'] = $insertNameHash;
+		$return[$insertNameHash] = $insert;
+	}
+	
+	return $return;
+}
+
+function buildImportedInsertArray($csvLine, $csvLineNumber, $csvFilename, &$importedInsertArray, $existingInsertArray, &$validate){
+	$objectNameString = $csvLine[0];
+	$face = $csvLine[1];
+	$slotID = strtolower($csvLine[2]);
+	$insertName = $csvLine[3];
+	$templateName = $csvLine[4];
+	$originalInsert = strtolower($csvLine[5]);
+	$originalInsertArray = explode('.', $originalInsert);
+	$originalInsertName = array_pop($originalInsertArray);
+	$originalInsertSlotID = array_pop($originalInsertArray);
+	$originalInsertFace = array_pop($originalInsertArray);
+	$originalInsertObjectNameString = implode('.', $originalInsertArray);
+	
+	if($templateName !='') {
+		$insertNameString = $objectNameString.'.'.$face.'.'.$slotID.'.'.$insertName;
+		$objectNameHash = md5(strtolower($objectNameString));
+		$insertNameHash = md5(strtolower($insertNameString));
+		$originalInsertHash = md5($originalInsert);
+		$originalInsertObjectNameHash = md5(strtolower($originalInsertObjectNameString));
+		$templateNameHash = md5(strtolower($templateName));
+		
+		if(!array_key_exists($insertNameHash, $importedInsertArray)) {
+			$importedInsertArray[$insertNameHash]['line'] = $csvLineNumber;
+			$importedInsertArray[$insertNameHash]['fileName'] = $csvFilename;
+			$importedInsertArray[$insertNameHash]['objectNameString'] = $objectNameString;
+			$importedInsertArray[$insertNameHash]['objectNameHash'] = $objectNameHash;
+			$importedInsertArray[$insertNameHash]['objectFace'] = $face;
+			$importedInsertArray[$insertNameHash]['parent_face'] = strtolower($face) == 'front' ? 0 : 1;
+			$importedInsertArray[$insertNameHash]['slotID'] = $slotID;
+			$importedInsertArray[$insertNameHash]['insertName'] = $insertName;
+			$importedInsertArray[$insertNameHash]['insertNameString'] = $insertNameString;
+			$importedInsertArray[$insertNameHash]['insertNameHash'] = $insertNameHash;
+			$importedInsertArray[$insertNameHash]['originalInsert'] = $originalInsert;
+			$importedInsertArray[$insertNameHash]['originalInsertHash'] = $originalInsertHash;
+			$importedInsertArray[$insertNameHash]['originalInsertName'] = $originalInsertName;
+			$importedInsertArray[$insertNameHash]['originalInsertSlotID'] = $originalInsertSlotID;
+			$importedInsertArray[$insertNameHash]['originalInsertFace'] = $originalInsertFace;
+			$importedInsertArray[$insertNameHash]['originalInsertObjectNameString'] = $originalInsertObjectNameString;
+			$importedInsertArray[$insertNameHash]['originalInsertObjectNameHash'] = $originalInsertObjectNameHash;
+			$importedInsertArray[$insertNameHash]['templateNameHash'] = $templateNameHash;
+			$importedInsertArray[$insertNameHash]['id'] = $originalInsert ? $existingInsertArray[$originalInsertHash]['id'] : null;
+		} else {
+			$errMsg = 'Duplicate insert name on line '.$csvLineNumber.' of '.$csvFilename;
+			array_push($validate->returnData['error'], $errMsg);
+		}
+	}
+}
+
+
+
+// Category Arrays
+function buildExistingCategoryArray($tableCategoryArray){
+	$return = array();
+	
+	foreach($tableCategoryArray as $category) {
+		$categoryName = $category['name'];
+		$categoryNameHash = md5(strtolower($categoryName));
+		$category['nameHash'] = $categoryNameHash;
+
+		$return[$categoryNameHash] = $category;
+	}
+	
+	return $return;
+}
+
+function buildImportedCategoryArray($csvLine, $csvLineNumber, $csvFilename, &$importedCategoryArray, $existingCategoryArray, &$validate){
+	$categoryName = $csvLine[0];
+	$categoryColor = $csvLine[1];
+	$categoryDefaultOption = $csvLine[2];
+	$originalCategoryName = $csvLine[3];
+	$originalCategoryNameHash = md5(strtolower($originalCategoryName));
+	$categoryNameHash = md5(strtolower($categoryName));
+	
+	$categoryDefaultOption = strtolower($categoryDefaultOption) == 'x' ? 1 : 0;
+	
+	$importedCategoryArray[$categoryNameHash]['name'] = $categoryName;
+	$importedCategoryArray[$categoryNameHash]['nameHash'] = $categoryNameHash;
+	$importedCategoryArray[$categoryNameHash]['color'] = $categoryColor;
+	$importedCategoryArray[$categoryNameHash]['defaultOption'] = $categoryDefaultOption;
+	$importedCategoryArray[$categoryNameHash]['originalCategoryName'] = $originalCategoryName;
+	$importedCategoryArray[$categoryNameHash]['originalCategoryNameHash'] = $originalCategoryNameHash;
+	$importedCategoryArray[$categoryNameHash]['line'] = $csvLineNumber;
+	$importedCategoryArray[$categoryNameHash]['fileName'] = $csvFilename;
+	if($originalCategoryName != '') {
+		$importedCategoryArray[$categoryNameHash]['id'] = $existingCategoryArray[$originalCategoryNameHash]['id'];
+	}
+}
+
+
+
+
+// Template Arrays
+function buildExistingTemplateArray($tableTemplateArray, $tableCategoryArray){
+	$return = array();
+	
+	foreach($tableTemplateArray as $template) {
+		$templateName = $template['templateName'];
+		$templateNameHash = md5(strtolower($templateName));
+		$template['templateNameHash'] = $templateNameHash;
+		$categoryName = $tableCategoryArray[$template['templateCategory_id']]['name'];
+		$template['categoryName'] = $categoryName;
+		$template['categoryNameHash'] = md5(strtolower($categoryName));
+		$return[$templateNameHash] = $template;
+	}
+	
+	return $return;
+}
+
+function buildImportedTemplateArray($csvLine, $csvLineNumber, $csvFilename, &$importedTemplateArray, $existingTemplateArray){
+	$templateName = $csvLine[0];
+	$templateCategoryName = $csvLine[1];
+	$templateOriginalTemplateName = $csvLine[2];
+	$templateType = $csvLine[3];
+	$templateFunction = $csvLine[4];
+	$templateRUSize = $csvLine[5];
+	$templateMountConfig = $csvLine[6];
+	$templateStructure = $csvLine[7];
+	$templateNameHash = md5(strtolower($templateName));
+	$templateCategoryNameHash = md5(strtolower($templateCategoryName));
+	$originalTemplateNameHash = md5(strtolower($templateOriginalTemplateName));
+	
+	$importedTemplateArray[$templateNameHash]['templateName'] = $templateName;
+	$importedTemplateArray[$templateNameHash]['templateNameHash'] = $templateNameHash;
+	$importedTemplateArray[$templateNameHash]['categoryName'] = $templateCategoryName;
+	$importedTemplateArray[$templateNameHash]['categoryNameHash'] = $templateCategoryNameHash;
+	$importedTemplateArray[$templateNameHash]['originalTemplateName'] = $templateOriginalTemplateName;
+	$importedTemplateArray[$templateNameHash]['originalTemplateNameHash'] = $originalTemplateNameHash;
+	$importedTemplateArray[$templateNameHash]['templateType'] = strtolower($templateType);
+	$importedTemplateArray[$templateNameHash]['templateFunction'] = strtolower($templateFunction);
+	$importedTemplateArray[$templateNameHash]['templateRUSize'] = $templateRUSize;
+	$importedTemplateArray[$templateNameHash]['templateMountConfig'] = strtolower($templateMountConfig);
+	$importedTemplateArray[$templateNameHash]['templateStructure'] = json_decode($templateStructure, true);
+	$importedTemplateArray[$templateNameHash]['line'] = $csvLineNumber;
+	$importedTemplateArray[$templateNameHash]['filename'] = $csvFilename;
+	
+	if($templateOriginalTemplateName != '') {
+		$importedTemplateArray[$templateNameHash]['id'] = $existingTemplateArray[$originalTemplateNameHash]['id'];
+	}
+}
+
+
+
+
+// Connection Arrays
+function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$importedConnectionArray, $existingConnectionArray){
+	$portA = strtolower($csvLine[0]);
+	$aCode39 = strtolower($csvLine[1]);
+	$aConnector = strtolower($csvLine[2]);
+	$portB = strtolower($csvLine[3]);
+	$bCode39 = strtolower($csvLine[4]);
+	$bConnector = strtolower($csvLine[5]);
+	$mediaType = strtolower($csvLine[6]);
+	$length = strtolower($csvLine[7]);
+	
+	$aPortNameHash = ($portA != '' and $portA != 'none') ? md5($portA) : false;
+	$bPortNameHash = ($portB != '' and $portB != 'none') ? md5($portB) : false;
+	$aCode39 = ($aCode39 != '' and $aCode39 != 'none') ? $aCode39 : false;
+	$bCode39 = ($bCode39 != '' and $bCode39 != 'none') ? $bCode39 : false;
+	$aConnector = ($aConnector != '' and $aConnector != 'none') ? $aConnector : false;
+	$bConnector = ($bConnector != '' and $bConnector != 'none') ? $bConnector : false;
+	$mediaType = ($mediaType != '' and $mediaType != 'none') ? $mediaType : false;
+	$length = ($length != '' and $length != 'none') ? $length : false;
+	
+	if($aPortNameHash) {
+		$importedConnectionArray[$aPortNameHash]['portNameHash'] = $aPortNameHash;
+		$importedConnectionArray[$aPortNameHash]['code39'] = $aCode39;
+		$importedConnectionArray[$aPortNameHash]['connector'] = $aConnector;
+		$importedConnectionArray[$aPortNameHash]['peerPortNameHash'] = $bPortNameHash;
+		$importedConnectionArray[$aPortNameHash]['peerCode39'] = $bCode39;
+		$importedConnectionArray[$aPortNameHash]['peerConnector'] = $bConnector;
+		$importedConnectionArray[$aPortNameHash]['mediaType'] = $mediaType;
+		$importedConnectionArray[$aPortNameHash]['length'] = $length;
+		$importedConnectionArray[$aPortNameHash]['line'] = $csvLineNumber;
+		$importedConnectionArray[$aPortNameHash]['filename'] = $csvFilename;
+	}
+}
+
+
+
+// Validation
+function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, $occupancyArray, &$validate){
+	
+	$arrayOriginalHashes = array();
+	$allowedLocationTypes = array(
+		'location',
+		'pod',
+		'cabinet',
+		'floorplan'
+	);
+			
+	foreach($importedCabinetArray as $cabinet) {
+		// Validation Cabinet
+		$cabinetName = $cabinet['nameString'];
+		$cabinetNameHash = $cabinet['nameHash'];
+		$cabinetType = $cabinet['type'];
+		$cabinetSize = $cabinet['size'];
+		$cabinetLeft = $cabinet['left'];
+		$cabinetRight = $cabinet['right'];
+		$csvLineNumber = $cabinet['line'];
+		$csvFilename = $cabinet['filename'];
+		$cabinetParentName = $cabinet['parentName'];
+		$cabinetParentNameHash = $cabinet['parentNameHash'];
+		$topOccupiedRU = $occupancyArray[$cabinetNameHash]['topOccupiedRU'];
+		$originalCabinetName = $cabinet['originalCabinetName'];
+		$originalCabinetNameHash = $cabinet['originalCabinetNameHash'];
+		
+		// Validate Cabinet Name
+		$cabinetNameArray = explode('.', $cabinetName);
+		foreach($cabinetNameArray as $cabinetNameFragment) {
+			$validate->validateNameText($cabinetNameFragment, 'Name '.$cabinetNameFragment.' on line '.$csvLineNumber.' of '.$csvFilename);
+		}
+		
+		// Validate Location Type
+		$validate->validateInArray($cabinetType, $allowedLocationTypes, 'type '.$cabinetType.' on line '.$csvLineNumber.' of '.$csvFilename);
+		
+		// Validate Cabinet Specific Values
+		if($cabinetType == 'cabinet') {
+			
+			// Validate RU Size
+			$validate->validateRUSize($cabinetSize, 'Invalid RU size on line '.$csvLineNumber.' of '.$csvFilename);
+			
+			if($cabinetSize < $topOccupiedRU) {
+				$errMsg = 'Cabinet RU size on line '.$csvLineNumber.' of"'.$csvFilename.'"is less than the top occupied RU.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+			
+			// Validate Cabinet Adjacencies
+			$cabinetSides = array(array('left', 'right'), array('right', 'left'));
+			foreach($cabinetSides as $cabinetSideArray) {
+				$cabinetSide = $cabinetSideArray[0];
+				$cabinetSideName = $cabinet[$cabinetSide];
+				$cabinetSideHash = $cabinet[$cabinetSide.'Hash'];
+				
+				if($cabinetSideName) {
+				
+					// Adjacenct Cabinet Needs to Exist
+					if(array_key_exists($cabinetSideHash, $importedCabinetArray)) {
+						$adjacentCabinet = $importedCabinetArray[$cabinetSideHash];
+						$adjacentCabinetSideName = $adjacentCabinet[$cabinetSideArray[1]];
+						
+						// Adjacent Cabinet Needs to be of Type Cabinet
+						if($adjacentCabinet['type'] == 'cabinet') {
+							
+							// Get Adjacent Cabinet Parent Name
+							$adjacentCabinetParentName = $adjacentCabinet['parentName'];
+							
+							// Parents Must Match, Meaning Cabinets Are in Same Location
+							if($cabinetParentName == $adjacentCabinetParentName) {
+								if($cabinetName != $adjacentCabinetSideName) {
+									$errMsg = ucfirst($cabinetSide).' adjacency does not agree on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+									array_push($validate->returnData['error'], $errMsg);
+								}
+							} else {
+								$errMsg = ucfirst($cabinetSide).' adjacency is not in the same location on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+								array_push($validate->returnData['error'], $errMsg);
+							}
+						} else {
+							$errMsg = ucfirst($cabinetSide).' adjacency is not a cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+							array_push($validate->returnData['error'], $errMsg);
+						}
+					} else {
+						$errMsg = ucfirst($cabinetSide).' adjacency is not a cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+			}
+		}
+		
+		// Validate Parent Exists
+		if($cabinetParentName != '') {
+			if(!array_key_exists($cabinetParentNameHash, $importedCabinetArray)) {
+				$errMsg = 'Path does not exist on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+		}
+		
+		// Validate Original Cabinet Name
+		if($originalCabinetName != '') {
+			if(!array_key_exists($originalCabinetNameHash, $existingCabinetArray)) {
+				$errMsg = 'Original cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+			
+			// Check for duplicate Original Cabinet Names
+			if(in_array($originalCabinetNameHash, $arrayOriginalHashes)) {
+				$errMsg = 'Duplicate original cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($arrayOriginalHashes, $originalCabinetNameHash);
+			}
+		}
+	}
+}
+
+function validateImportedPaths($importedPathArray, $importedCabinetArray, &$validate){
+	foreach($importedPathArray as $path) {
+		$distance = $path['distance'];
+		$notes = $path['notes'];
+		$csvFilename = $path['filename'];
+		$csvLineNumber = $path['line'];
+		
+		foreach($path['cabinets'] as $cabinet) {
+			$cabinetName = $cabinet['name'];
+			$cabinetNameHash = $cabinet['nameHash'];
+			$column = $cabinet['column'];
+			
+			// Validate Cabinet Name
+			$cabinetNameArray = explode('.', $cabinetName);
+			foreach($cabinetNameArray as $cabinetNameFragment) {
+				$validate->validateNameText($cabinetNameFragment, ucfirst($column).' name '.$cabinetNameFragment.' on line '.$cabinetLine.' of '.$cabinetFilename);
+			}
+			
+			// Cabinet Name Must Exist in Imported Cabinet Array
+			if(!array_key_exists($cabinetNameHash, $importedCabinetArray)) {
+				$errMsg = ucfirst($column).' on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist in Cabinets data.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+		}
+		
+		// Validate Path Distance
+		$validate->validateDistance($distance, 'Path distance on line '.$cabinetLine.' of '.$cabinetFilename);
+		
+		// Validate Path Notes
+		$validate->validateText($notes, 'Path notes on line '.$cabinetLine.' of '.$cabinetFilename);
+		
+	}
+}
+
+function validateImportedCategories($importedCategoryArray, $existingCategoryArray, &$validate){
+	$arrayOriginalHashes = array();
+	$defaultOptionCount = 0;
+	
+	foreach($importedCategoryArray as $category) {
+		$categoryName = $category['name'];
+		$categoryColor = $category['color'];
+		$defaultOption = $category['defaultOption'];
+		$originalCategoryName = $category['originalCategoryName'];
+		$originalCategoryNameHash = $category['originalCategoryNameHash'];
+		$csvFilename = $category['fileName'];
+		$csvLineNumber = $category['line'];
+		
+		// Validate Category Name
+		$validate->validateNameText($categoryName, 'Category name on line '.$cabinetLine.' of "'.$cabinetFilename.'".');
+		
+		// Validate Category Color
+		$validate->validateCategoryColor($categoryColor);
+		
+		// Validate Original Category Name
+		if($originalCategoryName != '' and !array_key_exists($originalCategoryNameHash, $existingCategoryArray)) {
+			$errMsg = 'Original category on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist.';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		// Check for original duplicates
+		if($originalCategoryName != '') {
+			if(in_array($originalCategoryNameHash, $arrayOriginalHashes)) {
+				$errMsg = 'Duplicate original category on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($arrayOriginalHashes, $originalCategoryNameHash);
+			}
+		}
+		
+		if($defaultOption) {
+			$defaultOptionCount++;
+		}
+	}
+	
+	// Validate Default Option
+	if($defaultOptionCount != 1) {
+		$errMsg = 'Must define 1 category as default in"'.$csvFilename.'"';
+		array_push($validate->returnData['error'], $errMsg);
+	}
+}
+
+function validateImportedTemplates(&$importedTemplateArray, $existingTemplateArray, $importedCategoryArray, &$validate){
+	$arrayOriginalHashes = array();
+	$templateTypeArray = ['standard', 'insert'];
+	$templateFunctionArray = ['passive', 'endpoint'];
+	$templateMountConfigArray = ['2-post', '4-post', 'n/a'];
+	$validImgFilenames = ['jpg', 'jpeg', 'png', 'gif'];
+	
+	foreach($importedTemplateArray as &$template) {
+		$templateName = $template['templateName'];
+		$templateCategoryNameHash = $template['categoryNameHash'];
+		$templateOriginalTemplateName = $template['originalTemplateName'];
+		$templateOriginalTemplateNameHash = $template['originalTemplateNameHash'];
+		$templateType = $template['templateType'];
+		$templateFunction = $template['templateFunction'];
+		$templateRUSize = $template['templateRUSize'];
+		$templateMountConfig = $template['templateMountConfig'];
+		$templateStructure = $template['templateStructure'];
+		
+		$csvFilename = $template['filename'];
+		$csvLineNumber = $template['line'];
+		
+		// Validate Template Structure JSON
+		if($templateStructure !== null) {
+			$template['templateEncLayoutX'] = $templateStructure['sizeX'];
+			$template['templateEncLayoutY'] = $templateStructure['sizeY'];
+			$template['templateHUnits'] = $templateStructure['parentH'];
+			$template['templateVUnits'] = $templateStructure['parentV'];
+			$template['templateFrontImage'] = $templateStructure['frontImage'];
+			$template['templateRearImage'] = $templateStructure['rearImage'];
+			$template['templatePartitionData'] = $templateStructure['structure'];
+		} else {
+			$errMsg = 'Invalid template structure on line '.$csvLineNumber.' of "'.$csvFilename.'".';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		// Validate Template Name
+		$validate->validateNameText($templateName, 'Template name on line '.$csvLineNumber.' of "'.$csvFilename.'".');
+		
+		// Validate Template Category
+		if(!array_key_exists($templateCategoryNameHash, $importedCategoryArray)) {
+			$errMsg = 'Category on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist in "Categories.csv".';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		// Validate Original Template Name
+		if($templateOriginalTemplateName != '') {
+			if(!array_key_exists($templateOriginalTemplateNameHash, $existingTemplateArray)) {
+				$errMsg = 'Original template on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+			
+			// Check for original duplicates
+			if(in_array($templateOriginalTemplateNameHash, $arrayOriginalHashes)) {
+				$errMsg = 'Duplicate original template on line '.$csvLineNumber.' of "'.$csvFilename.'".';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($arrayOriginalHashes, $templateOriginalTemplateNameHash);
+			}
+		}
+		
+		// Validate Template Type
+		$validate->validateInArray($templateType, $templateTypeArray, 'template type on line '.$csvLineNumber.' of '.$csvFilename);
+		
+		// Validate Template Function
+		$validate->validateInArray($templateFunction, $templateFunctionArray, 'template function on line '.$csvLineNumber.' of '.$csvFilename);
+		
+		// Validate Template RU Size
+		$validate->validateRUSize($templateRUSize, 'Invalid template RU size on line '.$csvLineNumber.' of '.$csvFilename);
+		
+		// Validate Template Mount Config
+		$validate->validateInArray($templateMountConfig, $templateMountConfigArray, 'template mount config on line '.$csvLineNumber.' of '.$csvFilename);
+		
+		// Validate Template Structure
+		if($templateStructure !== null) {
+			$templateDimensionArray = array(
+				'Size X' => $template['templateEncLayoutX'],
+				'Size Y' => $template['templateEncLayoutY'],
+				'Parent H' => $template['templateHUnits'],
+				'Parent V' => $template['templateVUnits']
+			);
+			$templatePartitionData = $template['templatePartitionData'];
+			$templateImageArray = array(
+				'Front Image' => $template['templateFrontImage'],
+				'Rear Image' => $template['templateRearImage']
+			);
+			
+			// Validate Template Dimensions
+			foreach($templateDimensionArray as $header => $value) {
+				if($templateType == 'standard') {
+					if($value) {
+						$errMsg = 'Standard templates should not have a '.$header.' value on line '.$csvLineNumber.' of "'.$csvFilename.'"';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				} else if($templateType == 'insert') {
+					if (!preg_match('/^[1-9]$|^[1-9][0-9]?$/', $value)){
+						$errMsg = 'Invalid '.$header.' value on line '.$csvLineNumber.' of "'.$csvFilename.'"';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+			}
+			
+			// Validate Template Partition Data
+			$errMsg = 'Invalid template structure on line '.$csvLineNumber.' of "'.$csvFilename.'"';
+			$depth = 0;
+			if(is_array($templatePartitionData) and (count($templatePartitionData) >= 1 and count($templatePartitionData) <= 2)) {
+				foreach ($templatePartitionData as $face) {
+					$validate->validateTemplateJSON($face[0], $depth, $errMsg);
+				}
+			} else {
+				array_push($validate->returnData['error'], $errorMsg);
+			}
+			
+			// Validate Template Images
+			foreach($templateImageArray as $header => $value) {
+				if($value) {
+					$imgFilenameArray = explode('.', $value);
+					if(!preg_match('/^[a-fA-F0-9]{32}$/', $imgFilenameArray[0]) or !in_array(strtolower($imgFilenameArray[1]), $validImgFilenames)) {
+						$errMsg = 'Invalid '.$header.' value on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+			}
+		}
+	}
+}
+
+function validateImportedObjects($importedObjectArray, $existingObjectArray, $importedCabinetArray, $importedTemplateArray, $existingTemplateArray, $existingCabinetOccupancyArray, &$validate){
+	$arrayOriginalHashes = array();
+	
+	foreach($importedObjectArray as $object) {
+		$line = $object['line'];
+		$fileName = $object['fileName'];
+		$objectName = $object['objectName'];
+		$objectCabinetName = $object['cabinetName'];
+		$objectCabinetNameHash = $object['cabinetNameHash'];
+		$objectTemplate = $object['templateName'];
+		$objectTemplateHash = $object['templateNameHash'];
+		$objectRU = $object['RU'];
+		$objectCabinetFace = $object['cabinetFace'];
+		$objectOriginalObjectName = $object['originalObjectName'];
+		$objectOriginalObjectNameHash = $object['originalObjectNameHash'];
+		
+		// Validate Cabinet Face
+		$allowedFaceArray = array('front', 'rear');
+		$cabinetFaceValidated = $validate->validateInArray($objectCabinetFace, $allowedFaceArray, 'cabinet face on line '.$line.' of '.$fileName);
+		
+		// Validate Name
+		$validate->validateNameText($objectName, 'Object name on line '.$line.' of '.$fileName);
+		
+		// Validate Cabinet
+		if(!array_key_exists($objectCabinetNameHash, $importedCabinetArray)) {
+			$errMsg = 'Cabinet on line '.$line.' of '.$fileName.' does not exist in "Cabinets.csv".';
+			array_push($validate->returnData['error'], $errMsg);
+		} else if($importedCabinetArray[$objectCabinetNameHash]['type'] != 'cabinet') {
+			$errMsg = 'Cabinet on line '.$line.' of '.$fileName.' needs to be of type "Cabinet".';
+			array_push($validate->returnData['error'], $errMsg);
+		} else {
+			$cabinetRUSize = $importedCabinetArray[$objectCabinetNameHash]['size'];
+			$cabinetID = $importedCabinetArray[$objectCabinetNameHash]['id'];
+		}
+		
+		// Validate Template
+		if(!array_key_exists($objectTemplateHash, $importedTemplateArray)) {
+			$errMsg = 'Template referenced on line '.$line.' of '.$fileName.' does not exist.';
+			array_push($validate->returnData['error'], $errMsg);
+		} else {
+			if($importedTemplateArray[$objectTemplateHash]['templateType'] != 'standard') {
+				$errMsg = 'Template referenced on line '.$line.' of '.$fileName.' is not a "Standard" template.';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				$templateRUSize = $importedTemplateArray[$objectTemplateHash]['RUSize'];
+				$templateMountConfig = $importedTemplateArray[$objectTemplateHash]['templateMountConfig'];
+				//$existingTemplate = $existingTemplateArray[$objectTemplateHash];
+			}
+		}
+		
+		// Validate RU
+		if($validate->validateRUSize($objectRU, 'Invalid RU on line '.$line.' of '.$fileName)) {
+			if($cabinetRUSize and $templateRUSize) {
+				$topRU = $objectRU + ($templateRUSize - 1);
+				$bottomRU = $objectRU;
+				//$templateMountConfig = $existingTemplate['templateMountConfig'];
+				
+				if($cabinetFaceValidated) {
+					if($templateMountConfig == 0) {
+						for($x=$bottomRU; $x<=$topRU; $x++) {
+							if(in_array($x, $existingCabinetOccupancyArray[$cabinetID][$cabinetFace])) {
+								$errMsg = 'Object on line '.$line.' of '.$fileName.' collides with another object.';
+								array_push($validate->returnData['error'], $errMsg);
+								break;
+							}
+						}
+					} else if($templateMountConfig == 1) {
+						for($x=$bottomRU; $x<=$topRU; $x++) {
+							if(in_array($x, $existingCabinetOccupancyArray[$cabinetID]['front']) or in_array($x, $existingCabinetOccupancyArray[$cabinetID]['rear'])) {
+								$errMsg = 'Object on line '.$line.' of '.$fileName.' collides with another object.';
+								array_push($validate->returnData['error'], $errMsg);
+								break;
+							}
+						}
+					}
+				}
+				
+				if($topRU > $cabinetRUSize) {
+					$errMsg = 'Object on line '.$line.' of '.$fileName.' extends beyond cabinet size.';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			}
+		}
+		
+		// Validate Original Object
+		if($objectOriginalObjectName != '') {
+			if(!array_key_exists($objectOriginalObjectNameHash, $existingObjectArray)) {
+				$errMsg = 'Original object on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+			
+			// Check for original duplicates
+			if(in_array($objectOriginalObjectNameHash, $arrayOriginalHashes)) {
+				$errMsg = 'Duplicate original object on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($arrayOriginalHashes, $objectOriginalObjectNameHash);
+			}
+		}
+	}
+}
+
+function validateImportedInserts($importedInsertArray, $existingInsertArray, $importedObjectArray, $importedTemplateArray, &$validate){
+	$arrayOriginalHashes = array();
+	
+	foreach($importedInsertArray as $insert) {
+		$line = $insert['line'];
+		$fileName = $insert['fileName'];
+		$objectNameHash = $insert['objectNameHash'];
+		$objectFace = strtolower($insert['objectFace']);
+		$slotID = $insert['slotID'];
+		$insertName = $insert['insertName'];
+		$originalInsert = $insert['originalInsert'];
+		$originalInsertHash = $insert['originalInsertHash'];
+		$templateNameHash = $insert['templateNameHash'];
+		
+		// Validate Object
+		if(!array_key_exists($objectNameHash, $importedObjectArray)) {
+			$errMsg = 'Object referenced on line '.$line.' of '.$fileName.' does not exist.';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		// Validate Object Face
+		$allowedFaceArray = array('front', 'rear');
+		$objectFaceValidated = $validate->validateInArray($objectFace, $allowedFaceArray, 'cabinet face on line '.$line.' of '.$fileName);
+		
+		// Validate Slot ID
+		$slotIDValidated = $validate->validateSlotID($slotID, 'slot ID on line '.$line.' of '.$fileName);
+		
+		// Validate Name
+		$validate->validateNameText($insertName, 'Insert name on line '.$line.' of '.$fileName);
+		
+		// Validate Original Insert
+		if($originalInsert != '') {
+			if(!array_key_exists($originalInsertHash, $existingInsertArray)) {
+				$errMsg = 'Original insert on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+			
+			// Check for original duplicates
+			if(in_array($originalInsertHash, $arrayOriginalHashes)) {
+				$errMsg = 'Duplicate original insert on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($arrayOriginalHashes, $originalInsertHash);
+			}
+		}
+		
+		// Validate Template
+		if(!array_key_exists($templateNameHash, $importedTemplateArray)) {
+			$errMsg = 'Template referenced on line '.$line.' of '.$fileName.' does not exist.';
+			array_push($validate->returnData['error'], $errMsg);
+		} else if($importedTemplateArray[$templateNameHash]['templateType'] != 'insert') {
+			$errMsg = 'Template referenced on line '.$line.' of '.$fileName.' is not an insert.';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		// Validate Compatibility
+		$parent = $importedObjectArray[$objectNameHash];
+		$parentTemplate = $importedTemplateArray[$parent['templateNameHash']];
+		$insertTemplate = $importedTemplateArray[$templateNameHash];
+		preg_match_all("/\d+|[a-b]+/", $slotID, $matches);
+		$depth = $matches[0][0];
+		$face = $objectFace == 'front' ? 0 : 1;
+		$compatible = true;
+		
+		if($parentPartition = retrievePartition($parentTemplate['templatePartitionData'][$face], $depth)) {
+			if($insertTemplate['templateFunction'] != $parentTemplate['templateFunction']) {
+				$compatible = false;
+			} else if($insertTemplate['sizeX'] != $parentPartition['encLayoutX']) {
+				$compatible = false;
+			} else if($insertTemplate['sizeY'] != $parentPartition['encLayoutY']) {
+				$compatible = false;
+			} else if($insertTemplate['parentH'] != $parentPartition['hUnits']) {
+				$compatible = false;
+			} else if($insertTemplate['parentV'] != $parentPartition['vUnits']) {
+				$compatible = false;
+			}
+		} else {
+			$errMsg = 'Could not find partition for insert on line '.$line.' of '.$fileName.'.';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		if(!compatible) {
+			$errMsg = 'Insert on line '.$line.' of '.$fileName.' is not compatible with slot.';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+	}
+}
+
+function validateImportedConnections(&$qls, &$importedConnectionArray, $portArray, &$validate){
+	$cableEndIDArray = array();
+	$portNameHashArray = array();
+	
+	// Iterate through all imported connections
+	foreach($importedConnectionArray as &$connection) {
+		
+		// Check to see if object port exists
+		$portNameHash = $connection['portNameHash'];
+		
+		if(isset($portArray[$portNameHash])) {
+			if(!in_array($portNameHash, $portNameHashArray)) {
+				array_push($portNameHashArray, $portNameHash);
+				$port = $portArray[$portNameHash];
+				
+				$objID = $port['objID'];
+				$face = $port['face'];
+				$depth = $port['depth'];
+				$portID = $port['portID'];
+				
+				$connection['objID'] = $objID;
+				$connection['face'] = $face;
+				$connection['depth'] = $depth;
+				$connection['portID'] = $portID;
+				
+				if($peerPortNameHash = $connection['peerPortNameHash']) {
+					if(isset($portArray[$peerPortNameHash])) {
+						if(!in_array($peerPortNameHash, $portNameHashArray)) {
+							array_push($portNameHashArray, $peerPortNameHash);
+							$peerPort = $portArray[$peerPortNameHash];
+							
+							$peerObjID = $peerPort['objID'];
+							$peerFace = $peerPort['face'];
+							$peerDepth = $peerPort['depth'];
+							$peerPortID = $peerPort['portID'];
+							
+							$connection['peerObjID'] = $peerObjID;
+							$connection['peerFace'] = $peerFace;
+							$connection['peerDepth'] = $peerDepth;
+							$connection['peerPortID'] = $peerPortID;
+						} else {
+							$errMsg = 'PortB on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+							array_push($validate->returnData['error'], $errMsg);
+						}
+						
+					} else {
+						$errMsg = 'PortB on line '.$connection['line'].' of file "'.$connection['filename'].'" does not exist.';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+			} else {
+				$errMsg = 'PortA on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+		} else {
+			$errMsg = 'PortA on line '.$connection['line'].' of file "'.$connection['filename'].'" does not exist.';
+			array_push($validate->returnData['error'], $errMsg);
+		}
+		
+		// Check to see if cableA end ID is valid
+		if($cableEndID = $connection['code39']) {
+			$cableEndID = (int)base_convert($cableEndID, 36, 10);
+			if(in_array($cableEndID, $cableEndIDArray)) {
+				$errMsg = 'CableA ID on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($cableEndIDArray, $cableEndID);
+				$connection['cableEndID'] = $cableEndID;
+			}
+		}
+		
+		// Check to see if cableB end ID is valid
+		if($peerCableEndID = $connection['peerCode39']) {
+			$peerCableEndID = (int)base_convert($peerCableEndID, 36, 10);
+			if(in_array($peerCableEndID, $cableEndIDArray)) {
+				$errMsg = 'CableB ID on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+				array_push($validate->returnData['error'], $errMsg);
+			} else {
+				array_push($cableEndIDArray, $peerCableEndID);
+				$connection['peerCableEndID'] = $peerCableEndID;
+			}
+		}
+		
+		if($cableEndID) {
+			// Check to see if cableA connector type is valid
+			if($connector = $connection['connector']) {
+				$connectorValue = 0;
+				foreach($qls->App->connectorTypeValueArray as $value => $row) {
+					if($connector == strtolower($row['name'])) {
+						$connectorValue = $value;
+					}
+				}
+				if($connectorValue) {
+					$connection['connector'] = $connectorValue;
+				} else {
+					$errMsg = 'CableA connector type on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			}
+		}
+		
+		if($peerCableEndID) {
+			// Check to see if cableB connector type is valid
+			if($peerConnector = $connection['peerConnector']) {
+				$connectorValue = 0;
+				foreach($qls->App->connectorTypeValueArray as $value => $row) {
+					if($connector == strtolower($row['name'])) {
+						$connectorValue = $value;
+					}
+				}
+				if($connectorValue) {
+					$connection['peerConnector'] = $connectorValue;
+				} else {
+					$errMsg = 'CableB connector type on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			}
+		}
+		
+		if($cableEndID or $peerCableEndID) {
+			// Check to see if media type is valid
+			if($mediaType = $connection['mediaType']) {
+				foreach($qls->App->mediaTypeValueArray as $value => $row) {
+					if($mediaType == strtolower($row['name'])) {
+						$mediaType = $value;
+					}
+				}
+				if($mediaType) {
+					$connection['mediaType'] = $mediaType;
+				} else {
+					$errMsg = 'Media type on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			}
+			
+			// Check to see if length is valid
+			if($length = $connection['length']) {
+				if($mediaType) {
+					$categoryTypeID = $qls->App->mediaTypeValueArray[$mediaType]['category_type_id'];
+					$categoryType = $qls->App->mediaCategoryTypeArray[$categoryTypeID];
+					if(preg_match('/\d+/', $length)) {
+						preg_match('/\d+/', $length, $match);
+						$cableLength = $match[0];
+						if($categoryType['unit_of_length'] == 'm.') {
+							$connection['length'] = $qls->App->convertMetersToMillimeters($cableLength);
+						} else if($categoryType['unit_of_length'] == 'ft.') {
+							$connection['length'] = $qls->App->convertFeetToMillimeters($cableLength);
+						} else {
+							$connection['length'] = 0;
+						}
+					} else {
+						$errMsg = 'Length on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				} else {
+					$errMsg = 'Length on line '.$connection['line'].' of file "'.$connection['filename'].'" requires media type.';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			}
+		}
+		
+		unset($portNameHash);
+		unset($cableEndID);
+		unset($connector);
+		
+		unset($peerPortNameHash);
+		unset($peerCableEndID);
+		unset($peerConnector);
+	}
+}
+
+
+
+// Cabinet Changes
+function findCabinetAdds($importedCabinetArray, $existingCabinetArray){
+	$return = array();
+	foreach($importedCabinetArray as $cabinet) {
+		$cabinetNameHash = $cabinet['nameHash'];
+		if(!array_key_exists($cabinetNameHash, $existingCabinetArray)) {
+			$return[$cabinetNameHash] = $cabinet;
+		}
+	}
+	
+	return $return;
+}
+
+function findCabinetEdits(&$importedCabinetArray, $existingCabinetArray){
+	$return = array();
+	foreach($importedCabinetArray as &$cabinet) {
+		$originalCabinetNameHash = $cabinet['originalCabinetNameHash'];
+		if(array_key_exists($originalCabinetNameHash, $existingCabinetArray)) {
+			$existingCabinet = $existingCabinetArray[$originalCabinetNameHash];
+			$addToArray = false;
+			if($existingCabinet['type'] != $cabinet['type']) {
+				$addToArray = true;
+			} else if($existingCabinet['size'] != $cabinet['size']) {
+				$addToArray = true;
+			} else if($existingCabinet['left'] != $cabinet['left']) {
+				$addToArray = true;
+			} else if($existingCabinet['right'] != $cabinet['right']) {
+				$addToArray = true;
+			}
+			if($addToArray) {
+				array_push($return, $cabinet);
+			}
+		}
+	}
+	
+	return $return;
+}
+
+function findCabinetDeletes($importedCabinetArray, $existingCabinetArray){
+	$return = array();
+	foreach($existingCabinetArray as $cabinet) {
+		$cabinetNameHash = $cabinet['nameHash'];
+		if(!array_key_exists($cabinetNameHash, $importedCabinetArray)) {
+			array_push($return, $cabinet);
+		}
+	}
+	
+	return $return;
+}
+
+
+
+// Path Changes
+function findPathAdds($importedPathArray, $existingPathArray){
+	$return = array();
+	foreach($importedPathArray as $path) {
+		$pathHash = $path['pathHash'];
+		if(!array_key_exists($pathHash, $existingPathArray)) {
+			$return[$pathHash] = $path;
+		}
+	}
+	
+	return $return;
+}
+
+function findPathEdits(&$importedPathArray, $existingPathArray){
+	$return = array();
+	foreach($importedPathArray as &$path) {
+		$pathHash = $path['pathHash'];
+		if(array_key_exists($pathHash, $existingPathArray)) {
+			$existingPath = $existingPathArray[$pathHash];
+			$addToArray = false;
+			if($existingPath['distance'] != $path['distance']) {
+				$addToArray = true;
+			} else if($existingPath['entrance'] != $path['entrance']) {
+				$addToArray = true;
+			} if($existingPath['notes'] != $path['notes']) {
+				$addToArray = true;
+			}
+			if($addToArray) {
+				$path['id'] = $existingPath['id'];
+				array_push($return, $path);
+			}
+		}
+	}
+	
+	return $return;
+}
+
+function findPathDeletes($importedPathArray, $existingPathArray){
+	$return = array();
+	foreach($existingPathArray as $path) {
+		$pathHash = $path['pathHash'];
+		if(!array_key_exists($pathHash, $importedPathArray)) {
+			array_push($return, $path);
+		}
+	}
+	
+	return $return;
+}
+
+
+
+// Object Changes
+function findObjectAdds($importedObjectArray){
+	$return = array();
+	
+	foreach($importedObjectArray as $object) {
+		if($object['originalObjectName'] == '') {
+			array_push($return, $object);
+		}
+	}
+	
+	return $return;
+}
+
+function findObjectEdits($importedObjectArray, $existingObjectArray){
+	$return = array();
+	
+	foreach($importedObjectArray as $object) {
+		if($object['originalObjectName'] != '') {
+			$originalObjectNameHash = $object['originalObjectNameHash'];
+			$existingObject = $existingObjectArray[$originalObjectNameHash];
+			
+			$addObject = false;
+			if($object['objectName'] != $existingObject['name']) {
+				$addObject = true;
+			} else if($object['RU'] != $existingObject['RU']) {
+				$addObject = true;
+			} else if($object['cabinetFace'] != $existingObject['cabinetFace']) {
+				$addObject = true;
+			} else if($object['env_tree_id'] != $existingObject['env_tree_id']) {
+				$addObject = true;
+			}
+			
+			if($addObject) {
+				array_push($return, $object);
+			}
+		}
+	}
+	
+	return $return;
+}
+
+function findObjectDeletes($importedObjectArray, $existingObjectArray){
+	$return = array();
+	
+	foreach($existingObjectArray as $existingObject) {
+		
+		$existingObjectNameHash = $existingObject['nameHash'];
+		$addToObjectDeletes = true;
+		foreach($importedObjectArray as $importedObject) {
+			
+			if($importedObject['originalObjectName'] != '') {
+				$originalObjectNameHash = $importedObject['originalObjectNameHash'];
+				
+				if($existingObjectNameHash == $originalObjectNameHash) {
+					$addToObjectDeletes = false;
+				}
+			}
+		}
+		
+		if($addToObjectDeletes) {
+			array_push($return, $existingObject);
+		}
+	}
+	
+	return $return;
+}
+
+
+
+// Insert Changes
+function findInsertAdds($importedInsertArray){
+	$return = array();
+	
+	foreach($importedInsertArray as $insert) {
+		if($insert['originalInsert'] == '') {
+			array_push($return, $insert);
+		}
+	}
+	
+	return $return;
+}
+
+function findInsertEdits($importedInsertArray, $existingInsertArray){
+	$return = array();
+	
+	foreach($importedInsertArray as $insert) {
+		$addToInsertEdits = false;
+		if($insert['originalInsert'] != '') {
+			$originalInsertHash = $insert['originalInsertHash'];
+			$existingInsert = $existingInsertArray[$originalInsertHash];
+			
+			if($insert['objectNameHash'] != $existingInsert['objectNameHash']) {
+				$addToInsertEdits = true;
+			} else if($insert['parent_face'] != $existingInsert['parent_face']) {
+				$addToInsertEdits = true;
+			} else if(strtolower($insert['slotID']) != strtolower($existingInsert['slotID'])) {
+				$addToInsertEdits = true;
+			} else if(strtolower($insert['insertName']) != strtolower($existingInsert['insertName'])) {
+				$addToInsertEdits = true;
+			}
+		}
+		
+		if($addToInsertEdits) {
+			array_push($return, $insert);
+		}
+	}
+	
+	return $return;
+}
+
+function findInsertDeletes($importedInsertArray, $existingInsertArray){
+	$return = array();
+	
+	foreach($existingInsertArray as $existingInsert) {
+		
+		$existingInsertNameHash = $existingInsert['insertNameHash'];
+		$addToInsertDeletes = true;
+		foreach($importedInsertArray as $importedInsert) {
+			
+			if($importedInsert['originalInsert'] != '') {
+				$originalInsertHash = $importedInsert['originalInsertHash'];
+				
+				if($existingInsertNameHash == $originalInsertHash) {
+					$addToInsertDeletes = false;
+				}
+			}
+		}
+		
+		if($addToInsertDeletes) {
+			array_push($return, $existingInsert);
+		}
+	}
+	
+	return $return;
+}
+
+
+
+// Category Changes
+function findCategoryAdds($importedCategoryArray){
+	$return = array();
+	
+	foreach($importedCategoryArray as $category) {
+		if($category['originalCategoryName'] == '') {
+			array_push($return, $category);
+		}
+	}
+	
+	return $return;
+}
+
+function findCategoryEdits($importedCategoryArray, $existingCategoryArray){
+	$return = array();
+	
+	foreach($importedCategoryArray as $category) {
+		if($category['originalCategoryName'] != '') {
+			$originalCategoryNameHash = $category['originalCategoryNameHash'];
+			$existingCategory = $existingCategoryArray[$originalCategoryNameHash];
+			
+			$addCategory = false;
+			if($category['name'] != $existingCategory['name']) {
+				$addCategory = true;
+			} else if($category['color'] != $existingCategory['color']) {
+				$addCategory = true;
+			} else if($category['defaultOption'] != $existingCategory['defaultOption']) {
+				$addCategory = true;
+			}
+			
+			if($addCategory) {
+				array_push($return, $category);
+			}
+		}
+	}
+	
+	return $return;
+}
+
+function findCategoryDeletes($importedCategoryArray, $existingCategoryArray){
+	$return = array();
+	
+	foreach($existingCategoryArray as $existingCategory) {
+		
+		$existingCategoryNameHash = $existingCategory['nameHash'];
+		$addCategory = true;
+		foreach($importedCategoryArray as $importedCategory) {
+			
+			if($importedCategory['originalCategoryName'] != '') {
+				$originalCategoryNameHash = $importedCategory['originalCategoryNameHash'];
+				
+				if($existingCategoryNameHash == $originalCategoryNameHash) {
+					$addCategory = false;
+				}
+			}
+		}
+		
+		if($addCategory) {
+			array_push($return, $existingCategory);
+		}
+	}
+	
+	return $return;
+}
+
+
+
+// Template Changes
+function findTemplateAdds($importedTemplateArray){
+	$return = array();
+	
+	foreach($importedTemplateArray as $template) {
+		if($template['originalTemplateName'] == '') {
+			array_push($return, $template);
+		}
+	}
+	
+	return $return;
+}
+
+function findTemplateEdits($importedTemplateArray, $existingTemplateArray){
+	$return = array();
+	
+	foreach($importedTemplateArray as $template) {
+		if($template['originalTemplateName'] != '') {
+			$originalTemplateNameHash = $template['originalTemplateNameHash'];
+			$existingTemplate = $existingTemplateArray[$originalTemplateNameHash];
+			
+			$addTemplate = false;
+			if($template['templateName'] != $existingTemplate['templateName']) {
+				$addTemplate = true;
+			} else if($template['categoryNameHash'] != $existingTemplate['categoryNameHash']) {
+				$addTemplate = true;
+			}
+			
+			if($addTemplate) {
+				array_push($return, $template);
+			}
+		}
+	}
+	
+	return $return;
+}
+
+function findTemplateDeletes($importedTemplateArray, $existingTemplateArray){
+	$return = array();
+	
+	foreach($existingTemplateArray as $existingTemplate) {
+		
+		$existingTemplateNameHash = $existingTemplate['templateNameHash'];
+		$addTemplate = true;
+		foreach($importedTemplateArray as $importedTemplate) {
+			
+			if($importedTemplate['originalTemplateName'] != '') {
+				$originalTemplateNameHash = $importedTemplate['originalTemplateNameHash'];
+				
+				if($existingTemplateNameHash == $originalTemplateNameHash) {
+					$addTemplate = false;
+				}
+			}
+		}
+		
+		if($addTemplate) {
+			array_push($return, $existingTemplate);
+		}
+	}
+	
+	return $return;
+}
+
+
+// Process Cabinets
+function insertCabinetAdds(&$qls, $cabinetAdds, &$importedCabinetArray, $existingCabinetArray){
+	// Insert Adds
+	foreach($cabinetAdds as $cabinet) {
+		$name = $cabinet['name'];
+		$nameHash = $cabinet['nameHash'];
+		$parentNameHash = $cabinet['parentNameHash'];
+		if(array_key_exists($parentNameHash, $existingCabinetArray)) {
+			$parent = $existingCabinetArray[$parentNameHash]['id'];
+		} else if(array_key_exists($parentNameHash, $importedCabinetArray)) {
+			$parent = $importedCabinetArray[$parentNameHash]['id'];
+		} else {
+			$parent = '#';
+		}
+		$type = $cabinet['type'];
+		$size = $type == 'cabinet' ? $cabinet['size'] : 42;
+		
+		$qls->app_SQL->insert('env_tree', array('name', 'parent', 'type', 'size'), array($name, $parent, $type, $size));
+		$importedCabinetArray[$nameHash]['id'] = $qls->app_SQL->insert_id();
+	}
+
+	foreach($importedCabinetArray as $cabinet) {
+		$rowID = $cabinet['id'];
+		$cabinetNameHash = $cabinet['nameHash'];
+		$cabinetLeftHash = $cabinet['leftHash'];
+		$cabinetRightHash = $cabinet['rightHash'];
+		
+		if($cabinetLeftHash) {
+			$addAdjacency = true;
+			
+			if(array_key_exists($cabinetLeftHash, $existingCabinetArray)) {
+				$leftID = $existingCabinetArray[$cabinetLeftHash]['id'];
+			} else if(array_key_exists($cabinetLeftHash, $importedCabinetArray)) {
+				$leftID = $importedCabinetArray[$cabinetLeftHash]['id'];
+			}
+			
+			if($addAdjacency) {
+				$qls->app_SQL->insert('table_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($leftID, $rowID));
+			}
+		}
+		
+		if($cabinetRightHash) {
+			$addAdjacency = true;
+			
+			if(array_key_exists($cabinetRightHash, $existingCabinetArray)) {
+				$rightID = $existingCabinetArray[$cabinetRightHash]['id'];
+			} else if(array_key_exists($cabinetRightHash, $importedCabinetArray)) {
+				$rightID = $importedCabinetArray[$cabinetRightHash]['id'];
+			}
+			
+			if($addAdjacency) {
+				$qls->app_SQL->insert('table_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($rowID, $rightID));
+			}
+		}
+	}
+}
+
+function updateCabinetEdits(&$qls, $cabinetEdits, $importedCabinetArray, $existingCabinetArray){
+	foreach($cabinetEdits as $cabinet) {
+		$cabinetNameHash = $cabinet['nameHash'];
+		$rowID = $existingCabinetArray[$cabinetNameHash]['id'];
+		$type = $cabinet['type'];
+		$size = $type == 'cabinet' ? $cabinet['size'] : 42;
+		
+		$table = 'env_tree';
+		$set = array('type'=>$type, 'size'=>$size);
+		$where = array('id'=>array('=', $rowID));
+		$qls->app_SQL->update($table, $set, $where);
+		
+		//Update Adjacencies
+		$qls->app_SQL->delete('table_cabinet_adj', array('left_cabinet_id' => array('=', $rowID), 'OR', 'right_cabinet_id' => array('=', $rowID)));
+		
+		$adjacencySides = array('left', 'right');
+		foreach($adjacencySides as $side) {
+			if($cabinet[$side]) {
+				$sideHash = md5(strtolower($cabinet[$side]));
+				$sideID = $importedCabinetArray[$sideHash]['id'];
+				$qls->app_SQL->insert('table_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($sideID, $rowID));
+			}
+		}
+	}
+}
+
+function deleteCabinetDeletes(&$qls, $cabinetDeletes, $cabinetObjects){
+	// Remove Deletes (cabinets)
+	foreach($cabinetDeletes as $cabinetDelete) {
+		$cabinetID = $cabinetDelete['id'];
+		
+		$qls->app_SQL->delete('env_tree', array('id' => array('=', $cabinetID)));
+		$qls->app_SQL->delete('table_cabinet_adj', array('left_cabinet_id' => array('=', $cabinetID), 'OR', 'right_cabinet_id' => array('=', $cabinetID)));
+		$qls->app_SQL->delete('table_cable_path', array('cabinet_a_id' => array('=', $cabinetID), 'OR', 'cabinet_b_id' => array('=', $cabinetID)));
+		
+		// Remove Deletes (objects)
+		foreach($cabinetObjects[$cabinetID] as $objectDelete) {
+			$objectID = $objectDelete['id'];
+			
+			$qls->app_SQL->delete('table_object', array('id' => array('=', $objectID)));
+			$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+			
+			$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
+			while($cable = $qls->app_SQL->fetch_assoc($query)) {
+				$attr = array();
+				if($cable['a_object_id'] == $objectID) {
+					array_push($attr, 'a');
+				}
+				if($cable['b_object_id'] == $objectID) {
+					array_push($attr, 'b');
+				}
+				
+				if($cable['a_id'] == 0 and $cable['b_id'] == 0) {
+					
+					// This is not a managed cable, so delete entry
+					$qls->app_SQL->delete('table_inventory', array('id' => array('=', $cable['id'])));
+					
+					// Mark far end as populated if it does not belong to the object being deleted
+					if(count($attr) == 1) {
+						$oppositeAttr = $attr[0] == 'a' ? 'b' : 'a';
+						$qls->app_SQL->insert('table_populated_port', array(
+								'object_id',
+								'object_face',
+								'object_depth',
+								'port_id'
+							), array(
+								$cable[$oppositeAttr.'_object_id'],
+								$cable[$oppositeAttr.'_object_face'],
+								$cable[$oppositeAttr.'_object_depth'],
+								$cable[$oppositeAttr.'_port_id']
+							)
+						);
+					}
+				} else {
+					
+					// This is a managed cable, so don't delete... just clear data
+					foreach($attr as $cableAttr) {
+						$qls->app_SQL->update('table_inventory', array(
+								$cableAttr.'_object_id' => 0,
+								$cableAttr.'_object_face' => 0,
+								$cableAttr.'_object_depth' => 0,
+								$cableAttr.'_port_id' => 0
+							), array('id' => array('=', $cable['id']))
+						);
+					}
+				}
+			}
+			$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $objectID)));
+		}
+	}
+}
+
+
+
+// Process Paths
+function insertPathAdds(&$qls, &$pathAdds, $importedCabinetArray){
+	foreach($pathAdds as &$path) {
+		foreach($path['cabinets'] as &$cabinet) {
+			$cabinet['id'] = $importedCabinetArray[$cabinet['nameHash']]['id'];
+		}
+		
+		insertPath($qls, $path);
+	}
+	
+	return;
+}
+
+function updatePathEdits(&$qls, $pathEdits){
+	foreach($pathEdits as $path) {
+		deletePath($qls, $path);
+		insertPath($qls, $path);
+	}
+	return;
+}
+
+function deletePathDeletes(&$qls, $pathDeletes){
+	foreach($pathDeletes as $path) {
+		deletePath($qls, $path);
+	}
+	return;
+}
+
+function insertPath(&$qls, $path){
+	$cabinetAttributes = array();
+	foreach($path['cabinets'] as $cabinet) {
+		array_push($cabinetAttributes, array(
+			'attribute' => $cabinet['attribute'],
+			'id' => $cabinet['id']
+		));
+	}
+	$cabinetAAttribute = $cabinetAttributes[0]['attribute'];
+	$cabinetBAttribute = $cabinetAttributes[1]['attribute'];
+	$cabinetAID = $cabinetAttributes[0]['id'];
+	$cabinetBID = $cabinetAttributes[1]['id'];
+	$distance = $path['distance'] * 1000;
+	$entrance = $path['entrance'];
+	$notes = $path['notes'];
+	
+	$qls->app_SQL->insert('table_cable_path', array($cabinetAAttribute, $cabinetBAttribute, 'distance', 'path_entrance_ru', 'notes'), array($cabinetAID, $cabinetBID, $distance, $entrance, $notes));
+	
+	return;
+}
+
+function deletePath(&$qls, $path){
+	$rowID = $path['id'];
+	
+	$qls->app_SQL->delete('table_cable_path', array('id' => array('=', $rowID)));
+	
+	return;
+}
+
+
+
+// Process Objects
+function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCabinetArray, $importedTemplateArray){
+	foreach($objectAdds as $object) {
+		$template = $importedTemplateArray[$object['templateNameHash']];
+		$cabinetID = $importedCabinetArray[$object['cabinetNameHash']]['id'];
+		$name = $object['objectName'];
+		$templateID = $template['id'];
+		$objectRU = $object['RU'];
+		$RUSize = $template['templateRUSize'];
+		$RU = $objectRU + ($RUSize - 1);
+		$face = $object['cabinetFace'];
+		$mountConfig = $template['templateMountConfig'];
+		if($face == 'front') {
+			$cabinetFront = 0;
+			$cabinetBack = $mountConfig == 1 ? 1 : null;
+		} else {
+			$cabinetBack = 0;
+			$cabinetFront = $mountConfig == 1 ? 1 : null;
+		}
+		
+		$qls->app_SQL->insert('table_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0));
+		
+		$importedObjectArray[$object['objectNameHash']]['id'] = $qls->app_SQL->insert_id();
+	}
+}
+
+function updateObjectEdits(&$qls, $objectEdits, $importedCabinetArray, $existingTemplateArray){
+	foreach($objectEdits as $object) {
+		$template = $existingTemplateArray[$object['templateNameHash']];
+		$cabinetID = $importedCabinetArray[$object['cabinetNameHash']]['id'];
+		$name = $object['objectName'];
+		$RU = $object['RU'];
+		$face = $object['cabinetFace'];
+		$mountConfig = $template['templateMountConfig'];
+		$objectID = $object['id'];
+		
+		if($face == 'front') {
+			$cabinetFront = 0;
+			$cabinetBack = $mountConfig == 1 ? 1 : null;
+		} else {
+			$cabinetBack = 0;
+			$cabinetFront = $mountConfig == 1 ? 1 : null;
+		}
+		
+		$updateArray = array(
+			'name' => $name,
+			'env_tree_id' => $cabinetID,
+			'RU' => $RU,
+			'cabinet_front' => $cabinetFront,
+			'cabinet_back' => $cabinetBack
+		);
+		
+		$qls->app_SQL->update('table_object', $updateArray, array('id' => array('=', $objectID)));
+	}
+}
+
+function deleteObjectDeletes(&$qls, $objectDeletes){
+	foreach($objectDeletes as $object) {
+		$objectID = $object['id'];
+		
+		$qls->app_SQL->delete('table_object', array('id' => array('=', $objectID)));
+		$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+		
+		$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
+		while($cable = $qls->app_SQL->fetch_assoc($query)) {
+			$attr = array();
+			if($cable['a_object_id'] == $objectID) {
+				array_push($attr, 'a');
+			}
+			if($cable['b_object_id'] == $objectID) {
+				array_push($attr, 'b');
+			}
+			
+			if($cable['a_id'] == 0 and $cable['b_id'] == 0) {
+				
+				// This is not a managed cable, so delete entry
+				$qls->app_SQL->delete('table_inventory', array('id' => array('=', $cable['id'])));
+				
+				// Mark far end as populated if it does not belong to the object being deleted
+				if(count($attr) == 1) {
+					$oppositeAttr = $attr[0] == 'a' ? 'b' : 'a';
+					$qls->app_SQL->insert('table_populated_port', array(
+							'object_id',
+							'object_face',
+							'object_depth',
+							'port_id'
+						), array(
+							$cable[$oppositeAttr.'_object_id'],
+							$cable[$oppositeAttr.'_object_face'],
+							$cable[$oppositeAttr.'_object_depth'],
+							$cable[$oppositeAttr.'_port_id']
+						)
+					);
+				}
+			} else {
+				
+				// This is a managed cable, so don't delete... just clear data
+				foreach($attr as $cableAttr) {
+					$qls->app_SQL->update('table_inventory', array(
+							$cableAttr.'_object_id' => 0,
+							$cableAttr.'_object_face' => 0,
+							$cableAttr.'_object_depth' => 0,
+							$cableAttr.'_port_id' => 0
+						), array('id' => array('=', $cable['id']))
+					);
+				}
+			}
+		}
+		$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $objectID)));
+	}
+}
+
+
+
+// Process Inserts
+function insertInsertAdds(&$qls, $insertAdds, &$importedInsertArray, $importedObjectArray, $importedCabinetArray, $importedTemplateArray){
+	foreach($insertAdds as $insert) {
+		$parent = $importedObjectArray[$insert['objectNameHash']];
+		$cabinet = $importedCabinetArray[$parent['cabinetNameHash']];
+		$cabinetID = $cabinet['id'];
+		$parentID = $parent['id'];
+		$template = $importedTemplateArray[$insert['templateNameHash']];
+		$templateID = $template['id'];
+		
+		$name = $insert['insertName'];
+		$parentFace = $insert['parent_face'];
+		$slotID = $insert['slotID'];
+		preg_match_all("/\d+|[a-b]+/", $slotID, $matches);
+		$depth = $matches[0][0];
+		$slotY = ord($matches[0][1]) - 97;
+		$slotX = $matches[0][2] - 1;
+		$RU = 0;
+		$cabinetFace = $parent['cabinetFace'];
+		if($cabinetFace == 'front') {
+			$cabinetFront = 0;
+			$cabinetBack = null;
+		} else {
+			$cabinetBack = 0;
+			$cabinetFront = null;
+		}
+		
+		$attributes = array(
+			'env_tree_id',
+			'name',
+			'template_id',
+			'RU',
+			'cabinet_front',
+			'cabinet_back',
+			'parent_id',
+			'parent_face',
+			'parent_depth',
+			'insertSlotX',
+			'insertSlotY'
+		);
+		
+		$values = array(
+			$cabinetID,
+			$name,
+			$templateID,
+			$RU,
+			$cabinetFront,
+			$cabinetBack,
+			$parentID,
+			$parentFace,
+			$depth,
+			$slotX,
+			$slotY
+		);
+		
+		$qls->app_SQL->insert('table_object', $attributes, $values);
+		
+		$importedInsertArray[$insert['insertNameHash']]['id'] = $qls->app_SQL->insert_id();
+	}
+}
+
+function updateInsertEdits(&$qls, $insertEdits, $importedObjectArray, $importedCabinetArray){
+	
+	foreach($insertEdits as $insert) {
+		$insertID = $insert['id'];
+		$parent = $importedObjectArray[$insert['objectNameHash']];
+		$parentID = $parent['id'];
+		$cabinet = $importedCabinetArray[$parent['cabinetNameHash']];
+		$cabinetID = $cabinet['id'];
+		$name = $insert['insertName'];
+		$parentFace = $insert['parent_face'];
+		$slotID = $insert['slotID'];
+		preg_match_all("/\d+|[a-b]+/", $slotID, $matches);
+		$depth = $matches[0][0];
+		$slotY = ord($matches[0][1]) - 97;
+		$slotX = $matches[0][2] - 1;
+		$RU = 0;
+		$cabinetFace = $parent['cabinetFace'];
+		if($cabinetFace == 'front') {
+			$cabinetFront = 0;
+			$cabinetBack = null;
+		} else {
+			$cabinetBack = 0;
+			$cabinetFront = null;
+		}
+		
+		$updateArray = array(
+			'env_tree_id' => $cabinetID,
+			'name' => $name,
+			'cabinet_front' => $cabinetFront,
+			'cabinet_back' => $cabinetBack,
+			'parent_id' => $parentID,
+			'parent_face' => $parentFace,
+			'parent_depth' => $depth,
+			'insertSlotX' => $slotX,
+			'insertSlotY' => $slotY
+		);
+		
+		$qls->app_SQL->update('table_object', $updateArray, array('id' => array('=', $insertID)));
+	}
+}
+
+function deleteInsertDeletes(&$qls, $insertDeletes){
+	foreach($insertDeletes as $insert) {
+		$insertID = $insert['id'];
+		
+		$qls->app_SQL->delete('table_object', array('id' => array('=', $insertID)));
+		$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
+		
+		$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $insertID), 'OR', 'b_object_id' => array('=', $insertID)));
+		while($cable = $qls->app_SQL->fetch_assoc($query)) {
+			$attr = array();
+			if($cable['a_object_id'] == $insertID) {
+				array_push($attr, 'a');
+			}
+			if($cable['b_object_id'] == $insertID) {
+				array_push($attr, 'b');
+			}
+			
+			if($cable['a_id'] == 0 and $cable['b_id'] == 0) {
+				
+				// This is not a managed cable, so delete entry
+				$qls->app_SQL->delete('table_inventory', array('id' => array('=', $cable['id'])));
+				
+				// Mark far end as populated if it does not belong to the object being deleted
+				if(count($attr) == 1) {
+					$oppositeAttr = $attr[0] == 'a' ? 'b' : 'a';
+					$qls->app_SQL->insert('table_populated_port', array(
+							'object_id',
+							'object_face',
+							'object_depth',
+							'port_id'
+						), array(
+							$cable[$oppositeAttr.'_object_id'],
+							$cable[$oppositeAttr.'_object_face'],
+							$cable[$oppositeAttr.'_object_depth'],
+							$cable[$oppositeAttr.'_port_id']
+						)
+					);
+				}
+			} else {
+				
+				// This is a managed cable, so don't delete... just clear data
+				foreach($attr as $cableAttr) {
+					$qls->app_SQL->update('table_inventory', array(
+							$cableAttr.'_object_id' => 0,
+							$cableAttr.'_object_face' => 0,
+							$cableAttr.'_object_depth' => 0,
+							$cableAttr.'_port_id' => 0
+						), array('id' => array('=', $cable['id']))
+					);
+				}
+			}
+		}
+		$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $insertID)));
+	}
+}
+
+
+
+// Process Categories
+function insertCategoryAdds(&$qls, $categoryAdds, &$importedCategoryArray) {
+	foreach($categoryAdds as $category) {
+		$categoryNameHash = $category['nameHash'];
+		$categoryName = $category['name'];
+		$categoryColor = $category['color'];
+		$defaultOption = $category['defaultOption'];
+		$categoryAttributes = array(
+			'name',
+			'color',
+			'defaultOption'
+		);
+		
+		$categoryValues = array(
+			$categoryName,
+			$categoryColor,
+			$defaultOption
+		);
+		
+		$qls->app_SQL->insert('table_object_category', $categoryAttributes, $categoryValues);
+		
+		$importedCategoryArray[$categoryNameHash]['id'] = $qls->app_SQL->insert_id();
+	}
+}
+
+function updateCategoryEdits(&$qls, $categoryEdits){
+	foreach($categoryEdits as $category) {
+		$categoryID = $category['id'];
+		$categoryName = $category['name'];
+		$categoryColor = $category['color'];
+		$categoryDefaultOption = $category['defaultOption'];
+		$categoryUpdateArray = array(
+			'name' => $categoryName,
+			'color' => $categoryColor,
+			'defaultOption' => $categoryDefaultOption
+		);
+		
+		$qls->app_SQL->update('table_object_category', $categoryUpdateArray, array('id' => array('=', $categoryID)));
+	}
+}
+
+function deleteCategoryDeletes(&$qls, $categoryDeletes){
+	foreach($categoryDeletes as $category) {
+		$categoryID = $category['id'];
+		$qls->app_SQL->delete('table_object_category', array('id' => array('=', $categoryID)));
+	}
+}
+
+
+
+// Process Templates
+function insertTemplateAdds(&$qls, $templateAdds, &$importedTemplateArray, $importedCategoryArray){
+	$mediaTypeArray = array();
+	$query = $qls->shared_SQL->select('*', 'table_mediaType');
+	while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$mediaTypeArray[$row['value']] = $row;
+	}
+	
+	$objectPortTypeArray = array();
+	$query = $qls->shared_SQL->select('*', 'table_object_portType');
+	while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$objectPortTypeArray[$row['value']] = $row;
+	}
+	
+	foreach($templateAdds as $template) {
+		$templateNameHash = $template['templateNameHash'];
+		$categoryNameHash = $template['categoryNameHash'];
+		$categoryID = $importedCategoryArray[$categoryNameHash]['id'];
+		$mountConfig = $template['templateMountConfig'];
+		if($mountConfig == 'n/a') {
+			$mountConfig = null;
+		} else if($mountConfig == '2-post') {
+			$mountConfig = 0;
+		} else if($mountConfig == '4-post') {
+			$mountConfig = 1;
+		}
+		
+		$templateName = $template['templateName'];
+		$templateCategoryID = $categoryID;
+		$templateType = ucfirst($template['templateType']);
+		$templateRUSize = $template['templateRUSize'];
+		$templateFunction = ucfirst($template['templateFunction']);
+		$templateMountConfig = $mountConfig;
+		$templateEnclLayoutX = $template['templateEncLayoutX'];
+		$templateEnclLayoutY = $template['templateEncLayoutY'];
+		$templateHUnits = $template['templateHUnits'];
+		$templateVUnits = $template['templateVUnits'];
+		$templatePartitionData = json_encode($template['templatePartitionData']);
+		$frontImage = $template['templateFrontImage'];
+		$rearImage = $template['templateFrontImage'];
+		
+		$templateAttributes = array(
+			'templateName',
+			'templateCategory_id',
+			'templateType',
+			'templateRUSize',
+			'templateFunction',
+			'templateMountConfig',
+			'templateEncLayoutX',
+			'templateEncLayoutY',
+			'templateHUnits',
+			'templateVUnits',
+			'templatePartitionData',
+			'frontImage',
+			'rearImage'
+		);
+		
+		$templateValues = array(
+			$templateName,
+			$templateCategoryID,
+			$templateType,
+			$templateRUSize,
+			$templateFunction,
+			$templateMountConfig,
+			$templateEnclLayoutX,
+			$templateEnclLayoutY,
+			$templateHUnits,
+			$templateVUnits,
+			$templatePartitionData,
+			$frontImage,
+			$rearImage
+		);
+		
+		$qls->app_SQL->insert('table_object_templates', $templateAttributes, $templateValues);
+		
+		$templateID = $importedTemplateArray[$templateNameHash]['id'] = $qls->app_SQL->insert_id();
+		
+		// Gather compatibility data
+		$compatibilityArray = array();
+		foreach($template['templatePartitionData'] as $face){
+			array_push($compatibilityArray, getCompatibilityInfo($face));
+		}
+		
+		foreach($compatibilityArray as $side=>$face) {
+			foreach($face as $compatibilityRecord) {
+				$portType = $compatibilityRecord['portType'];
+				$mediaType = $templateFunction == 'Endpoint' ? 8 : $compatibilityRecord['mediaType'];
+				$mediaCategory = $templateFunction == 'Endpoint' ? 5 : $mediaTypeArray[$mediaType]['category_id'];
+				$mediaCategoryType = $objectPortTypeArray[$portType]['category_type_id'];
+				$portTotal = array_key_exists('portLayoutX', $compatibilityRecord) ? $compatibilityRecord['portLayoutX'] * $compatibilityRecord['portLayoutY'] : 0;
+				
+				$compatibilityAttributes = array(
+					'template_id',
+					'side',
+					'depth',
+					'portLayoutX',
+					'portLayoutY',
+					'portTotal',
+					'encLayoutX',
+					'encLayoutY',
+					'templateType',
+					'partitionType',
+					'partitionFunction',
+					'portOrientation',
+					'portType',
+					'mediaType',
+					'mediaCategory',
+					'mediaCategoryType',
+					'direction',
+					'flex',
+					'hUnits',
+					'vUnits',
+					'portNameFormat'
+				);
+				
+				$compatibilityValues = array(
+					$templateID,
+					$side,
+					$compatibilityRecord['depth'],
+					$compatibilityRecord['portX'],
+					$compatibilityRecord['portY'],
+					$portTotal,
+					$compatibilityRecord['encX'],
+					$compatibilityRecord['encY'],
+					$templateType,
+					$compatibilityRecord['partitionType'],
+					$templateFunction,
+					$compatibilityRecord['portOrientation'],
+					$portType,
+					$mediaType,
+					$mediaCategory,
+					$mediaCategoryType,
+					$compatibilityRecord['direction'],
+					$compatibilityRecord['flex'],
+					$compatibilityRecord['hUnits'],
+					$compatibilityRecord['vUnits'],
+					json_encode($compatibilityRecord['portNameFormat']),
+				);
+				$qls->app_SQL->insert('table_object_compatibility', $compatibilityAttributes, $compatibilityValues);
+			}
+		}
+	}
+}
+
+function updateTemplateEdits(&$qls, $templateEdits, $importedCategoryArray){
+	foreach($templateEdits as $template) {
+		$templateID = $template['id'];
+		$templateName = $template['templateName'];
+		$categoryNameHash = $template['categoryNameHash'];
+		$templateCategoryID = $importedCategoryArray[$categoryNameHash]['id'];
+		
+		$templateUpdateArray = array(
+			'templateName' => $templateName,
+			'templateCategory_id' => $templateCategoryID
+		);
+		
+		$qls->app_SQL->update('table_object_templates', $templateUpdateArray, array('id' => array('=', $templateID)));
+	}
+}
+
+function deleteTemplateDeletes(&$qls, $templateDeletes){
+	foreach($templateDeletes as $template) {
+		$templateID = $template['id'];
+		$qls->app_SQL->delete('table_object_templates', array('id' => array('=', $templateID)));
+		$qls->app_SQL->delete('table_object_compatibility', array('template_id' => array('=', $templateID)));
+	}
+}
+
+
+
+// Process Connections
+function processConnections(&$qls, $importedConnectionArray){
+	$query = 'TRUNCATE TABLE `table_inventory`';
+	$qls->app_SQL->query($query);
+	$query = 'TRUNCATE TABLE `table_populated_port`';
+	$qls->app_SQL->query($query);
+	
+	foreach($importedConnectionArray as $connection) {
+		$cableEndID = $connection['cableEndID'];
+		$code39 = $connection['code39'];
+		$connector = $connection['connector'];
+		$objID = $connection['objID'];
+		$face = $connection['face'];
+		$depth = $connection['depth'];
+		$portID = $connection['portID'];
+		
+		$peerCableEndID = $connection['peerCableEndID'];
+		$peerCode39 = $connection['peerCode39'];
+		$peerConnector = $connection['peerConnector'];
+		$peerObjID = $connection['peerObjID'];
+		$peerFace = $connection['peerFace'];
+		$peerDepth = $connection['peerDepth'];
+		$peerPortID = $connection['peerPortID'];
+		
+		$mediaType = $connection['mediaType'];
+		$length = $connection['length'];
+
+		
+		$a_id = $cableEndID ? $cableEndID : 0;
+		$a_code39 = $cableEndID ? base_convert($cableEndID, 10, 36) : 0;
+		$a_connector = $connector ? $connector : 0;
+		$a_object_id = $objID ? $objID : 0;
+		$a_port_id = $portID ? $portID : 0;
+		$a_object_face = $face ? $face : 0;
+		$a_object_depth = $depth ? $depth : 0;
+		$b_id = $peerCableEndID ? $peerCableEndID : 0;
+		$b_code39 = $peerCableEndID ? base_convert($peerCableEndID, 10, 36) : 0;
+		$b_connector = $peerConnector ? $peerConnector : 0;
+		$b_object_id = $peerObjID ? $peerObjID : 0;
+		$b_port_id = $peerPortID ? $peerPortID : 0;
+		$b_object_face = $peerFace ? $peerFace : 0;
+		$b_object_depth = $peerDepth ? $peerDepth : 0;
+		$mediaType = $mediaType ? $mediaType : 0;
+		$length = $length ? $length : 0;
+		$editable = ($a_id and $a_code39 and $a_connector and $b_id and $b_code39 and $b_connector and $mediaType and $length) ? 1 : 0;
+		
+		if($a_id or $b_object_id) {
+			// Insert into inventory table
+			$tableAttributes = array(
+				'a_id',
+				'a_code39',
+				'a_connector',
+				'a_object_id',
+				'a_object_face',
+				'a_object_depth',
+				'a_port_id',
+				'b_id',
+				'b_code39',
+				'b_connector',
+				'b_object_id',
+				'b_object_face',
+				'b_object_depth',
+				'b_port_id',
+				'mediaType',
+				'length',
+				'editable'
+			);
+			
+			$tableValues = array(
+				$a_id,
+				$a_code39,
+				$a_connector,
+				$a_object_id,
+				$a_object_face,
+				$a_object_depth,
+				$a_port_id,
+				$b_id,
+				$b_code39,
+				$b_connector,
+				$b_object_id,
+				$b_object_face,
+				$b_object_depth,
+				$b_port_id,
+				$mediaType,
+				$length,
+				$editable
+			);
+			
+			$qls->app_SQL->insert('table_inventory', $tableAttributes, $tableValues);
+		} else {
+			// Insert into populated port table
+			$tableAttributes = array(
+				'object_id',
+				'object_face',
+				'object_depth',
+				'port_id',
+			);
+			
+			$tableValues = array(
+				$a_object_id,
+				$a_object_face,
+				$a_object_depth,
+				$a_port_id
+			);
+			
+			$qls->app_SQL->insert('table_populated_port', $tableAttributes, $tableValues);
+		}
+	}
+}
+
+
+
+
+// Misc.
+function populateImportedPathCabinetIDs(&$importedPathArray, $importedCabinetArray){
+	foreach($importedPathArray as &$path) {
+		foreach($path['cabinets'] as &$cabinet) {
+			$cabinet['id'] = $importedCabinetArray[$cabinet['nameHash']]['id'];
+		}
+	}
+	
+	return;
+}
+
+function populateImportedObjectCabinetIDs(&$importedObjectArray, $importedCabinetArray){
+	foreach($importedObjectArray as &$object) {
+		$object['env_tree_id'] = $importedCabinetArray[$object['cabinetNameHash']]['id'];
+	}
+	
+	return;
+}
+
+function getCompatibilityInfo($face, $dataArray=array(), &$depthCounter=0){
+	foreach($face as $element){
+		$partitionType = $element['partitionType'];
+		if($partitionType == 'Generic') {
+			if(isset($element['children'])){
+				$depthCounter++;
+				$dataArray = getCompatibilityInfo($element['children'], $dataArray, $depthCounter);
+			}
+			
+		} else if($partitionType == 'Connectable') {
+			$tempArray = array();
+			$tempArray['depth'] = $depthCounter;
+			$tempArray['portX'] = $element['portLayoutX'];
+			$tempArray['portY'] = $element['portLayoutY'];
+			$tempArray['partitionType'] = $element['partitionType'];
+			$tempArray['portOrientation'] = $element['portOrientation'];
+			$tempArray['portType'] = $element['portType'];
+			$tempArray['mediaType'] = $element['mediaType'];
+			$tempArray['direction'] = $element['direction'];
+			$tempArray['hUnits'] = $element['hunits'];
+			$tempArray['vUnits'] = $element['vunits'];
+			$tempArray['flex'] = $element['flex'];
+			$tempArray['portNameFormat'] = $element['portNameFormat'];
+			array_push($dataArray, $tempArray);
+		
+		} else if($partitionType == 'Enclosure') {
+				$tempArray = array();
+				$tempArray['depth'] = $depthCounter;
+				$tempArray['encX'] = $element['encLayoutX'];
+				$tempArray['encY'] = $element['encLayoutY'];
+				$tempArray['partitionType'] = $element['partitionType'];
+				$tempArray['direction'] = $element['direction'];
+				$tempArray['hUnits'] = $element['hunits'];
+				$tempArray['vUnits'] = $element['vunits'];
+				$tempArray['flex'] = $element['flex'];
+				array_push($dataArray, $tempArray);
+		}
+		$depthCounter++;
+	}
+	return $dataArray;
+}
+
+function retrievePartition($template, $depth, &$depthCounter=0){
+	
+	foreach($template as $item) {
+		if($depthCounter == $depth) {
+			return $item;
+		} else {
+			if(isset($item['children'])) {
+				$depthCounter++;
+				return retrievePartition($item['children'], $depth, $depthCounter);
+			}
+		}
+		$depthCounter++;
+	}
+	return false;
+}
+
+function buildCompatibilityArray(&$qls){
+	$compatibilityArray = array();
+	
+	$query = $qls->app_SQL->select('*', 'table_object_compatibility');
+	while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$compatibilityArray[$row['template_id']][$row['side']][$row['depth']] = $row;
+	}
+	
+	return $compatibilityArray;
+}
+
+function buildObjectArray(&$qls){
+	$objectArray = array();
+	
+	$query = $qls->app_SQL->select('*', 'table_object');
+	while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$objectArray[$row['id']] = $row;
+	}
+	
+	return $objectArray;
+}
+
+function buildTemplateArray(&$qls){
+	$templateArray = array();
+	$query = $qls->app_SQL->select('*', 'table_object_templates');
+	while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$templateArray[$row['id']] = $row;
+	}
+	
+	return $templateArray;
+}
+
+function buildEnvTreeArray(&$qls){
+	$envTreeArray = array();
+	$query = $qls->app_SQL->select('*', 'env_tree');
+	while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$envTreeArray[$row['id']] = $row;
+	}
+	
+	return $envTreeArray;
+}
+
+function buildPortArray(&$qls){
+	
+	$portArray = array();
+	
+	foreach($qls->App->objectArray as $objID => $obj) {
+		$objTemplateID = $obj['template_id'];
+		foreach($qls->App->compatibilityArray[$objTemplateID] as $face => $faceElement) {
+			foreach($faceElement as $depth => $compatibility) {
+				if($compatibility['partitionType'] == 'Connectable') {
+					$portLayoutX = $compatibility['portLayoutX'];
+					$portLayoutY = $compatibility['portLayoutY'];
+					$portTotal = $portLayoutX * $portLayoutY;
+					for($portID=0; $portID<$portTotal; $portID++) {
+						//$portNameString = $qls->App->getPortNameString($objID, $face, $depth, $portID, $objectArray, $compatibilityArray, $templateArray, $envTreeArray);
+						$portNameString = $qls->App->getPortNameString($objID, $face, $depth, $portID);
+						$portNameStringHash = md5(strtolower($portNameString));
+						$portArray[$portNameStringHash] = array(
+							'objID' => $objID,
+							'face' => $face,
+							'depth' => $depth,
+							'portID' => $portID,
+							'portName' => $portNameString
+						);
+					}
+				}
+			}
+		}
+	}
+	
+	return $portArray;
+}
+
+?>
