@@ -42,9 +42,9 @@ class qls {
 
         // Get current language constants
         require_once($current_language . '.lang.php');
-		require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/definitions.php';
+		require_once 'definitions.php';
 		
-		require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/vendor/autoload.php';
+		require_once 'vendor/autoload.php';
 		$this->gAuth = new \Google\Authenticator\GoogleAuthenticator();
 		$this->PHPmailer = new \PHPMailer\PHPMailer\PHPMailer;
 		

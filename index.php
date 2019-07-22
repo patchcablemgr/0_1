@@ -1,17 +1,17 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('user.php');
 ?>
 
-<?php require 'includes/header_start.php'; ?>
+<?php require './includes/header_start.php'; ?>
 <!-- DataTables -->
 <link href="assets/plugins/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css"/>
 <link href="assets/plugins/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css"/>
 <!--Morris Chart CSS -->
 <link rel="stylesheet" href="assets/plugins/morris/morris.css">
-<?php require 'includes/header_end.php'; ?>
+<?php require './includes/header_end.php'; ?>
 
 
 <!-- Page-Title -->
@@ -137,4 +137,4 @@ $qls->Security->check_auth_page('user.php');
 
 <!-- Page specific js -->
 <script src="assets/pages/jquery.dashboard.js"></script>
-<?php require 'includes/footer_end.php' ?>
+<?php require './includes/footer_end.php' ?>
