@@ -12,7 +12,7 @@ if (!defined('QUADODO_IN_SYSTEM')) {
 exit;
 }
 
-define('SYSTEM_INSTALLED', true);
+#define('SYSTEM_INSTALLED', false);
 $database_prefix = '';
 $database_type = 'MySQLi';
 $database_server_name = 'localhost';

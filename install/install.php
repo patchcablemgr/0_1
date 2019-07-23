@@ -68,7 +68,7 @@ else {
 					SQL Setup
 				</legend>
 				<table border="0">
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Table Prefix:
 						</td>
@@ -86,7 +86,7 @@ else {
 
 	if (extension_loaded('mysqli')) {
 ?>
-								<option value="MySQLi"<?php if ($_SESSION['database_type'] == 'MySQLi') { ?> selected="selected"<?php } ?>>MySQLi</option>
+								<option value="MySQLi" selected="selected">MySQLi</option>
 <?php
 	}
     else {
@@ -103,7 +103,7 @@ else {
 							Database Port:
 						</td>
 						<td>
-							<input type="text" name="database_port" maxlength="255" value="<?php echo $_SESSION['database_port']; ?>" />
+							<input type="text" name="database_port" maxlength="255" value="3306" />
 						</td>
 					</tr>
 					<tr>
@@ -147,7 +147,7 @@ else {
 					Cookie Information
 				</legend>
 				<table border="0">
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Cookie Prefix:
 						</td>
@@ -163,7 +163,7 @@ else {
 							<input type="text" name="cookie_path" maxlength="255" value="<?php if (isset($_SESSION['cookie_path'])) { echo $_SESSION['cookie_path']; } else { echo str_replace('install/install.php', '', $_SERVER['REQUEST_URI']); } ?>" />
 						</td>
 					</tr>
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Cookie Secure:
 						</td>
@@ -174,7 +174,7 @@ else {
 							</select>
 						</td>
 					</tr>
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Cookie Length:
 						</td>
@@ -192,7 +192,7 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-			<br />
+			<!--br />
 			<br />
 			<fieldset style="width: 50%;">
 				<legend>
@@ -207,50 +207,11 @@ else {
 							<input type="text" name="max_tries" maxlength="2" value="<?php if (isset($_SESSION['max_tries'])) { echo $_SESSION['max_tries']; } else { echo '5'; } ?>" />
 						</td>
 					</tr>
-<?php
-	if (!extension_loaded('gd2') && !extension_loaded('gd')) {
-	$prefix = (PHP_SHLIB_SUFFIX === 'dll') ? 'php_' : '';
-		if (@dl($prefix . 'gd.' . PHP_SHLIB_SUFFIX)) {
-?>
-					<tr>
-						<td>
-							Security Image:
-						</td>
-						<td>
-							<select name="security_image">
-								<option value="yes"<?php if ($_SESSION['security_image'] == 'yes') { ?> selected="selected"<?php } ?>>Yes</option>
-								<option value="no"<?php if ($_SESSION['security_image'] == 'no') { ?> selected="selected"<?php } ?>>No</option>
-							</select>
-						</td>
-					</tr>
-<?php
-		}
-		else {
-?>
 					<tr style="display: none;">
 						<td colspan="2">
 							<input type="hidden" name="security_image" value="no" />
 						</td>
 					</tr>
-<?php
-		}
-	}
-	else {
-?>
-					<tr>
-						<td>
-							Security Image:
-						</td>
-						<td>
-							<select name="security_image">
-								<option value="yes"<?php if ($_SESSION['security_image'] == 'yes') { ?> selected="selected"<?php } ?>>Yes</option>
-								<option value="no"<?php if ($_SESSION['security_image'] == 'no') { ?> selected="selected"<?php } ?>>No</option>
-							</select>
-						</td>
-					</tr>
-<?php
-	}
-?>
 					<tr>
 						<td>
 							Maximum Upload Size:
@@ -336,7 +297,7 @@ else {
 							Login Redirect URL:
 						</td>
 						<td>
-							<input type="text" name="login_redirect" maxlength="255" value="<?php if (isset($_SESSION['login_redirect'])) { echo $_SESSION['login_redirect']; } ?>" />
+							<input type="text" name="login_redirect" maxlength="255" value="<?php if (isset($_SESSION['login_redirect'])) { echo $_SESSION['login_redirect']; } else { echo 'index.php'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -344,7 +305,7 @@ else {
 							Logout Redirect URL:
 						</td>
 						<td>
-							<input type="text" name="logout_redirect" maxlength="255" value="<?php if (isset($_SESSION['logout_redirect'])) { echo $_SESSION['logout_redirect']; } ?>" />
+							<input type="text" name="logout_redirect" maxlength="255" value="<?php if (isset($_SESSION['logout_redirect'])) { echo $_SESSION['logout_redirect']; } else { echo 'index.php'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -352,7 +313,7 @@ else {
 							Default Group Name:
 						</td>
 						<td>
-							<input type="text" name="default_group_name" maxlength="255" value="<?php if (isset($_SESSION['default_group_name'])) { echo $_SESSION['default_group_name']; } ?>" />
+							<input type="text" name="default_group_name" maxlength="255" value="<?php if (isset($_SESSION['default_group_name'])) { echo $_SESSION['default_group_name']; } else { echo 'Default'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -360,7 +321,7 @@ else {
 							Mask Name for Default Group:
 						</td>
 						<td>
-							<input type="text" name="default_mask_name" maxlength="255" value="<?php if (isset($_SESSION['default_mask_name'])) { echo $_SESSION['default_mask_name']; } ?>" />
+							<input type="text" name="default_mask_name" maxlength="255" value="<?php if (isset($_SESSION['default_mask_name'])) { echo $_SESSION['default_mask_name']; } else { echo 'Default'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -392,7 +353,7 @@ else {
 						</td>
 					</tr>
 				</table>
-			</fieldset>
+			</fieldset-->
 			<br />
 			<br />
 			<fieldset style="width: 50%;">
