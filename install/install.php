@@ -73,7 +73,23 @@ else {
 							Table Prefix:
 						</td>
 						<td>
-							<input type="text" name="database_prefix" maxlength="254" value="<?php if (isset($_SESSION['database_prefix'])) { echo $_SESSION['database_prefix']; } else { echo 'qls3_'; } ?>" />
+							<input type="text" name="database_prefix" maxlength="254" value="<?php if (isset($_SESSION['database_prefix'])) { echo $_SESSION['database_prefix']; } else { echo 'qls_'; } ?>" />
+						</td>
+					</tr>
+					<tr style="display: none;">
+						<td>
+							App Table Prefix:
+						</td>
+						<td>
+							<input type="text" name="database_prefix_app" maxlength="254" value="<?php if (isset($_SESSION['database_prefix_app'])) { echo $_SESSION['database_prefix_app']; } else { echo 'app_'; } ?>" />
+						</td>
+					</tr>
+					<tr style="display: none;">
+						<td>
+							Shared Table Prefix:
+						</td>
+						<td>
+							<input type="text" name="database_prefix_shared" maxlength="254" value="<?php if (isset($_SESSION['database_prefix_shared'])) { echo $_SESSION['database_prefix_shared']; } else { echo 'shared_'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -116,6 +132,14 @@ else {
 					</tr>
 					<tr>
 						<td>
+							Database Name:
+						</td>
+						<td>
+							<input type="text" name="database_name" maxlength="512" value="<?php echo $_SESSION['database_name']; ?>" />
+						</td>
+					</tr>
+					<tr>
+						<td>
 							Database Username:
 						</td>
 						<td>
@@ -130,14 +154,6 @@ else {
 							<input type="text" name="database_password" maxlength="512" value="<?php echo $_SESSION['database_password']; ?>" />
 						</td>
 					</tr>
-					<tr>
-						<td>
-							Database Name:
-						</td>
-						<td>
-							<input type="text" name="database_name" maxlength="512" value="<?php echo $_SESSION['database_name']; ?>" />
-						</td>
-					</tr>
 				</table>
 			</fieldset>
 			<br />
@@ -147,7 +163,7 @@ else {
 					Cookie Information
 				</legend>
 				<table border="0">
-					<tr style="display: none;">
+					<tr style="">
 						<td>
 							Cookie Prefix:
 						</td>
@@ -163,7 +179,7 @@ else {
 							<input type="text" name="cookie_path" maxlength="255" value="<?php if (isset($_SESSION['cookie_path'])) { echo $_SESSION['cookie_path']; } else { echo str_replace('install/install.php', '', $_SERVER['REQUEST_URI']); } ?>" />
 						</td>
 					</tr>
-					<tr style="display: none;">
+					<tr style="">
 						<td>
 							Cookie Secure:
 						</td>
@@ -192,9 +208,9 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-			<!--br />
 			<br />
-			<fieldset style="width: 50%;">
+			<br />
+			<fieldset style="display: none; width: 50%;">
 				<legend>
 					Security Information
 				</legend>
@@ -353,7 +369,7 @@ else {
 						</td>
 					</tr>
 				</table>
-			</fieldset-->
+			</fieldset>
 			<br />
 			<br />
 			<fieldset style="width: 50%;">
@@ -361,12 +377,28 @@ else {
 					Admin User Information
 				</legend>
 				<table border="0">
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Username:
 						</td>
 						<td>
 							<input type="text" name="username" maxlength="255" value="<?php if (isset($_SESSION['username'])) { echo $_SESSION['username']; } ?>" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Email Address:
+						</td>
+						<td>
+							<input type="text" name="email" maxlength="100" value="<?php if (isset($_SESSION['email'])) { echo $_SESSION['email']; } ?>" />
+						</td>
+					</tr>
+					<tr style="display: none;">
+						<td>
+							Confirm:
+						</td>
+						<td>
+							<input type="text" name="email_confirm" maxlength="100" value="<?php if (isset($_SESSION['email_confirm'])) { echo $_SESSION['email_confirm']; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -383,22 +415,6 @@ else {
 						</td>
 						<td>
 							<input type="text" name="password_confirm" maxlength="255" value="<?php if (isset($_SESSION['password_confirm'])) { echo $_SESSION['password_confirm']; } ?>" />
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Email Address:
-						</td>
-						<td>
-							<input type="text" name="email" maxlength="100" value="<?php if (isset($_SESSION['email'])) { echo $_SESSION['email']; } ?>" />
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Confirm:
-						</td>
-						<td>
-							<input type="text" name="email_confirm" maxlength="100" value="<?php if (isset($_SESSION['email_confirm'])) { echo $_SESSION['email_confirm']; } ?>" />
 						</td>
 					</tr>
 				</table>

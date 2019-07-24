@@ -249,6 +249,8 @@ var $install_error = 'There was an error with the installation! This is most lik
 
         // Check all the input data
         $database_prefix = (preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]{0,254}$/", $_POST['database_prefix']) || $_POST['database_prefix'] == '') ? $this->make_safe($_POST['database_prefix']) : false;
+		$database_prefix_app = (preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]{0,254}$/", $_POST['database_prefix_app']) || $_POST['database_prefix_app'] == '') ? $this->make_safe($_POST['database_prefix_app']) : false;
+		$database_prefix_shared = (preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]{0,254}$/", $_POST['database_prefix_shared']) || $_POST['database_prefix_shared'] == '') ? $this->make_safe($_POST['database_prefix_shared']) : false;
         $database_type = (isset($_POST['database_type'])) ? $_POST['database_type'] : false;
         $database_server_name = (isset($_POST['database_server_name'])) ? $_POST['database_server_name'] : false;
         $database_username = (isset($_POST['database_username'])) ? $_POST['database_username'] : false;
@@ -277,15 +279,23 @@ var $install_error = 'There was an error with the installation! This is most lik
         $redirect_type = ($_POST['redirect_type'] == '1' || $_POST['redirect_type'] == '2' || $_POST['redirect_type'] == '3') ? $this->make_safe($_POST['redirect_type']) : '1';
         $online_users_format = (isset($_POST['online_users_format']) && strlen($_POST['online_users_format']) <= 255) ? $this->make_safe($_POST['online_users_format'], false) : '{username}';
         $online_users_separator = (isset($_POST['online_users_separator']) && strlen($_POST['online_users_separator']) <= 255) ? $this->make_safe($_POST['online_users_separator'], false) : ',';
-        $username = (isset($_POST['username']) && preg_match($_POST['user_regex'], $_POST['username']) && strlen($_POST['username']) <= $max_username && strlen($_POST['username']) >= $min_username) ? $this->make_safe($_POST['username']) : false;
+        $email = (isset($_POST['email']) && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) && strlen($_POST['email']) <= 255) ? $_POST['email'] : false;
+        $email_confirm = $email;
+		$username = $email;
         $password = (isset($_POST['password']) && strlen($_POST['password']) >= $min_password && strlen($_POST['password']) <= $max_password) ? $this->make_safe($_POST['password']) : false;
         $password_confirm = (isset($_POST['password_confirm']) && $password == $this->make_safe($_POST['password_confirm'])) ? true : false;
-        $email = (isset($_POST['email']) && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) && strlen($_POST['email']) <= 255) ? $_POST['email'] : false;
-        $email_confirm = (isset($_POST['email_confirm']) && $email == $_POST['email_confirm']) ? true : false;
 
 		// Did they fail? If so add to the $errors variable
 		if ($database_prefix === false) {
-		    $errors[] = 'The database prefix you entered was not a valid format.';
+		    $errors[] = 'The "QLS" database table prefix you entered was not a valid format.';
+		}
+		
+		if ($database_prefix_app === false) {
+		    $errors[] = 'The "App" database table prefix you entered was not a valid format.';
+		}
+		
+		if ($database_prefix_shared === false) {
+		    $errors[] = 'The "Shared" database table prefix you entered was not a valid format.';
 		}
 
 		if ($cookie_prefix === false) {
@@ -364,6 +374,8 @@ var $install_error = 'There was an error with the installation! This is most lik
 		if ($errors !== null) {
             // Make sure the values are saved
             $_SESSION['database_prefix'] = stripslashes($database_prefix);
+			$_SESSION['database_prefix_app'] = stripslashes($database_prefix_app);
+			$_SESSION['database_prefix_shared'] = stripslashes($database_prefix_shared);
             $_SESSION['cookie_prefix'] = stripslashes($cookie_prefix);
             $_SESSION['max_username'] = stripslashes($max_username);
             $_SESSION['min_username'] = stripslashes($min_username);
@@ -416,7 +428,12 @@ var $install_error = 'There was an error with the installation! This is most lik
 
             // Test the connection and create necessary tables
             $this->test->test_connection();
-            $this->test->create_system_tables($database_prefix);
+			$table_name_array = array(
+				array('{database_prefix_qls}', $database_prefix),
+				array('{database_prefix_app}', $database_prefix_app),
+				array('{database_prefix_shared}', $database_prefix_shared)
+			);
+            $this->test->create_system_tables($table_name_array);
 
             // Code generation
             $c_hash[] = md5($username . $password . md5($email));
@@ -444,34 +461,154 @@ var $install_error = 'There was an error with the installation! This is most lik
             $hash[] = sha1($hash[0] . $hash[1] . $hash[2] . $hash[3]) . md5($hash[4] . $hash[4]) . sha1($user_code);
             $final_hash = sha1($hash[0] . $hash[1] . $hash[2] . $hash[3] . $hash[4] . $hash[5] . md5($user_code));
 
-			// The permission mask for an Administrator
-			if (!$this->test->query("INSERT INTO `{$database_prefix}masks` (`name`,`auth_admin`,`auth_admin_phpinfo`,`auth_admin_configuration`,`auth_admin_add_user`,`auth_admin_user_list`,`auth_admin_remove_user`,`auth_admin_edit_user`,`auth_admin_add_page`,`auth_admin_page_list`,`auth_admin_remove_page`,`auth_admin_edit_page`,`auth_admin_page_stats`,`auth_admin_add_mask`,`auth_admin_list_masks`,`auth_admin_remove_mask`,`auth_admin_edit_mask`,`auth_admin_add_group`,`auth_admin_list_groups`,`auth_admin_remove_group`,`auth_admin_edit_group`, `auth_admin_activate_account`,`auth_admin_send_invite`,`auth_356a192b7913b04c54574d18c28d46e6395428ab`) VALUES('Admin',1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)")) {
-		    	$this->test->output_error();
+			$masks = array(
+				"'Admin',1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+				"'{$default_mask_name}',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+				"'Administrator',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1",
+				"'Operator',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1",
+				"'User',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1"
+			);
+			
+			// The permission masks
+			foreach($masks as $masks_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}masks` (`name`,`auth_admin`,`auth_admin_phpinfo`,`auth_admin_configuration`,`auth_admin_add_user`,`auth_admin_user_list`,`auth_admin_remove_user`,`auth_admin_edit_user`,`auth_admin_add_page`,`auth_admin_page_list`,`auth_admin_remove_page`,`auth_admin_edit_page`,`auth_admin_page_stats`,`auth_admin_add_mask`,`auth_admin_list_masks`,`auth_admin_remove_mask`,`auth_admin_edit_mask`,`auth_admin_add_group`,`auth_admin_list_groups`,`auth_admin_remove_group`,`auth_admin_edit_group`, `auth_admin_activate_account`,`auth_admin_send_invite`,`auth_9e6a55b6b4563e652a23be9d623ca5055c356940`, `auth_b3f0c7f6bb763af1be91d9e74eabfeb199dc1f1f`, `auth_91032ad7bbcb6cf72875e8e8207dcfba80173f7c`, `auth_472b07b9fcf2c2451e8781e944bf5f77cd8457c8`) VALUES({$masks_item})")) {
+					$this->test->output_error();
+				}
 			}
 
-			// The Default mask for new users
-			if (!$this->test->query("INSERT INTO `{$database_prefix}masks` (`name`,`auth_admin`,`auth_admin_phpinfo`,`auth_admin_configuration`,`auth_admin_add_user`,`auth_admin_user_list`,`auth_admin_remove_user`,`auth_admin_edit_user`,`auth_admin_add_page`,`auth_admin_page_list`,`auth_admin_remove_page`,`auth_admin_edit_page`,`auth_admin_page_stats`,`auth_admin_add_mask`,`auth_admin_list_masks`,`auth_admin_remove_mask`,`auth_admin_edit_mask`,`auth_admin_add_group`,`auth_admin_list_groups`,`auth_admin_remove_group`,`auth_admin_edit_group`, `auth_admin_activate_account`,`auth_admin_send_invite`,`auth_356a192b7913b04c54574d18c28d46e6395428ab`) VALUES('{$default_mask_name}',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1)")) {
-		    	$this->test->output_error();
+			$groups = array(
+				"'Admin',1,0,1",
+				"'{$default_group_name}',2,1,1",
+				"'Administrator',3,1,1",
+				"'Operator',4,1,1",
+				"'User',5,1,1"
+			);
+			
+			// The groups
+			foreach($groups as $groups_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}groups` (`name`,`mask_id`,`is_public`,`leader`) VALUES({$groups_item})")) {
+					$this->test->output_error();
+				}
 			}
 
-			// The group for administrators
-			if (!$this->test->query("INSERT INTO `{$database_prefix}groups` (`name`,`mask_id`,`is_public`,`leader`) VALUES('Admin',1,0,1)")) {
-			    $this->test->output_error();
-			}
-
-			// The group for new users
-			if (!$this->test->query("INSERT INTO `{$database_prefix}groups` (`name`,`mask_id`,`is_public`,`leader`) VALUES('{$default_group_name}',2,1,1)")) {
-			    $this->test->output_error();
-			}
-
-			// The default member page
-			if (!$this->test->query("INSERT INTO `{$database_prefix}pages` (`name`,`hits`) VALUES('members.php',0)")) {
-			    $this->test->output_error();
+			$pages = array(
+				"'admin.php',0",
+				"'administrator.php',0",
+				"'operator.php',0",
+				"'user.php',0"
+			);
+			
+			// The pages
+			foreach($pages as $pages_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}pages` (`name`,`hits`) VALUES({$pages_item})")) {
+					$this->test->output_error();
+				}
 			}
 
 			// Add administrator
 			if (!$this->test->query("INSERT INTO `{$database_prefix}users` (`username`,`password`,`code`,`active`,`last_login`,`last_session`,`blocked`,`tries`,`last_try`,`email`,`mask_id`,`group_id`) VALUES('{$username}','{$final_hash}','{$user_code}','yes','0','0','no','0','0','{$email}',1,1)")) {
 			    $this->test->output_error();
+			}
+			
+			$env_tree = array(
+				"'Location', '#', 'location', 42, NULL",
+				"'Sub-Location', '1', 'location', 42, NULL",
+				"'Pod', '2', 'pod', 42, NULL",
+				"'Cab1', '3', 'cabinet', 42, NULL",
+				"'Cab2', '3', 'cabinet', 42, NULL",
+				"'Cab3', '3', 'cabinet', 42, NULL"
+			);
+			
+			// Add environment tree data
+			foreach($env_tree as $env_tree_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_app}env_tree` (`name`, `parent`, `type`, `size`, `floorplan_img`) VALUES({$env_tree_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$cabinet_adj = array(
+				"4,5,0",
+				"5,6,0"
+			);
+			
+			// Add cabinet adjacency
+			foreach($cabinet_adj as $cabinet_adj_item) {
+			if (!$this->test->query("INSERT INTO `{$database_prefix_app}cabinet_adj` (`left_cabinet_id`, `right_cabinet_id`, `entrance_ru`) VALUES({$cabinet_adj_item})")) {
+			    $this->test->output_error();
+			}
+			
+			$object_category = array(
+				"'Switch', '#d581d6', 0",
+				"'Router', '#d6819f', 0",
+				"'Server', '#d68d8d', 0",
+				"'Module', '#e59881', 0",
+				"'Linecard', '#81d6a1', 0",
+				"'Patch_Panel', '#a9a9a9', 1",
+				"'Cable_Mgmt', '#d3d3d3', 0",
+				"'Enclosure', '#95d681', 0",
+				"'MM_Fiber_Insert', '#81d6ce', 0",
+				"'SM_Fiber_Insert', '#d6d678', 0"
+			);
+			
+			// Add object category
+			foreach($object_category as $object_category_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_app}object_category` (`name`, `color`, `defaultOption`) VALUES({$object_category_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$object_compatibility = array(
+				"11, 0, 0, 24, 1, 24, NULL, NULL, 'Standard', 'Connectable', 'Passive', 1, 1, 1, '1', 1, 'column', '0', 10, 2, '[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"series\",\"value\":[\"a\",\"b\",\"c\"],\"count\":3,\"order\":1}]'",
+				"12, 0, 0, 24, 2, 48, NULL, NULL, 'Standard', 'Connectable', 'Passive', 1, 1, 1, '1', 1, 'column', '0', 10, 4, '[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"static\",\"value\":\"-\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":48,\"order\":1},{\"type\":\"series\",\"value\":[\"a\",\"b\",\"c\"],\"count\":3,\"order\":2}]'",
+				"4, 0, 0, 24, 2, 48, NULL, NULL, 'Standard', 'Connectable', 'Passive', 1, 1, 1, '1', 1, 'column', '0', 10, 4, '[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"5, 0, 0, 1, 6, 6, NULL, NULL, 'Insert', 'Connectable', 'Passive', 2, 2, 6, '2', 2, 'row', '0', 10, 8, '[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"6, 0, 0, 1, 6, 6, NULL, NULL, 'Insert', 'Connectable', 'Passive', 2, 2, 5, '4', 2, 'row', '0', 10, 8, '[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"7, 0, 0, 4, 1, 4, NULL, NULL, 'Insert', 'Connectable', 'Endpoint', 1, 4, 8, '5', 4, 'row', '0', 2, 2, '[{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"8, 0, 1, 6, 2, 12, NULL, NULL, 'Standard', 'Connectable', 'Endpoint', 2, 1, 8, '5', 1, 'column', '0.2', 2, 2, '[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"8, 0, 2, 6, 2, 12, NULL, NULL, 'Standard', 'Connectable', 'Endpoint', 2, 1, 8, '5', 1, 'column', '0.2', 2, 2, '[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"13\",\"count\":0,\"order\":1}]'",
+				"8, 0, 3, 6, 2, 12, NULL, NULL, 'Standard', 'Connectable', 'Endpoint', 2, 1, 8, '5', 1, 'column', '0.2', 2, 2, '[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"25\",\"count\":0,\"order\":1}]'",
+				"8, 0, 4, 6, 2, 12, NULL, NULL, 'Standard', 'Connectable', 'Endpoint', 2, 1, 8, '5', 1, 'column', '0.2', 2, 2, '[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"37\",\"count\":0,\"order\":1}]'",
+				"8, 0, 5, NULL, NULL, 0, 1, 1, 'Standard', 'Enclosure', 'Endpoint', NULL, NULL, 8, '5', NULL, 'column', '0.2', 2, 2, NULL",
+				"8, 1, 2, 1, 1, 1, NULL, NULL, 'Standard', 'Connectable', 'Endpoint', 1, 1, 8, '5', 1, 'row', '0.5', 1, 1, '[{\"type\":\"static\",\"value\":\"Con\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"8, 1, 3, 1, 1, 1, NULL, NULL, 'Standard', 'Connectable', 'Endpoint', 1, 1, 8, '5', 1, 'row', '0.5', 1, 1, '[{\"type\":\"static\",\"value\":\"Mgmt\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"9, 0, 0, NULL, NULL, 0, 12, 1, 'Standard', 'Enclosure', 'Passive', NULL, NULL, NULL, NULL, NULL, 'column', '0', 10, 8, NULL",
+				"1, 0, 0, NULL, NULL, NULL, NULL, NULL, 'walljack', 'Connectable', 'Passive', NULL, 1, 8, '1', 1, NULL, NULL, NULL, NULL, NULL",
+				"2, 0, 0, 1, 1, 1, NULL, NULL, 'wap', 'Connectable', 'Endpoint', NULL, 1, 8, '1', 1, NULL, NULL, NULL, NULL, '[{\"type\":\"static\",\"value\":\"NIC\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'",
+				"3, 0, 0, 1, 1, 1, NULL, NULL, 'device', 'Connectable', 'Endpoint', NULL, 1, 8, '1', 1, NULL, NULL, NULL, NULL, '[{\"type\":\"static\",\"value\":\"NIC\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'"
+			);
+			
+			// Add object compatibility
+			foreach($object_compatibility as $object_compatibility_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_app}object_compatibility` (`template_id`,`side`,`depth`,`portLayoutX`,`portLayoutY`,`portTotal`,`encLayoutX`,`encLayoutY`,`templateType`,`partitionType`,`partitionFunction`,`portOrientation`,`portType`,`mediaType`,`mediaCategory`,`mediaCategoryType`,`direction`,`flex`,`hUnits`,`vUnits`,`portNameFormat`) VALUES({$object_compatibility_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$object_templates = array(
+				"('Walljack', NULL, 'walljack', NULL, 'Passive', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL",
+				"('WAP', NULL, 'wap', NULL, 'Endpoint', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL",
+				"('Device', NULL, 'device', NULL, 'Endpoint', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL",
+				"('48p_RJ45_Cat6', 6, 'Standard', 2, 'Passive', 0, NULL, NULL, NULL, NULL, '[[{\"portLayoutX\":\"24\",\"portLayoutY\":\"2\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":4,\"hunits\":10,\"flex\":\"0\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]}]]', '105137c8ec469aecd387cef6ef807dc0.jpg', NULL",
+				"('6p_LC_OM4', 9, 'Insert', 4, 'Passive', NULL, 12, 1, 10, 8, '[[{\"portLayoutX\":\"1\",\"portLayoutY\":\"6\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":\"2\",\"portType\":\"2\",\"mediaType\":\"6\",\"direction\":\"row\",\"vunits\":8,\"hunits\":10,\"flex\":\"0\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]}]]', 'f782af8c83a096a188ba333d0039aaf7.jpg', NULL",
+				"('6p_LC_OS1', 10, 'Insert', 4, 'Passive', NULL, 12, 1, 10, 8, '[[{\"portLayoutX\":\"1\",\"portLayoutY\":\"6\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":\"2\",\"portType\":\"2\",\"mediaType\":\"5\",\"direction\":\"row\",\"vunits\":8,\"hunits\":10,\"flex\":\"0\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]}]]', '86257b172c9a706aa704abfdad4de53c.jpg', NULL",
+				"('C3850-NM-4-10G', 4, 'Insert', 1, 'Endpoint', NULL, 1, 1, 2, 2, '[[{\"portLayoutX\":\"4\",\"portLayoutY\":\"1\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":1,\"portType\":\"4\",\"mediaType\":1,\"direction\":\"row\",\"vunits\":2,\"hunits\":2,\"flex\":\"0\",\"portNameFormat\":[{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]}]]', '7ae4f0a4040a7fe8f3a823b167952f26.jpg', NULL",
+				"('C3850_48p', 1, 'Standard', 1, 'Endpoint', 1, NULL, NULL, NULL, NULL, '[[{\"portLayoutX\":0,\"portLayoutY\":0,\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Generic\",\"portPrefix\":\"Port\",\"portNumber\":1,\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"row\",\"vunits\":2,\"hunits\":10,\"flex\":\"0\",\"children\":[{\"portLayoutX\":\"6\",\"portLayoutY\":\"2\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":\"2\",\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":2,\"flex\":\"0.2\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]},{\"portLayoutX\":\"6\",\"portLayoutY\":\"2\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":\"2\",\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":2,\"flex\":\"0.2\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"13\",\"count\":0,\"order\":1}]},{\"portLayoutX\":\"6\",\"portLayoutY\":\"2\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":\"2\",\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":2,\"flex\":\"0.2\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"25\",\"count\":0,\"order\":1}]},{\"portLayoutX\":\"6\",\"portLayoutY\":\"2\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":\"2\",\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":2,\"flex\":\"0.2\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"G1/0/\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"37\",\"count\":0,\"order\":1}]},{\"portLayoutX\":0,\"portLayoutY\":0,\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Enclosure\",\"portPrefix\":\"Port\",\"portNumber\":1,\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":2,\"flex\":\"0.2\"}]}],[{\"portLayoutX\":0,\"portLayoutY\":0,\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Generic\",\"portPrefix\":\"Port\",\"portNumber\":1,\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"row\",\"vunits\":2,\"hunits\":10,\"flex\":\"0\",\"children\":[{\"portLayoutX\":0,\"portLayoutY\":0,\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Generic\",\"portPrefix\":\"Port\",\"portNumber\":1,\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":1,\"flex\":\"0.1\",\"children\":[{\"portLayoutX\":\"1\",\"portLayoutY\":\"1\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"row\",\"vunits\":1,\"hunits\":1,\"flex\":\"0.5\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Con\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]},{\"portLayoutX\":\"1\",\"portLayoutY\":\"1\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"row\",\"vunits\":1,\"hunits\":1,\"flex\":\"0.5\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Mgmt\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]}]}]}]]', 'ab97c853ba94a8ebb9d950f6867601de.jpg', '93c68d70070b0ccb5645bd6bfd53c89b.jpg'",
+				"('Fiber_Enclosure', 8, 'Standard', 4, 'Passive', 0, NULL, NULL, NULL, NULL, '[[{\"portLayoutX\":0,\"portLayoutY\":0,\"encLayoutX\":\"12\",\"encLayoutY\":\"1\",\"partitionType\":\"Enclosure\",\"portPrefix\":\"Port\",\"portNumber\":1,\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":8,\"hunits\":10,\"flex\":\"0\"}]]', NULL, NULL",
+				"('1RU_Cable_Mgmt', 7, 'Standard', 1, 'Passive', 0, NULL, NULL, NULL, NULL, '[[{\"portLayoutX\":0,\"portLayoutY\":0,\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Generic\",\"portPrefix\":\"Port\",\"portNumber\":1,\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":10,\"flex\":\"0\"}]]', 'c4e7eb2d860f17b94042199509ca4b28.jpg', NULL",
+				"('24P_RJ45_Cat5E', 6, 'Standard', 1, 'Passive', 0, NULL, NULL, NULL, NULL, '[[{\"portLayoutX\":\"24\",\"portLayoutY\":\"1\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":2,\"hunits\":10,\"flex\":\"0\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"series\",\"value\":[\"a\",\"b\",\"c\"],\"count\":3,\"order\":1}]}]]', '47618b55d38fcaf9ad73be0ead312d68.jpg', NULL",
+				"('48p_RJ45_Cat5e', 6, 'Standard', 2, 'Passive', 0, NULL, NULL, NULL, NULL, '[[{\"portLayoutX\":\"24\",\"portLayoutY\":\"2\",\"encLayoutX\":1,\"encLayoutY\":1,\"partitionType\":\"Connectable\",\"portOrientation\":1,\"portType\":1,\"mediaType\":1,\"direction\":\"column\",\"vunits\":4,\"hunits\":10,\"flex\":\"0\",\"portNameFormat\":[{\"type\":\"static\",\"value\":\"Port\",\"count\":0,\"order\":0},{\"type\":\"static\",\"value\":\"-\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":48,\"order\":1},{\"type\":\"series\",\"value\":[\"a\",\"b\",\"c\"],\"count\":3,\"order\":2}]}]]', '0e1b15f076088230505a14c5a6e010c0.jpg', NULL",
+			);
+			
+			// Add object templates
+			foreach($object_templates as $object_templates_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_app}object_templates` (`templateName`, `templateCategory_id`, `templateType`, `templateRUSize`, `templateFunction`, `templateMountConfig`, `templateEncLayoutX`, `templateEncLayoutY`, `templateHUnits`, `templateVUnits`, `templatePartitionData`, `frontImage`, `rearImage`) VALUES({$object_templates_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			// Add organization data
+			if (!$this->test->query("INSERT INTO `{$database_prefix_app}organization_data` (`name`) VALUES('Acme, Inc.')")) {
+				$this->test->output_error();
 			}
 
             // Configuration information to be inserted
@@ -518,6 +655,8 @@ var $install_error = 'There was an error with the installation! This is most lik
 
             // We don't need these anymore
             unset($_SESSION['database_prefix'],
+				$_SESSION['database_prefix_app'],
+				$_SESSION['database_prefix_shared'],
                 $_SESSION['cookie_prefix'],
                 $_SESSION['max_username'],
                 $_SESSION['min_username'],
@@ -566,6 +705,8 @@ exit;
 
 define('SYSTEM_INSTALLED', true);
 \$database_prefix = '{$database_prefix}';
+\$database_prefix_app = '{$database_prefix_app}';
+\$database_prefix_shared = '{$database_prefix_shared}';
 \$database_type = '{$database_type}';
 \$database_server_name = '{$database_server_name}';
 \$database_username = '{$database_username}';

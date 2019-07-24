@@ -234,7 +234,7 @@ var $sql_class;
 	 * @param string $database_prefix - The prefix entered by the user
 	 * @return void
 	 */
-	function create_system_tables($database_prefix) {
+	function create_system_tables($table_prefix_array) {
         // Fetch SQL information
         $sql = $this->read_sql_file('mysql.sql');
 
@@ -247,7 +247,9 @@ var $sql_class;
 
 		// Loop through all the SQL
 		for ($x = 0; $x < $query_count; $x++) {
-		    $sql[$x] = str_replace('{database_prefix}', $database_prefix, $sql[$x]);
+			foreach($table_prefix_array as $prefix) {
+				$sql[$x] = str_replace($prefix[0], $prefix[1], $sql[$x]);
+			}
 
 			if (!empty($sql[$x])) {
 			    $this->connection->query($sql[$x]) or die($this->connection->error);

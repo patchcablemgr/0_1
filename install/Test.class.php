@@ -188,8 +188,8 @@ var $go_back = '<br /><br />This may mean your permissions are not correct. Plea
 	    return $this->current_layer->read_sql_file($file_name);
 	}
 
-	function create_system_tables($database_prefix) {
-	    $this->current_layer->create_system_tables($database_prefix);
+	function create_system_tables($table_prefix_array) {
+	    $this->current_layer->create_system_tables($table_prefix_array);
 	}
 
 	function output_error() {
