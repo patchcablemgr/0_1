@@ -252,6 +252,7 @@ var $sql_class;
 			}
 
 			if (!empty($sql[$x])) {
+				error_log($sql[$x]);
 			    $this->connection->query($sql[$x]) or die($this->connection->error);
 			}
 		}
@@ -289,17 +290,17 @@ var $sql_class;
  	 * @return resource|bool
 	 */
 	function query($query) {
-		if ($query != '') {	
+		if ($query != '') {
 			// Run and check if true or false
 			if ($result = $this->connection->query($query)) {
 			    return $result;
-			}
-			else {
+			} else {
+				error_log($query);
                 $this->error();
                 return false;
 			}
-		}
-		else {
+		} else {
+			error_log($query);
             // Find the error for no query
             $result = $this->connection->query('');
             $this->error();

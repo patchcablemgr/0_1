@@ -266,7 +266,7 @@ CREATE TABLE `{database_prefix_app}object` (
   `insertSlotY` int(11) DEFAULT NULL,
   `position_top` int(11) DEFAULT NULL,
   `position_left` int(11) DEFAULT NULL,
-  PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`)
 );
 
 DROP TABLE IF EXISTS `{database_prefix_app}object_category`;
@@ -276,7 +276,7 @@ CREATE TABLE `{database_prefix_app}object_category` (
   `name` varchar(255) NOT NULL,
   `color` varchar(255) NOT NULL,
   `defaultOption` int(11) NOT NULL,
-  PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`)
 );
 
 DROP TABLE IF EXISTS `{database_prefix_app}object_compatibility`;
@@ -304,7 +304,7 @@ CREATE TABLE `{database_prefix_app}object_compatibility` (
   `hUnits` int(11) DEFAULT NULL,
   `vUnits` int(11) DEFAULT NULL,
   `portNameFormat` text,
-  PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`)
 );
 
 DROP TABLE IF EXISTS `{database_prefix_app}object_peer`;
@@ -322,10 +322,10 @@ CREATE TABLE `{database_prefix_app}object_peer` (
   `b_port` int(11) DEFAULT NULL,
   `b_endpoint` tinyint(1) NOT NULL,
   `floorplan_peer` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}object_template`;
+DROP TABLE IF EXISTS `{database_prefix_app}object_templates`;
 
 CREATE TABLE `{database_prefix_app}object_templates` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -342,15 +342,15 @@ CREATE TABLE `{database_prefix_app}object_templates` (
   `templatePartitionData` text,
   `frontImage` varchar(45) DEFAULT NULL,
   `rearImage` varchar(45) DEFAULT NULL,
-  PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`)
 );
 
 DROP TABLE IF EXISTS `{database_prefix_app}organization_data`;
 
 CREATE TABLE `{database_prefix_app}organization_data` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL
-  PRIMARY KEY(`id`),
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY(`id`)
 );
 
 DROP TABLE IF EXISTS `{database_prefix_app}populated_port`;
@@ -361,21 +361,5 @@ CREATE TABLE `{database_prefix_app}populated_port` (
   `object_face` int(11) NOT NULL,
   `object_depth` int(11) NOT NULL,
   `port_id` int(11) NOT NULL,
-  PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`)
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
