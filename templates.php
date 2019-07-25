@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('operator.php');
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-templates.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
+require_once './includes/content-templates.php';
+require_once './includes/templateFunctions.php';
 ?>
 
 <?php require 'includes/header_start.php'; ?>
@@ -238,7 +238,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
 							<div id="templateCatalogAvailableContainer">
 								<h6>Name Filter:</h6>
 								<select id="templateCatalogFilter" multiple data-role="tagsinput"></select>
-								<?php include_once($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-templateCatalogObjects.php'); ?>
+								<?php include_once('./includes/content-build-templateCatalogObjects.php'); ?>
 							</div>
 							<p class="m-t-10">
 								<mark>Don't see what you're looking for?</mark><br>
@@ -654,7 +654,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
 									<input id="selectedObjectID" type="hidden">
 									<input id="selectedObjectFace" type="hidden">
 									<input id="selectedPartitionDepth" type="hidden">
-									<?php include_once($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-objectDetails.php'); ?>
+									<?php include_once('./includes/content-build-objectDetails.php'); ?>
 								</blockquote>
 							</div>
 						</div>
@@ -686,7 +686,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
 									<h6>Name Filter:</h6>
 									<select id="templateFilter" multiple data-role="tagsinput"></select>
 									<div id="templateContainer">
-										<?php include_once($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-objects.php'); ?>
+										<?php include_once('./includes/content-build-objects.php'); ?>
 									</div>
 								</div>
 								

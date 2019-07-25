@@ -1,11 +1,11 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/image-uploader.class.php';
+require_once '../includes/header.php';
+require_once '../includes/image-uploader.class.php';
 $qls->Security->check_auth_page('administrator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
@@ -23,7 +23,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			'maxSize' => 2, //Maximum Size of files {null, Number(in MB's)}
 			'extensions' => array('zip'), //Whitelist for file extension. {null, Array(ex: array('jpg', 'png'))}
 			'required' => false, //Minimum one file is required for upload {Boolean}
-			'uploadDir' => $_SERVER['DOCUMENT_ROOT'].'/app/userUploads/', //Upload directory {String}
+			'uploadDir' => './userUploads/', //Upload directory {String}
 			'title' => $filename, //New file name {null, String, Array} *please read documentation in README.md
 			'removeFiles' => true, //Enable file exclusion {Boolean(extra for jQuery.filer), String($_POST field name containing json data with file names)}
 			'perms' => null, //Uploaded file permisions {null, Number}
@@ -48,7 +48,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			
 			$zipFilename = $data['data']['metas'][0]['name'];
 			$zip = new ZipArchive;
-			$res = $zip->open($_SERVER['DOCUMENT_ROOT'].'/app/userUploads/'.$zipFilename);
+			$res = $zip->open('./userUploads/'.$zipFilename);
 			if ($res === TRUE) {
 				// Get Filenames
 				$filenameArray = array();
@@ -64,23 +64,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				}
 				
 				// Extract Files
-				$zip->extractTo($_SERVER['DOCUMENT_ROOT'].'/app/userUploads/');
+				$zip->extractTo('./userUploads/');
 				$zip->close();
 				
 // Prepare Required Data
 				
 				// Cabinet Adjacencies
 				$envAdjArray = array();
-				$query = $qls->app_SQL->select('*', 'table_cabinet_adj');
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_cabinet_adj');
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					$envAdjArray[$row['left_cabinet_id']]['right'] = $row['right_cabinet_id'];
 					$envAdjArray[$row['right_cabinet_id']]['left'] = $row['left_cabinet_id'];
 				}
 				
 				// Get Env Tree
 				$envTreeArray = array();
-				$query = $qls->app_SQL->select('*', 'env_tree');
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_env_tree');
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					if($row['type'] != 'floorplan') {
 						$envTreeArray[$row['id']] = $row;
 					}
@@ -107,8 +107,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 				// Templates
 				$tableTemplateArray = array();
-				$query = $qls->app_SQL->select('*', 'table_object_templates');
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_object_templates');
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					if($row['id'] != 1 and $row['id'] != 2 and $row['id'] != 3) {
 						$tableTemplateArray[$row['id']] = $row;
 					}
@@ -116,8 +116,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 				// Enclosure Compatibility
 				$tableEnclosureCompatibilityArray = array();
-				$query = $qls->app_SQL->select('*', 'table_object_compatibility');
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_object_compatibility');
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					$templateID = $row['template_id'];
 					$templateFace = $row['side'];
 					$templateDepth = $row['depth'];
@@ -140,8 +140,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 				// Objects
 				$tableObjectArray = array();
-				$query = $qls->app_SQL->select('*', 'table_object', array('parent_id' => array('=', 0)));
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_object', array('parent_id' => array('=', 0)));
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
 						$tableObjectArray[$row['id']] = $row;
 					}
@@ -149,15 +149,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 				// Inserts
 				$tableInsertArray = array();
-				$query = $qls->app_SQL->select('*', 'table_object', array('parent_id' => array('<>', 0)));
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_object', array('parent_id' => array('<>', 0)));
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					$tableInsertArray[$row['id']] = $row;
 				}
 				
 				// Get Cabinet Objects
 				$cabinetObjects = array();
-				$query = $qls->app_SQL->select('*', 'table_object');
-				while($row = $qls->app_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'app_object');
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					if(!isset($cabinetObjects[$row['env_tree_id']])) {
 						$cabinetObjects[$row['env_tree_id']] = array();
 					}
@@ -188,7 +188,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$importedCabinetOccupancyArray = array();
 				
 				foreach($expectedFilenames as $csvFilename) {
-					if($csvFile = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userUploads/'.$csvFilename, 'r')) {
+					if($csvFile = fopen('./userUploads/'.$csvFilename, 'r')) {
 						if($csvFilename == '03 - Cabinets.csv') {
 							$csvLineNumber = 0;
 							while($csvLine = fgetcsv($csvFile)) {
@@ -261,7 +261,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				validateImportedInserts($importedInsertArray, $existingInsertArray, $importedObjectArray, $importedTemplateArray, $validate);
 				
 				if(count($validate->returnData['error']) == 0) {
-					$qls->app_SQL->transaction('BEGIN');
+					$qls->SQL->transaction('BEGIN');
 					
 					// Find Category Changes
 					$categoryAdds = findCategoryAdds($importedCategoryArray);
@@ -356,10 +356,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					
 					if(count($validate->returnData['error']) == 0) {
 						processConnections($qls, $importedConnectionArray);
-						$qls->app_SQL->transaction('COMMIT');
+						$qls->SQL->transaction('COMMIT');
 						$validate->returnData['success'] = 'Import finished successfully.';
 					} else {
-						$qls->app_SQL->transaction('ROLLBACK');
+						$qls->SQL->transaction('ROLLBACK');
 					}
 				}
 				
@@ -1956,8 +1956,8 @@ function insertCabinetAdds(&$qls, $cabinetAdds, &$importedCabinetArray, $existin
 		$type = $cabinet['type'];
 		$size = $type == 'cabinet' ? $cabinet['size'] : 42;
 		
-		$qls->app_SQL->insert('env_tree', array('name', 'parent', 'type', 'size'), array($name, $parent, $type, $size));
-		$importedCabinetArray[$nameHash]['id'] = $qls->app_SQL->insert_id();
+		$qls->SQL->insert('app_env_tree', array('name', 'parent', 'type', 'size'), array($name, $parent, $type, $size));
+		$importedCabinetArray[$nameHash]['id'] = $qls->SQL->insert_id();
 	}
 
 	foreach($importedCabinetArray as $cabinet) {
@@ -1976,7 +1976,7 @@ function insertCabinetAdds(&$qls, $cabinetAdds, &$importedCabinetArray, $existin
 			}
 			
 			if($addAdjacency) {
-				$qls->app_SQL->insert('table_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($leftID, $rowID));
+				$qls->SQL->insert('app_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($leftID, $rowID));
 			}
 		}
 		
@@ -1990,7 +1990,7 @@ function insertCabinetAdds(&$qls, $cabinetAdds, &$importedCabinetArray, $existin
 			}
 			
 			if($addAdjacency) {
-				$qls->app_SQL->insert('table_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($rowID, $rightID));
+				$qls->SQL->insert('app_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($rowID, $rightID));
 			}
 		}
 	}
@@ -2003,20 +2003,20 @@ function updateCabinetEdits(&$qls, $cabinetEdits, $importedCabinetArray, $existi
 		$type = $cabinet['type'];
 		$size = $type == 'cabinet' ? $cabinet['size'] : 42;
 		
-		$table = 'env_tree';
+		$table = 'app_env_tree';
 		$set = array('type'=>$type, 'size'=>$size);
 		$where = array('id'=>array('=', $rowID));
-		$qls->app_SQL->update($table, $set, $where);
+		$qls->SQL->update($table, $set, $where);
 		
 		//Update Adjacencies
-		$qls->app_SQL->delete('table_cabinet_adj', array('left_cabinet_id' => array('=', $rowID), 'OR', 'right_cabinet_id' => array('=', $rowID)));
+		$qls->SQL->delete('app_cabinet_adj', array('left_cabinet_id' => array('=', $rowID), 'OR', 'right_cabinet_id' => array('=', $rowID)));
 		
 		$adjacencySides = array('left', 'right');
 		foreach($adjacencySides as $side) {
 			if($cabinet[$side]) {
 				$sideHash = md5(strtolower($cabinet[$side]));
 				$sideID = $importedCabinetArray[$sideHash]['id'];
-				$qls->app_SQL->insert('table_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($sideID, $rowID));
+				$qls->SQL->insert('app_cabinet_adj', array('left_cabinet_id', 'right_cabinet_id'), array($sideID, $rowID));
 			}
 		}
 	}
@@ -2027,19 +2027,19 @@ function deleteCabinetDeletes(&$qls, $cabinetDeletes, $cabinetObjects){
 	foreach($cabinetDeletes as $cabinetDelete) {
 		$cabinetID = $cabinetDelete['id'];
 		
-		$qls->app_SQL->delete('env_tree', array('id' => array('=', $cabinetID)));
-		$qls->app_SQL->delete('table_cabinet_adj', array('left_cabinet_id' => array('=', $cabinetID), 'OR', 'right_cabinet_id' => array('=', $cabinetID)));
-		$qls->app_SQL->delete('table_cable_path', array('cabinet_a_id' => array('=', $cabinetID), 'OR', 'cabinet_b_id' => array('=', $cabinetID)));
+		$qls->SQL->delete('app_env_tree', array('id' => array('=', $cabinetID)));
+		$qls->SQL->delete('app_cabinet_adj', array('left_cabinet_id' => array('=', $cabinetID), 'OR', 'right_cabinet_id' => array('=', $cabinetID)));
+		$qls->SQL->delete('app_cable_path', array('cabinet_a_id' => array('=', $cabinetID), 'OR', 'cabinet_b_id' => array('=', $cabinetID)));
 		
 		// Remove Deletes (objects)
 		foreach($cabinetObjects[$cabinetID] as $objectDelete) {
 			$objectID = $objectDelete['id'];
 			
-			$qls->app_SQL->delete('table_object', array('id' => array('=', $objectID)));
-			$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+			$qls->SQL->delete('app_object', array('id' => array('=', $objectID)));
+			$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
 			
-			$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
-			while($cable = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
+			while($cable = $qls->SQL->fetch_assoc($query)) {
 				$attr = array();
 				if($cable['a_object_id'] == $objectID) {
 					array_push($attr, 'a');
@@ -2051,12 +2051,12 @@ function deleteCabinetDeletes(&$qls, $cabinetDeletes, $cabinetObjects){
 				if($cable['a_id'] == 0 and $cable['b_id'] == 0) {
 					
 					// This is not a managed cable, so delete entry
-					$qls->app_SQL->delete('table_inventory', array('id' => array('=', $cable['id'])));
+					$qls->SQL->delete('app_inventory', array('id' => array('=', $cable['id'])));
 					
 					// Mark far end as populated if it does not belong to the object being deleted
 					if(count($attr) == 1) {
 						$oppositeAttr = $attr[0] == 'a' ? 'b' : 'a';
-						$qls->app_SQL->insert('table_populated_port', array(
+						$qls->SQL->insert('app_populated_port', array(
 								'object_id',
 								'object_face',
 								'object_depth',
@@ -2073,7 +2073,7 @@ function deleteCabinetDeletes(&$qls, $cabinetDeletes, $cabinetObjects){
 					
 					// This is a managed cable, so don't delete... just clear data
 					foreach($attr as $cableAttr) {
-						$qls->app_SQL->update('table_inventory', array(
+						$qls->SQL->update('app_inventory', array(
 								$cableAttr.'_object_id' => 0,
 								$cableAttr.'_object_face' => 0,
 								$cableAttr.'_object_depth' => 0,
@@ -2083,7 +2083,7 @@ function deleteCabinetDeletes(&$qls, $cabinetDeletes, $cabinetObjects){
 					}
 				}
 			}
-			$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $objectID)));
+			$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $objectID)));
 		}
 	}
 }
@@ -2134,7 +2134,7 @@ function insertPath(&$qls, $path){
 	$entrance = $path['entrance'];
 	$notes = $path['notes'];
 	
-	$qls->app_SQL->insert('table_cable_path', array($cabinetAAttribute, $cabinetBAttribute, 'distance', 'path_entrance_ru', 'notes'), array($cabinetAID, $cabinetBID, $distance, $entrance, $notes));
+	$qls->SQL->insert('app_cable_path', array($cabinetAAttribute, $cabinetBAttribute, 'distance', 'path_entrance_ru', 'notes'), array($cabinetAID, $cabinetBID, $distance, $entrance, $notes));
 	
 	return;
 }
@@ -2142,7 +2142,7 @@ function insertPath(&$qls, $path){
 function deletePath(&$qls, $path){
 	$rowID = $path['id'];
 	
-	$qls->app_SQL->delete('table_cable_path', array('id' => array('=', $rowID)));
+	$qls->SQL->delete('app_cable_path', array('id' => array('=', $rowID)));
 	
 	return;
 }
@@ -2169,9 +2169,9 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 			$cabinetFront = $mountConfig == 1 ? 1 : null;
 		}
 		
-		$qls->app_SQL->insert('table_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0));
+		$qls->SQL->insert('app_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0));
 		
-		$importedObjectArray[$object['objectNameHash']]['id'] = $qls->app_SQL->insert_id();
+		$importedObjectArray[$object['objectNameHash']]['id'] = $qls->SQL->insert_id();
 	}
 }
 
@@ -2201,7 +2201,7 @@ function updateObjectEdits(&$qls, $objectEdits, $importedCabinetArray, $existing
 			'cabinet_back' => $cabinetBack
 		);
 		
-		$qls->app_SQL->update('table_object', $updateArray, array('id' => array('=', $objectID)));
+		$qls->SQL->update('app_object', $updateArray, array('id' => array('=', $objectID)));
 	}
 }
 
@@ -2209,11 +2209,11 @@ function deleteObjectDeletes(&$qls, $objectDeletes){
 	foreach($objectDeletes as $object) {
 		$objectID = $object['id'];
 		
-		$qls->app_SQL->delete('table_object', array('id' => array('=', $objectID)));
-		$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+		$qls->SQL->delete('app_object', array('id' => array('=', $objectID)));
+		$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
 		
-		$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
-		while($cable = $qls->app_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
+		while($cable = $qls->SQL->fetch_assoc($query)) {
 			$attr = array();
 			if($cable['a_object_id'] == $objectID) {
 				array_push($attr, 'a');
@@ -2225,12 +2225,12 @@ function deleteObjectDeletes(&$qls, $objectDeletes){
 			if($cable['a_id'] == 0 and $cable['b_id'] == 0) {
 				
 				// This is not a managed cable, so delete entry
-				$qls->app_SQL->delete('table_inventory', array('id' => array('=', $cable['id'])));
+				$qls->SQL->delete('app_inventory', array('id' => array('=', $cable['id'])));
 				
 				// Mark far end as populated if it does not belong to the object being deleted
 				if(count($attr) == 1) {
 					$oppositeAttr = $attr[0] == 'a' ? 'b' : 'a';
-					$qls->app_SQL->insert('table_populated_port', array(
+					$qls->SQL->insert('app_populated_port', array(
 							'object_id',
 							'object_face',
 							'object_depth',
@@ -2247,7 +2247,7 @@ function deleteObjectDeletes(&$qls, $objectDeletes){
 				
 				// This is a managed cable, so don't delete... just clear data
 				foreach($attr as $cableAttr) {
-					$qls->app_SQL->update('table_inventory', array(
+					$qls->SQL->update('app_inventory', array(
 							$cableAttr.'_object_id' => 0,
 							$cableAttr.'_object_face' => 0,
 							$cableAttr.'_object_depth' => 0,
@@ -2257,7 +2257,7 @@ function deleteObjectDeletes(&$qls, $objectDeletes){
 				}
 			}
 		}
-		$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $objectID)));
+		$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $objectID)));
 	}
 }
 
@@ -2318,9 +2318,9 @@ function insertInsertAdds(&$qls, $insertAdds, &$importedInsertArray, $importedOb
 			$slotY
 		);
 		
-		$qls->app_SQL->insert('table_object', $attributes, $values);
+		$qls->SQL->insert('app_object', $attributes, $values);
 		
-		$importedInsertArray[$insert['insertNameHash']]['id'] = $qls->app_SQL->insert_id();
+		$importedInsertArray[$insert['insertNameHash']]['id'] = $qls->SQL->insert_id();
 	}
 }
 
@@ -2361,7 +2361,7 @@ function updateInsertEdits(&$qls, $insertEdits, $importedObjectArray, $importedC
 			'insertSlotY' => $slotY
 		);
 		
-		$qls->app_SQL->update('table_object', $updateArray, array('id' => array('=', $insertID)));
+		$qls->SQL->update('app_object', $updateArray, array('id' => array('=', $insertID)));
 	}
 }
 
@@ -2369,11 +2369,11 @@ function deleteInsertDeletes(&$qls, $insertDeletes){
 	foreach($insertDeletes as $insert) {
 		$insertID = $insert['id'];
 		
-		$qls->app_SQL->delete('table_object', array('id' => array('=', $insertID)));
-		$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
+		$qls->SQL->delete('app_object', array('id' => array('=', $insertID)));
+		$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
 		
-		$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $insertID), 'OR', 'b_object_id' => array('=', $insertID)));
-		while($cable = $qls->app_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $insertID), 'OR', 'b_object_id' => array('=', $insertID)));
+		while($cable = $qls->SQL->fetch_assoc($query)) {
 			$attr = array();
 			if($cable['a_object_id'] == $insertID) {
 				array_push($attr, 'a');
@@ -2385,12 +2385,12 @@ function deleteInsertDeletes(&$qls, $insertDeletes){
 			if($cable['a_id'] == 0 and $cable['b_id'] == 0) {
 				
 				// This is not a managed cable, so delete entry
-				$qls->app_SQL->delete('table_inventory', array('id' => array('=', $cable['id'])));
+				$qls->SQL->delete('app_inventory', array('id' => array('=', $cable['id'])));
 				
 				// Mark far end as populated if it does not belong to the object being deleted
 				if(count($attr) == 1) {
 					$oppositeAttr = $attr[0] == 'a' ? 'b' : 'a';
-					$qls->app_SQL->insert('table_populated_port', array(
+					$qls->SQL->insert('app_populated_port', array(
 							'object_id',
 							'object_face',
 							'object_depth',
@@ -2407,7 +2407,7 @@ function deleteInsertDeletes(&$qls, $insertDeletes){
 				
 				// This is a managed cable, so don't delete... just clear data
 				foreach($attr as $cableAttr) {
-					$qls->app_SQL->update('table_inventory', array(
+					$qls->SQL->update('app_inventory', array(
 							$cableAttr.'_object_id' => 0,
 							$cableAttr.'_object_face' => 0,
 							$cableAttr.'_object_depth' => 0,
@@ -2417,7 +2417,7 @@ function deleteInsertDeletes(&$qls, $insertDeletes){
 				}
 			}
 		}
-		$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $insertID)));
+		$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $insertID)));
 	}
 }
 
@@ -2442,9 +2442,9 @@ function insertCategoryAdds(&$qls, $categoryAdds, &$importedCategoryArray) {
 			$defaultOption
 		);
 		
-		$qls->app_SQL->insert('table_object_category', $categoryAttributes, $categoryValues);
+		$qls->SQL->insert('app_object_category', $categoryAttributes, $categoryValues);
 		
-		$importedCategoryArray[$categoryNameHash]['id'] = $qls->app_SQL->insert_id();
+		$importedCategoryArray[$categoryNameHash]['id'] = $qls->SQL->insert_id();
 	}
 }
 
@@ -2460,14 +2460,14 @@ function updateCategoryEdits(&$qls, $categoryEdits){
 			'defaultOption' => $categoryDefaultOption
 		);
 		
-		$qls->app_SQL->update('table_object_category', $categoryUpdateArray, array('id' => array('=', $categoryID)));
+		$qls->SQL->update('app_object_category', $categoryUpdateArray, array('id' => array('=', $categoryID)));
 	}
 }
 
 function deleteCategoryDeletes(&$qls, $categoryDeletes){
 	foreach($categoryDeletes as $category) {
 		$categoryID = $category['id'];
-		$qls->app_SQL->delete('table_object_category', array('id' => array('=', $categoryID)));
+		$qls->SQL->delete('app_object_category', array('id' => array('=', $categoryID)));
 	}
 }
 
@@ -2476,14 +2476,14 @@ function deleteCategoryDeletes(&$qls, $categoryDeletes){
 // Process Templates
 function insertTemplateAdds(&$qls, $templateAdds, &$importedTemplateArray, $importedCategoryArray){
 	$mediaTypeArray = array();
-	$query = $qls->shared_SQL->select('*', 'table_mediaType');
-	while($row = $qls->shared_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'shared_mediaType');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$mediaTypeArray[$row['value']] = $row;
 	}
 	
 	$objectPortTypeArray = array();
-	$query = $qls->shared_SQL->select('*', 'table_object_portType');
-	while($row = $qls->shared_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'shared_object_portType');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$objectPortTypeArray[$row['value']] = $row;
 	}
 	
@@ -2546,9 +2546,9 @@ function insertTemplateAdds(&$qls, $templateAdds, &$importedTemplateArray, $impo
 			$rearImage
 		);
 		
-		$qls->app_SQL->insert('table_object_templates', $templateAttributes, $templateValues);
+		$qls->SQL->insert('app_object_templates', $templateAttributes, $templateValues);
 		
-		$templateID = $importedTemplateArray[$templateNameHash]['id'] = $qls->app_SQL->insert_id();
+		$templateID = $importedTemplateArray[$templateNameHash]['id'] = $qls->SQL->insert_id();
 		
 		// Gather compatibility data
 		$compatibilityArray = array();
@@ -2611,7 +2611,7 @@ function insertTemplateAdds(&$qls, $templateAdds, &$importedTemplateArray, $impo
 					$compatibilityRecord['vUnits'],
 					json_encode($compatibilityRecord['portNameFormat']),
 				);
-				$qls->app_SQL->insert('table_object_compatibility', $compatibilityAttributes, $compatibilityValues);
+				$qls->SQL->insert('app_object_compatibility', $compatibilityAttributes, $compatibilityValues);
 			}
 		}
 	}
@@ -2629,15 +2629,15 @@ function updateTemplateEdits(&$qls, $templateEdits, $importedCategoryArray){
 			'templateCategory_id' => $templateCategoryID
 		);
 		
-		$qls->app_SQL->update('table_object_templates', $templateUpdateArray, array('id' => array('=', $templateID)));
+		$qls->SQL->update('app_object_templates', $templateUpdateArray, array('id' => array('=', $templateID)));
 	}
 }
 
 function deleteTemplateDeletes(&$qls, $templateDeletes){
 	foreach($templateDeletes as $template) {
 		$templateID = $template['id'];
-		$qls->app_SQL->delete('table_object_templates', array('id' => array('=', $templateID)));
-		$qls->app_SQL->delete('table_object_compatibility', array('template_id' => array('=', $templateID)));
+		$qls->SQL->delete('app_object_templates', array('id' => array('=', $templateID)));
+		$qls->SQL->delete('app_object_compatibility', array('template_id' => array('=', $templateID)));
 	}
 }
 
@@ -2646,9 +2646,9 @@ function deleteTemplateDeletes(&$qls, $templateDeletes){
 // Process Connections
 function processConnections(&$qls, $importedConnectionArray){
 	$query = 'TRUNCATE TABLE `table_inventory`';
-	$qls->app_SQL->query($query);
+	$qls->SQL->query($query);
 	$query = 'TRUNCATE TABLE `table_populated_port`';
-	$qls->app_SQL->query($query);
+	$qls->SQL->query($query);
 	
 	foreach($importedConnectionArray as $connection) {
 		$cableEndID = $connection['cableEndID'];
@@ -2731,7 +2731,7 @@ function processConnections(&$qls, $importedConnectionArray){
 				$editable
 			);
 			
-			$qls->app_SQL->insert('table_inventory', $tableAttributes, $tableValues);
+			$qls->SQL->insert('app_inventory', $tableAttributes, $tableValues);
 		} else {
 			// Insert into populated port table
 			$tableAttributes = array(
@@ -2748,7 +2748,7 @@ function processConnections(&$qls, $importedConnectionArray){
 				$a_port_id
 			);
 			
-			$qls->app_SQL->insert('table_populated_port', $tableAttributes, $tableValues);
+			$qls->SQL->insert('app_populated_port', $tableAttributes, $tableValues);
 		}
 	}
 }
@@ -2836,8 +2836,8 @@ function retrievePartition($template, $depth, &$depthCounter=0){
 function buildCompatibilityArray(&$qls){
 	$compatibilityArray = array();
 	
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object_compatibility');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$compatibilityArray[$row['template_id']][$row['side']][$row['depth']] = $row;
 	}
 	
@@ -2847,8 +2847,8 @@ function buildCompatibilityArray(&$qls){
 function buildObjectArray(&$qls){
 	$objectArray = array();
 	
-	$query = $qls->app_SQL->select('*', 'table_object');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$objectArray[$row['id']] = $row;
 	}
 	
@@ -2857,8 +2857,8 @@ function buildObjectArray(&$qls){
 
 function buildTemplateArray(&$qls){
 	$templateArray = array();
-	$query = $qls->app_SQL->select('*', 'table_object_templates');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object_templates');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$templateArray[$row['id']] = $row;
 	}
 	
@@ -2867,8 +2867,8 @@ function buildTemplateArray(&$qls){
 
 function buildEnvTreeArray(&$qls){
 	$envTreeArray = array();
-	$query = $qls->app_SQL->select('*', 'env_tree');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_env_tree');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$envTreeArray[$row['id']] = $row;
 	}
 	

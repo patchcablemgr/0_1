@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
 	
@@ -19,10 +19,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	if (!count($validate->returnData['error'])){
 		$action = $data['action'];
 		$cabinetID = $data['cabinetID'];
-		$cabinet = $qls->app_SQL->fetch_assoc($qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetID))));
+		$cabinet = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetID))));
 		$cabinetSize = $cabinet['size'];
 		$cabinetParentID = getCabinetParentID($cabinet['parent'], $qls);
-		$topObject = $qls->app_SQL->fetch_assoc($qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $cabinetID)), array('RU', 'DESC'), array(0,1)));
+		$topObject = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $cabinetID)), array('RU', 'DESC'), array(0,1)));
 		$topOccupiedRU = $topObject['RU'];
 		
 		if($action == 'adj') {
@@ -32,19 +32,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$localCabinetID = $data['cabinetID'];
 			$adjCabinetID = $data['adjCabinetID'];
 			
-			$query = $qls->app_SQL->select('*', 'table_cabinet_adj', array($attrAdjCabinet => array('=', $localCabinetID)));
-			if ($qls->app_SQL->num_rows($query)) {
-				$row = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_cabinet_adj', array($attrAdjCabinet => array('=', $localCabinetID)));
+			if ($qls->SQL->num_rows($query)) {
+				$row = $qls->SQL->fetch_assoc($query);
 				$rowID = $row['id'];
 
 				if($adjCabinetID == 0) {
-					$qls->app_SQL->delete('table_cabinet_adj', array('id' => array('=', $rowID)));
+					$qls->SQL->delete('app_cabinet_adj', array('id' => array('=', $rowID)));
 				} else {
-					$qls->app_SQL->update('table_cabinet_adj', array($attrLocalCabinet => $adjCabinetID), array('id' => array('=', $rowID)));
+					$qls->SQL->update('app_cabinet_adj', array($attrLocalCabinet => $adjCabinetID), array('id' => array('=', $rowID)));
 				}
 			} else {
 				if($adjCabinetID != 0) {
-					$qls->app_SQL->insert('table_cabinet_adj', array($attrLocalCabinet, $attrAdjCabinet), array($adjCabinetID, $localCabinetID));
+					$qls->SQL->insert('app_cabinet_adj', array($attrLocalCabinet, $attrAdjCabinet), array($adjCabinetID, $localCabinetID));
 				}
 			}
 		} else if($action == 'path') {
@@ -53,33 +53,33 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$adjCabinetID = $data['value'];
 			$pathID = $data['pathID'];
 
-			$query = $qls->app_SQL->select('*', 'table_cable_path', array('id' => array('=', $pathID)));
-			$cablePath = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_cable_path', array('id' => array('=', $pathID)));
+			$cablePath = $qls->SQL->fetch_assoc($query);
 
 			$attrAdjCabinet = $cablePath['cabinet_a_id'] == $localCabinetID ? 'cabinet_b_id' : 'cabinet_a_id';
-			$qls->app_SQL->update('table_cable_path', array($attrAdjCabinet => $adjCabinetID), array('id' => array('=', $pathID)));
+			$qls->SQL->update('app_cable_path', array($attrAdjCabinet => $adjCabinetID), array('id' => array('=', $pathID)));
 		} else if($action == 'distance') {
 			
 			$pathID = $data['pathID'];
 			// Convert distance from meters to millimeters
 			$distance = $data['distance']*1000;
-			$qls->app_SQL->update('table_cable_path', array('distance' => $distance), array('id' => array('=', $pathID)));
+			$qls->SQL->update('app_cable_path', array('distance' => $distance), array('id' => array('=', $pathID)));
 		} else if($action == 'notes') {
 			
 			$pathID = $data['pathID'];
 			$notes = $data['value'];
-			$qls->app_SQL->update('table_cable_path', array('notes' => $notes), array('id' => array('=', $pathID)));
+			$qls->SQL->update('app_cable_path', array('notes' => $notes), array('id' => array('=', $pathID)));
 		} else if($action == 'delete') {
 			
 			$pathID = $data['pathID'];
-			$qls->app_SQL->delete('table_cable_path', array('id' => array('=', $pathID)));
+			$qls->SQL->delete('app_cable_path', array('id' => array('=', $pathID)));
 		} else if($action == 'new') {
 			
 			$validate->returnData['success']['entranceMax'] = $cabinetSize;
 			$validate->returnData['success']['localCabinets'] = getChildCabinets($cabinetID, $cabinetParentID, $qls);
 			
-			$qls->app_SQL->insert('table_cable_path', array('cabinet_a_id', 'path_entrance_ru', 'distance'), array($cabinetID, $cabinetSize, 1000));
-			$validate->returnData['success']['newID'] = $qls->app_SQL->insert_id();
+			$qls->SQL->insert('app_cable_path', array('cabinet_a_id', 'path_entrance_ru', 'distance'), array($cabinetID, $cabinetSize, 1000));
+			$validate->returnData['success']['newID'] = $qls->SQL->insert_id();
 		} else if($action == 'RU') {
 			
 			$RUSize = $data['RUSize'];
@@ -87,14 +87,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$validate->returnData['success']['size'] = $RUSize;
 			$validate->returnData['success']['topOccupiedRU'] = $topOccupiedRU;
 			if ($RUSize < $cabinetSize and $RUSize >= $topOccupiedRU) {
-				$cabinetPath = $qls->app_SQL->fetch_assoc($query);
+				$cabinetPath = $qls->SQL->fetch_assoc($query);
 				$validate->returnData['success']['action'] = 'pop';
 				$validate->returnData['success']['delta'] = $cabinetSize - $RUSize;
-				$qls->app_SQL->update('env_tree', array('size' => $RUSize), array('id' => array('=', $cabinetID)));
+				$qls->SQL->update('app_env_tree', array('size' => $RUSize), array('id' => array('=', $cabinetID)));
 			} else if ($RUSize > $cabinetSize) {
 				$validate->returnData['success']['action'] = 'push';
 				$validate->returnData['success']['delta'] = $RUSize - $cabinetSize;
-				$qls->app_SQL->update('env_tree', array('size' => $RUSize), array('id' => array('=', $cabinetID)));
+				$qls->SQL->update('app_env_tree', array('size' => $RUSize), array('id' => array('=', $cabinetID)));
 			} else if ($RUSize < $topOccupiedRU or $RUSize == $cabinetSize){
 				$errMsg = 'Invalid RU size.';
 				array_push($validate->returnData['error'], $errMsg);
@@ -105,8 +105,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$cabinets = getChildCabinets($cabinetID, $cabinetParentID, $qls);
 			
 			$validate->returnData['success']['path'] = array();
-			$result = $qls->app_SQL->select('*', 'table_cable_path', array('cabinet_a_id' => array('=', $cabinetID), 'OR', 'cabinet_b_id' => array('=', $cabinetID)));
-			while ($row = $qls->app_SQL->fetch_assoc($result)) {
+			$result = $qls->SQL->select('*', 'app_cable_path', array('cabinet_a_id' => array('=', $cabinetID), 'OR', 'cabinet_b_id' => array('=', $cabinetID)));
+			while ($row = $qls->SQL->fetch_assoc($result)) {
 				$attrCabinet = $row['cabinet_a_id'] == $cabinetID ? 'cabinet_b_id' : 'cabinet_a_id';
 				array_push($validate->returnData['success']['path'], array(
 					'id' => $row['id'],
@@ -121,8 +121,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$validate->returnData['success']['localCabinets'] = getLocalCabinets($cabinetID, $qls);
 			
 			//Gather adjacency data
-			$result = $qls->app_SQL->select('*', 'table_cabinet_adj', 'left_cabinet_id = '.$cabinetID.' OR right_cabinet_id = '.$cabinetID);
-			while($row = $qls->app_SQL->fetch_assoc($result)) {
+			$result = $qls->SQL->select('*', 'app_cabinet_adj', 'left_cabinet_id = '.$cabinetID.' OR right_cabinet_id = '.$cabinetID);
+			while($row = $qls->SQL->fetch_assoc($result)) {
 				$attrAdjCabinetID = $row['left_cabinet_id'] == $cabinetID ? 'right_cabinet_id' : 'left_cabinet_id';
 				$attrAdjCabinetKey = $row['left_cabinet_id'] == $cabinetID ? 'adjRight' : 'adjLeft';
 				$validate->returnData['success'][$attrAdjCabinetKey]['cabinetID'] = $row[$attrAdjCabinetID];
@@ -137,8 +137,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		} else if($action == 'getFloorplan') {
 			
 			// Retrieve floorplan data
-			$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetID)));
-			$floorplan = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetID)));
+			$floorplan = $qls->SQL->fetch_assoc($query);
 			$floorplanImg = $floorplan['floorplan_img'];
 			
 			if(isset($floorplanImg)) {
@@ -149,8 +149,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			
 			// Retrieve peer data
 			$peerData = array();
-			$query = $qls->app_SQL->select('*', 'table_object_peer', array('floorplan_peer' => array('=', 1)));
-			while($row = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'app_object_peer', array('floorplan_peer' => array('=', 1)));
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$objectID = $row['a_id'];
 				if(!count($peerData[$objectID])) {
 					$peerData[$objectID] = array();
@@ -160,23 +160,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			
 			// Retrieve object data
 			$objectData = array();
-			$query = $qls->app_SQL->select('*', 'table_object');
-			while($row = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'app_object');
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$objectData[$row['id']] = $row;
 			}
 			
 			// Retrieve portName data
 			$compatibilityArray = array();
-			$query = $qls->app_SQL->select('*', 'table_object_compatibility');
-			while($row = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'app_object_compatibility');
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$compatibilityArray[$row['template_id']][$row['side']][$row['depth']] = $row;
 			}
 			
 			// Retrieve object data
 			$floorplanObjectData = array();
 			$floorplanObjectPeerTable = array();
-			$query = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $cabinetID)));
-			while($object = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $cabinetID)));
+			while($object = $qls->SQL->fetch_assoc($query)) {
 				$objectID = $object['id'];
 				$objectName = $object['name'];
 				$type = $compatibilityArray[$object['template_id']][0][0]['templateType'];
@@ -239,8 +239,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			// Retrieve object data
 			$floorplanObjectData = array();
 			$floorplanObjectPeerTable = array();
-			$query = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $cabinetID)));
-			while($object = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $cabinetID)));
+			while($object = $qls->SQL->fetch_assoc($query)) {
 				$objectID = $object['id'];
 				$objectName = $object['name'];
 				$type = $qls->App->compatibilityArray[$object['template_id']][0][0]['templateType'];
@@ -294,7 +294,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$validate->returnData['success']['floorplanObjectPeerTable'] = $floorplanObjectPeerTable;
 		} else if($action == 'trunkPeer') {
 			
-			require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+			require_once '../includes/path_functions.php';
 			
 			$valueArray = explode('-', $data['value']);
 			$elementType = $valueArray[0];
@@ -306,18 +306,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$objectFace = $data['objectFace'];
 			$objectDepth = $data['objectDepth'];
 	
-			$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objectID)));
-			$object = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
+			$object = $qls->SQL->fetch_assoc($query);
 	
-			$query = $qls->app_SQL->select('partitionFunction', 'table_object_compatibility', array('template_id' => array('=', $object['template_id'])));
-			$partitionFunction = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('partitionFunction', 'app_object_compatibility', array('template_id' => array('=', $object['template_id'])));
+			$partitionFunction = $qls->SQL->fetch_assoc($query);
 			$objectEndpoint = $partitionFunction['partitionFunction'] == 'Endpoint' ? 1 : 0;
 			
-			$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $elementID)));
-			$element = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
+			$element = $qls->SQL->fetch_assoc($query);
 			
-			$query = $qls->app_SQL->select('partitionFunction', 'table_object_compatibility', array('template_id' => array('=', $element['template_id'])));
-			$partitionFunction = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('partitionFunction', 'app_object_compatibility', array('template_id' => array('=', $element['template_id'])));
+			$partitionFunction = $qls->SQL->fetch_assoc($query);
 			$elementEndpoint = $partitionFunction['partitionFunction'] == 'Endpoint' ? 1 : 0;
 			
 			if($objectEndpoint == 1 and $elementEndpoint == 1) {
@@ -326,12 +326,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				array_push($validate->returnData['error'], $errMsg);
 			} else {
 			
-				$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'AND', 'a_face' => array('=', $objectFace), 'AND', 'a_depth' => array('=', $objectDepth)));
-				$qls->app_SQL->delete('table_object_peer', array('b_id' => array('=', $objectID), 'AND', 'b_face' => array('=', $objectFace), 'AND', 'b_depth' => array('=', $objectDepth)));
-				$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $elementID), 'AND', 'a_face' => array('=', $elementFace), 'AND', 'a_depth' => array('=', $elementDepth)));
-				$qls->app_SQL->delete('table_object_peer', array('b_id' => array('=', $elementID), 'AND', 'b_face' => array('=', $elementFace), 'AND', 'b_depth' => array('=', $elementDepth)));
-				$qls->app_SQL->insert(
-					'table_object_peer',
+				$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID), 'AND', 'a_face' => array('=', $objectFace), 'AND', 'a_depth' => array('=', $objectDepth)));
+				$qls->SQL->delete('app_object_peer', array('b_id' => array('=', $objectID), 'AND', 'b_face' => array('=', $objectFace), 'AND', 'b_depth' => array('=', $objectDepth)));
+				$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $elementID), 'AND', 'a_face' => array('=', $elementFace), 'AND', 'a_depth' => array('=', $elementDepth)));
+				$qls->SQL->delete('app_object_peer', array('b_id' => array('=', $elementID), 'AND', 'b_face' => array('=', $elementFace), 'AND', 'b_depth' => array('=', $elementDepth)));
+				$qls->SQL->insert(
+					'app_object_peer',
 					array(
 						'a_id',
 						'a_face',
@@ -422,7 +422,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$rowID = $inventoryEntry['rowID'];
 					if($inventoryEntry['localEndID'] === 0 and $inventoryEntry['remoteEndID'] === 0) {
 						// If this is an unmanaged connection, delete the entry
-						$qls->app_SQL->delete('table_inventory', array('id' => array('=', $rowID)));
+						$qls->SQL->delete('app_inventory', array('id' => array('=', $rowID)));
 					} else {
 						// If this is a managed connection, just clear the data
 						$attrPrefix = $inventoryEntry['localAttrPrefix'];
@@ -432,7 +432,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 							$attrPrefix.'_object_depth' => 0,
 							$attrPrefix.'_port_id' => 0
 						);
-						$qls->app_SQL->update('table_inventory', $set, array('id' => array('=', $rowID)));
+						$qls->SQL->update('app_inventory', $set, array('id' => array('=', $rowID)));
 						if(isset($qls->App->inventoryArray[$inventoryEntry['id']][$inventoryEntry['face']][$inventoryEntry['depth']][$inventoryEntry['port']])) {
 							$qls->App->inventoryArray[$inventoryEntry['id']][$inventoryEntry['face']][$inventoryEntry['depth']][$inventoryEntry['port']]['id'] = 0;
 							$qls->App->inventoryArray[$inventoryEntry['id']][$inventoryEntry['face']][$inventoryEntry['depth']][$inventoryEntry['port']]['face'] = 0;
@@ -446,12 +446,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				// Delete from populated port table
 				if($populatedPortEntry = $qls->App->populatedPortArray[$entry['id']][$entry['face']][$entry['depth']][$entry['port']]) {
 					$rowID = $populatedPortEntry['rowID'];
-					$qls->app_SQL->delete('table_populated_port', array('id' => array('=', $rowID)));
+					$qls->SQL->delete('app_populated_port', array('id' => array('=', $rowID)));
 					unset($qls->App->populatedPortArray[$entry['id']][$entry['face']][$entry['depth']][$entry['port']]);
 				}
 				
 				// Delete from object peer table
-				$qls->app_SQL->delete('table_object_peer', array('id' => array('=', $entry['rowID'])));
+				$qls->SQL->delete('app_object_peer', array('id' => array('=', $entry['rowID'])));
 				unset($qls->App->peerArrayWalljack[$entry['selfID']]);
 			}
 			
@@ -486,8 +486,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$peerTemplate = $qls->App->templateArray[$peerTemplateID];
 					$peerEndpoint = $peerTemplate['templateFunction'] == 'Endpoint' ? 1 : 0;
 					
-					$qls->app_SQL->insert(
-						'table_object_peer',
+					$qls->SQL->insert(
+						'app_object_peer',
 						array(
 							'a_id',
 							'a_face',
@@ -525,21 +525,21 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$validate->returnData['success']['trunkFlatPath'] = $trunkFlatPath;
 		} else if($action == 'clearTrunkPeer') {
 			
-			require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+			require_once '../includes/path_functions.php';
 			$objectID = $data['objectID'];
 			$objectFace = $data['objectFace'];
 			$objectDepth = $data['objectDepth'];
 			
-			$query = $qls->app_SQL->select('id', 'table_object_peer', '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$objectDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$objectDepth.')');
-			$objectPeerEntry = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('id', 'app_object_peer', '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$objectDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$objectDepth.')');
+			$objectPeerEntry = $qls->SQL->fetch_assoc($query);
 			$objectPeerEntryID = $objectPeerEntry['id'];
-			$qls->app_SQL->delete('table_object_peer', array('id' => array('=', $objectPeerEntryID)));
+			$qls->SQL->delete('app_object_peer', array('id' => array('=', $objectPeerEntryID)));
 			
 			$validate->returnData['success']['trunkFlatPath'] = buildTrunkFlatPath($objectID, $objectFace, $objectDepth, $qls);
 		} else if($action == 'clearFloorplanTrunkPeer') {
 			$objectID = $data['objectID'];
 			
-			$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID)));
+			$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID)));
 			$validate->returnData['success']['trunkFlatPath'] = 'None';
 		}
 	}
@@ -576,8 +576,8 @@ function validate($data, &$validate, &$qls){
 			//Validate cabinet ID
 			$cabinetID = $data['cabinetID'];
 			$validate->validateObjectID($cabinetID);
-			$result = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetID)));
-			if ($qls->app_SQL->num_rows($result) == 0) {
+			$result = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetID)));
+			if ($qls->SQL->num_rows($result) == 0) {
 				$errMsg = 'Cabinet does not exist.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
@@ -645,8 +645,8 @@ function validate($data, &$validate, &$qls){
 			$cabinetID = $data['cabinetID'];
 			$validate->validateObjectID($cabinetID);
 			
-			$result = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetID)));
-			if ($qls->app_SQL->num_rows($result) == 0) {
+			$result = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetID)));
+			if ($qls->SQL->num_rows($result) == 0) {
 				$errMsg = 'Cabinet does not exist.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
@@ -655,8 +655,8 @@ function validate($data, &$validate, &$qls){
 			// Validate cabinet ID
 			$cabinetID = $data['cabinetID'];
 			$validate->validateObjectID($cabinetID);
-			$result = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetID)));
-			if ($qls->app_SQL->num_rows($result) == 0) {
+			$result = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetID)));
+			if ($qls->SQL->num_rows($result) == 0) {
 				$errMsg = 'Cabinet does not exist.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
@@ -669,8 +669,8 @@ function validate($data, &$validate, &$qls){
 }
 
 function getCabinetParentID($cabinetParentID, &$qls){
-	$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetParentID)));
-	$cabinetParent = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetParentID)));
+	$cabinetParent = $qls->SQL->fetch_assoc($query);
 	if($cabinetParent['type'] == 'pod') {
 		return getCabinetParentID($cabinetParent['parent'], $qls);
 	}
@@ -678,8 +678,8 @@ function getCabinetParentID($cabinetParentID, &$qls){
 }
 
 function getChildCabinets($cabinetID, $cabinetParentID, &$qls, $parentName='', $childCabinets=array()){
-	$query = $qls->app_SQL->select('*', 'env_tree', array('parent' => array('=', $cabinetParentID)));
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_env_tree', array('parent' => array('=', $cabinetParentID)));
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['type'] == 'cabinet') {
 			if($row['id'] != $cabinetID) {
 				array_push($childCabinets, array('value' => $row['id'], 'text' => $parentName.'.'.$row['name']));
@@ -696,11 +696,11 @@ function getChildCabinets($cabinetID, $cabinetParentID, &$qls, $parentName='', $
 
 function getLocalCabinets($cabinetID, &$qls){
 	$localCabinetArray = array();
-	$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $cabinetID)));
-	$cabinet = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $cabinetID)));
+	$cabinet = $qls->SQL->fetch_assoc($query);
 	$cabinetParentID = $cabinet['parent'];
-	$query = $qls->app_SQL->select('*', 'env_tree', array('parent' => array('=', $cabinetParentID)));
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_env_tree', array('parent' => array('=', $cabinetParentID)));
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['id'] != $cabinetID) {
 			array_push($localCabinetArray, array('value' => $row['id'], 'text' => $row['name']));
 		}

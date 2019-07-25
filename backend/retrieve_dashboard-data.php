@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
@@ -53,19 +53,19 @@ function buildInventoryData($connectorValue, $mediaValue, &$qls){
 		
 		if($connectorArray[0] == 4) {
 			
-			$query = $qls->app_SQL->select('*', 'table_inventory', array('order_id' => array('>', 0), 'AND', 'b_id' => array('=', 0), 'AND', 'active' => array('=', 1)));
-			$available = $qls->app_SQL->num_rows($query);
+			$query = $qls->SQL->select('*', 'app_inventory', array('order_id' => array('>', 0), 'AND', 'b_id' => array('=', 0), 'AND', 'active' => array('=', 1)));
+			$available = $qls->SQL->num_rows($query);
 			
-			$query = $qls->app_SQL->select('*', 'table_inventory', array('order_id' => array('>', 0), 'AND', 'b_id' => array('=', 0), 'AND', 'active' => array('=', 0)));
-			$inTransit = $qls->app_SQL->num_rows($query);
+			$query = $qls->SQL->select('*', 'app_inventory', array('order_id' => array('>', 0), 'AND', 'b_id' => array('=', 0), 'AND', 'active' => array('=', 0)));
+			$inTransit = $qls->SQL->num_rows($query);
 			
 		} else {
 			
 			$queryString = '((a_connector = '.$connectorArray[0].' AND b_connector = '.$connectorArray[1].') OR (a_connector = '.$connectorArray[1].' AND b_connector = '.$connectorArray[0].')) AND mediaType = '.$mediaValue;
 			
-			$query = $qls->app_SQL->select('*', 'table_inventory', $queryString);
+			$query = $qls->SQL->select('*', 'app_inventory', $queryString);
 			
-			while($row = $qls->app_SQL->fetch_assoc($query)) {
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				if($row['active'] == 0) {
 					$inTransit += 1;
 				}else if($row['a_object_id'] != 0 and $row['b_object_id'] != 0) {
@@ -91,8 +91,8 @@ function buildUtilizationTable(&$qls){
 	
 	// Get Env Tree
 	$envTreeArray = array();
-	$query = $qls->app_SQL->select('*', 'env_tree');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_env_tree');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$envTreeArray[$row['id']] = $row;
 	}
 	
@@ -108,8 +108,8 @@ function buildUtilizationTable(&$qls){
 	}
 
 	$populatedPortArray = array();
-	$query = $qls->app_SQL->select('*', 'table_populated_port');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_populated_port');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if(!array_key_exists($row['object_id'], $populatedPortArray)) {
 			$populatedPortArray[$row['object_id']] = 0;
 		}
@@ -117,8 +117,8 @@ function buildUtilizationTable(&$qls){
 		$populatedPortArray[$row['object_id']] += 1;
 	}
 	
-	$query = $qls->app_SQL->select('*', 'table_inventory');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_inventory');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if(!array_key_exists($row['a_object_id'], $populatedPortArray)) {
 			$populatedPortArray[$row['a_object_id']] = 0;
 		}
@@ -131,8 +131,8 @@ function buildUtilizationTable(&$qls){
 	}
 	
 	$objectArray = array();
-	$query = $qls->app_SQL->select('*', 'table_object');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$objectArray[$row['id']] = $row;
 		$objectArray[$row['id']]['portTotal'] = 0;
 		$objectArray[$row['id']]['nameString'] = $envTreeArray[$row['env_tree_id']]['nameString'].'.'.$row['name'];
@@ -140,8 +140,8 @@ function buildUtilizationTable(&$qls){
 	}
 	
 	$templateCompatibilityArray = array();
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object_compatibility');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if(!array_key_exists($row['template_id'], $templateCompatibilityArray)) {
 			$templateCompatibilityArray[$row['template_id']] = array();
 		}
@@ -208,8 +208,8 @@ function buildHistoryTable(&$qls){
 	
 	// Get History
 	$historyArray = array();
-	$query = $qls->app_SQL->select('*', 'table_history');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_history');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$historyArray[$row['id']] = $row;
 	}
 	

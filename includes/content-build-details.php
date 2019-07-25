@@ -2,36 +2,36 @@
 
 //Retreive categories
 $category = array();
-$categoryInfo = $qls->app_SQL->select('*', 'table_object_category');
-while ($categoryRow = $qls->app_SQL->fetch_assoc($categoryInfo)){
+$categoryInfo = $qls->SQL->select('*', 'app_object_category');
+while ($categoryRow = $qls->SQL->fetch_assoc($categoryInfo)){
 	$category[$categoryRow['id']]['name'] = $categoryRow['name'];
 }
 
 //Retreive port orientation
 $portOrientation = array();
-$results = $qls->shared_SQL->select('*', 'table_object_portOrientation');
-while ($row = $qls->shared_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'shared_object_portOrientation');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$portOrientation[$row['id']]['name'] = $row['name'];
 }
 
 //Retreive port type
 $portType = array();
-$results = $qls->shared_SQL->select('*', 'table_object_portType');
-while ($row = $qls->shared_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'shared_object_portType');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$portType[$row['id']]['name'] = $row['name'];
 }
 
 //Retreive media type
 $mediaType = array();
-$results = $qls->shared_SQL->select('*', 'table_mediaType');
-while ($row = $qls->shared_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'shared_mediaType');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$mediaType[$row['value']]['name'] = $row['name'];
 }
 
 //Retreive rackable objects
 $objectProperties = array();
-$results = $qls->app_SQL->select('*', 'table_object_properties', false, 'objType_id ASC, name ASC');
-while ($row = $qls->app_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'table_object_properties', false, 'objType_id ASC, name ASC');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$objectProperties[$row['id']]['id'] = $row['id'];
 	$objectProperties[$row['id']]['name'] = $row['name'];
 	$objectProperties[$row['id']]['categoryName'] = $category[$row['category_id']]['name'];

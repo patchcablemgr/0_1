@@ -863,14 +863,14 @@ function initialize_session($user_info, $auth_token_salt) {
 		} else if ($subCode !== false) {
 			$this->qls->SQL->create_db($org_id);
 			$this->qls->app_SQL = new SQL($this->qls, 'app_', $org_id);
-			$this->qls->app_SQL->create_app_table();
-			$this->qls->app_SQL->update('table_organization_data', array('created' => time()), array('created' => array('=', 0)));
+			$this->qls->SQL->create_app_table();
+			$this->qls->SQL->update('app_organization_data', array('created' => time()), array('created' => array('=', 0)));
             $this->qls->SQL->update('subscriptions', array('used' => 1, 'org_id' => $org_id), array('code' => array( '=', $subCode)));
 		} else {
 			$this->qls->SQL->create_db($org_id);
 			$this->qls->app_SQL = new SQL($this->qls, 'app_', $org_id);
-			$this->qls->app_SQL->create_app_table();
-			$this->qls->app_SQL->update('table_organization_data', array('created' => time()), array('created' => array('=', 0)));
+			$this->qls->SQL->create_app_table();
+			$this->qls->SQL->update('app_organization_data', array('created' => time()), array('created' => array('=', 0)));
 			$columns = array(
 				'sub_level',
 				'date',

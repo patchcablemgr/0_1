@@ -1,11 +1,11 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'GET'){
 	if(isset($_GET['scope'])) {
-		require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+		require_once '../includes/path_functions.php';
 		$treeArray = array();
 		$scope = $_GET['scope'];
 		
@@ -39,8 +39,8 @@ if($_SERVER['REQUEST_METHOD'] == 'GET'){
 		} else if($scope == 'portScan') {
 			$connectorID = $_GET['connectorID'];
 			
-			$query = $qls->app_SQL->select('*', 'table_inventory', array('a_id' => array('=', $connectorID), 'OR', 'b_id' => array('=', $connectorID)));
-			$cable = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_inventory', array('a_id' => array('=', $connectorID), 'OR', 'b_id' => array('=', $connectorID)));
+			$cable = $qls->SQL->fetch_assoc($query);
 			$connectorAttrPrefix = $cable['a_id'] == $connectorID ? 'a' : 'b';
 			$cablePortType = $cable[$connectorAttrPrefix.'_connector'];
 			$cableMediaType = $cable['mediaType'];

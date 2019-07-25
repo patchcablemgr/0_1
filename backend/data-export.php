@@ -1,27 +1,27 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('administrator.php');
 
 // Templates
 $templateArray = array();
-$query = $qls->app_SQL->select('*', 'table_object_templates');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_object_templates');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	if($row['id'] != 1 and $row['id'] != 2 and $row['id'] != 3)
 	$templateArray[$row['id']] = $row;
 }
 
 // Categories
 $categoryArray = array();
-$query = $qls->app_SQL->select('*', 'table_object_category');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_object_category');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$categoryArray[$row['id']] = $row;
 }
 
 // Template Compatibility
 $templateEnclosureArray = array();
-$query = $qls->app_SQL->select('*', 'table_object_compatibility');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_object_compatibility');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$templateID = $row['template_id'];
 	$templateFace = $row['side'];
 	$templateDepth = $row['depth'];
@@ -44,8 +44,8 @@ while($row = $qls->app_SQL->fetch_assoc($query)) {
 
 // Cabinet Adjacencies
 $envAdjArray = array();
-$query = $qls->app_SQL->select('*', 'table_cabinet_adj');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_cabinet_adj');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$envAdjArray[$row['left_cabinet_id']]['right'] = $row['right_cabinet_id'];
 	$envAdjArray[$row['right_cabinet_id']]['left'] = $row['left_cabinet_id'];
 }
@@ -53,8 +53,8 @@ while($row = $qls->app_SQL->fetch_assoc($query)) {
 // Objects
 $objectArray = array();
 $insertArray = array();
-$query = $qls->app_SQL->select('*', 'table_object');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_object');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
 		if($row['parent_id'] == 0) {
 			$objectArray[$row['id']] = $row;
@@ -97,14 +97,14 @@ while($row = $qls->app_SQL->fetch_assoc($query)) {
 		
 // Open ZIP File
 $zip = new ZipArchive();
-$zipFilename = $_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/export.zip';
+$zipFilename = './userDownloads/export.zip';
 if ($zip->open($zipFilename, ZipArchive::CREATE | ZipArchive::OVERWRITE)!==TRUE) {
     exit("cannot open <$filename>\n");
 }
 
 // ####### Cabinets #######
 // Create File
-$fileCabinets = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Cabinets.csv', 'w');
+$fileCabinets = fopen('./userDownloads/Cabinets.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -118,8 +118,8 @@ $csvHeader = array(
 fputcsv($fileCabinets,$csvHeader);
 
 $envTreeArray = array();
-$query = $qls->app_SQL->select('*', 'env_tree');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_env_tree');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	if($row['type'] != 'floorplan') {
 		$envTreeArray[$row['id']] = $row;
 	}
@@ -158,7 +158,7 @@ foreach($csvArray as $line) {
 
 // ####### Cabinet Cable Paths #######
 // Create File
-$fileCabinetCablePaths = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Cabinet Cable Paths.csv', 'w');
+$fileCabinetCablePaths = fopen('./userDownloads/Cabinet Cable Paths.csv', 'w');
 
 $csvHeader = array(
 	'Cabinet A',
@@ -169,8 +169,8 @@ $csvHeader = array(
 fputcsv($fileCabinetCablePaths, $csvHeader);
 
 $csvArray = array();
-$query = $qls->app_SQL->select('*', 'table_cable_path');
-while($row = $qls->app_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'app_cable_path');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$line = array(
 		$envTreeArray[$row['cabinet_a_id']]['nameString'],
 		$envTreeArray[$row['cabinet_b_id']]['nameString'],
@@ -187,7 +187,7 @@ foreach($csvArray as $line) {
 
 // ####### Cabinet Objects #######
 // Create File
-$fileCabinetObjects = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Cabinet Objects.csv', 'w');
+$fileCabinetObjects = fopen('./userDownloads/Cabinet Objects.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -228,7 +228,7 @@ foreach($csvArray as $line) {
 
 // ####### Object Inserts #######
 // Create File
-$fileObjectInserts = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Object Inserts.csv', 'w');
+$fileObjectInserts = fopen('./userDownloads/Object Inserts.csv', 'w');
 
 $csvHeader = array(
 	'**Object',
@@ -309,7 +309,7 @@ foreach($csvArray as $object) {
 
 // ####### Templates #######
 // Create File
-$fileTemplates = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Templates.csv', 'w');
+$fileTemplates = fopen('./userDownloads/Templates.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -376,7 +376,7 @@ foreach($csvArray as $line) {
 
 // ####### Categories #######
 // Create File
-$fileCategories = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Categories.csv', 'w');
+$fileCategories = fopen('./userDownloads/Categories.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -410,7 +410,7 @@ foreach($csvArray as $line) {
 
 // ####### Connections #######
 // Create File
-$fileConnections = fopen($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Connections.csv', 'w');
+$fileConnections = fopen('./userDownloads/Connections.csv', 'w');
 
 $csvHeader = array(
 	'PortA',
@@ -517,18 +517,18 @@ fclose($fileTemplates);
 fclose($fileCategories);
 fclose($fileConnections);
 
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Categories.csv', '01 - Categories.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Templates.csv', '02 - Templates.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Cabinets.csv', '03 - Cabinets.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Cabinet Cable Paths.csv', '04 - Cabinet Cable Paths.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Cabinet Objects.csv', '05 - Cabinet Objects.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Object Inserts.csv', '06 - Object Inserts.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/Connections.csv', '07 - Connections.csv');
-$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/README.txt', 'README.txt');
+$zip->addFile('./userDownloads/Categories.csv', '01 - Categories.csv');
+$zip->addFile('./userDownloads/Templates.csv', '02 - Templates.csv');
+$zip->addFile('./userDownloads/Cabinets.csv', '03 - Cabinets.csv');
+$zip->addFile('./userDownloads/Cabinet Cable Paths.csv', '04 - Cabinet Cable Paths.csv');
+$zip->addFile('./userDownloads/Cabinet Objects.csv', '05 - Cabinet Objects.csv');
+$zip->addFile('./userDownloads/Object Inserts.csv', '06 - Object Inserts.csv');
+$zip->addFile('./userDownloads/Connections.csv', '07 - Connections.csv');
+$zip->addFile('./userDownloads/README.txt', 'README.txt');
 
 $zip->close();
 
-$yourfile = $_SERVER['DOCUMENT_ROOT'].'/app/userDownloads/export.zip';
+$yourfile = './userDownloads/export.zip';
 
 $file_name = basename($yourfile);
 

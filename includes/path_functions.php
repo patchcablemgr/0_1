@@ -1,8 +1,8 @@
 <?php
 function buildTemplateTable(&$qls){
 	$return = array();
-	$result = $qls->app_SQL->select('*', 'table_object_templates');
-	while($row = $qls->app_SQL->fetch_assoc($result)){
+	$result = $qls->SQL->select('*', 'app_object_templates');
+	while($row = $qls->SQL->fetch_assoc($result)){
 		$return[$row['id']] = $row;
 	}
 	return $return;
@@ -10,8 +10,8 @@ function buildTemplateTable(&$qls){
 
 function buildCompatibilityTable(&$qls){
 	$return = array();
-	$result = $qls->app_SQL->select('*', 'table_object_compatibility');
-	while($row = $qls->app_SQL->fetch_assoc($result)){
+	$result = $qls->SQL->select('*', 'app_object_compatibility');
+	while($row = $qls->SQL->fetch_assoc($result)){
 		$return[$row['template_id']][$row['side']][$row['depth']] = $row;
 	}
 	return $return;
@@ -19,8 +19,8 @@ function buildCompatibilityTable(&$qls){
 
 function buildLocation($elementID, &$qls){
 	$children = array();
-	$result = $qls->app_SQL->select('*', 'env_tree', array('parent' => array('=', $elementID)), array('name', 'ASC'));
-	while ($row = $qls->app_SQL->fetch_assoc($result)) {
+	$result = $qls->SQL->select('*', 'app_env_tree', array('parent' => array('=', $elementID)), array('name', 'ASC'));
+	while ($row = $qls->SQL->fetch_assoc($result)) {
 		if($row['type'] == 'location' || $row['type'] == 'pod') {
 			$elementType = 0;
 		} else if($row['type'] == 'cabinet') {
@@ -60,25 +60,25 @@ function buildObjects($elementID, $object, $objectFace, $partitionDepth, &$qls){
 	$templateTable = buildTemplateTable($qls);
 	$objectFunction = $templateTable[$object['template_id']]['templateFunction'];
 	
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
-	$objectCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
+	$objectCompatibility = $qls->SQL->fetch_assoc($query);
 	
 	if($objectCompatibility['partitionFunction'] == 'Endpoint') {
-		$query = $qls->app_SQL->select(
+		$query = $qls->SQL->select(
 			'*',
-			'table_object_compatibility',
+			'app_object_compatibility',
 			'portTotal = '.$objectCompatibility['portTotal'].' AND portType = 1 AND partitionFunction <> "Endpoint"'
 		);
 	} else if($objectCompatibility['partitionFunction'] == 'Passive' and $objectCompatibility['portType'] == 1) {
-		$query = $qls->app_SQL->select(
+		$query = $qls->SQL->select(
 			'*',
-			'table_object_compatibility',
+			'app_object_compatibility',
 			'portTotal = '.$objectCompatibility['portTotal'].' AND ((partitionFunction = "Endpoint" AND (portType = 1 OR portType = 4)) OR (partitionFunction = "Passive" AND mediaType = '.$objectCompatibility['mediaType'].'))'
 		);
 	} else if($objectCompatibility['partitionFunction'] == 'Passive') {
-		$query = $qls->app_SQL->select(
+		$query = $qls->SQL->select(
 			'*',
-			'table_object_compatibility',
+			'app_object_compatibility',
 			array(
 				'portTotal' => array('=', $objectCompatibility['portTotal']),
 				'AND',
@@ -93,10 +93,10 @@ function buildObjects($elementID, $object, $objectFace, $partitionDepth, &$qls){
 	$compatibleObjectsArray = array();
 	$compatibleEnclosureArray = array();
 	
-	while ($row = $qls->app_SQL->fetch_assoc($query)) {
+	while ($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['templateType'] == 'Insert') {
-			$queryInsert = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $elementID), 'AND', 'template_id' => array('=', $row['template_id'])));
-			while ($rowInsert = $qls->app_SQL->fetch_assoc($queryInsert)) {
+			$queryInsert = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $elementID), 'AND', 'template_id' => array('=', $row['template_id'])));
+			while ($rowInsert = $qls->SQL->fetch_assoc($queryInsert)) {
 				array_push($compatibleEnclosureArray, $rowInsert['parent_id']);
 			}
 		} else if($row['templateType'] == 'Standard') {
@@ -106,8 +106,8 @@ function buildObjects($elementID, $object, $objectFace, $partitionDepth, &$qls){
 	$compatibleObjectsArray = array_unique($compatibleObjectsArray);
 	$compatibleEnclosureArray = array_unique($compatibleEnclosureArray);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $elementID), 'AND', 'parent_id' => array('=', 0), 'AND', 'id' => array('<>', $object['id'])), array('name', 'ASC'));
-	while ($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $elementID), 'AND', 'parent_id' => array('=', 0), 'AND', 'id' => array('<>', $object['id'])), array('name', 'ASC'));
+	while ($row = $qls->SQL->fetch_assoc($query)) {
 		if(in_array($row['template_id'], $compatibleObjectsArray) or in_array($row['id'], $compatibleEnclosureArray)) {
 			$mountConfig = $templateTable[$row['template_id']]['templateMountConfig'];
 			for($x=0; $x<=$mountConfig; $x++){
@@ -142,15 +142,15 @@ function buildObjectsConnector($elementID, $cable, $connectorAttributePrefix, &$
 	$connectorType = $cable[$connectorAttributePrefix.'_connector'];
 	$cableMediaType = $cable['mediaType'];
 	
-	//$query = $qls->app_SQL->select('*', 'table_object_compatibility', '(portType = '.$connectorType.' OR portType = 4) AND (mediaType = '.$cableMediaType.' OR partitionFunction = "Endpoint")');
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', 'portType = '.$connectorType.' OR portType = 4');
+	//$query = $qls->SQL->select('*', 'app_object_compatibility', '(portType = '.$connectorType.' OR portType = 4) AND (mediaType = '.$cableMediaType.' OR partitionFunction = "Endpoint")');
+	$query = $qls->SQL->select('*', 'app_object_compatibility', 'portType = '.$connectorType.' OR portType = 4');
 	
 	$compatibleObjectsArray = array();
 	$compatibleEnclosureArray = array();
-	while ($row = $qls->app_SQL->fetch_assoc($query)) {
+	while ($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['templateType'] == 'Insert') {
-			$queryInsert = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $elementID), 'AND', 'template_id' => array('=', $row['template_id'])));
-			while ($rowInsert = $qls->app_SQL->fetch_assoc($queryInsert)) {
+			$queryInsert = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $elementID), 'AND', 'template_id' => array('=', $row['template_id'])));
+			while ($rowInsert = $qls->SQL->fetch_assoc($queryInsert)) {
 				array_push($compatibleEnclosureArray, $rowInsert['parent_id']);
 			}
 		} else if($row['templateType'] == 'Standard') {
@@ -160,8 +160,8 @@ function buildObjectsConnector($elementID, $cable, $connectorAttributePrefix, &$
 	$compatibleObjectsArray = array_unique($compatibleObjectsArray);
 	$compatibleEnclosureArray = array_unique($compatibleEnclosureArray);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $elementID), 'AND', 'parent_id' => array('=', 0)));
-	while ($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $elementID), 'AND', 'parent_id' => array('=', 0)));
+	while ($row = $qls->SQL->fetch_assoc($query)) {
 		if(in_array($row['template_id'], $compatibleObjectsArray) or in_array($row['id'], $compatibleEnclosureArray)) {
 			$mountConfig = $templateTable[$row['template_id']]['templateMountConfig'];
 			for($x=0; $x<=$mountConfig; $x++){
@@ -194,11 +194,11 @@ function buildObjectsPathFinder($elementID, $objectID, $objectFace, $objectDepth
 	$children = array();
 	$templateTable = buildTemplateTable($qls);
 
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objectID)));
-	$object = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
+	$object = $qls->SQL->fetch_assoc($query);
 
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $objectDepth)));
-	$objectCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $objectDepth)));
+	$objectCompatibility = $qls->SQL->fetch_assoc($query);
 	
 	$mediaType = $objectCompatibility['mediaType'];
 	$mediaCategory = $objectCompatibility['mediaCategory'];
@@ -218,14 +218,14 @@ function buildObjectsPathFinder($elementID, $objectID, $objectFace, $objectDepth
 		$compatibilityQuery = array('mediaType' => array('=', $mediaType));
 	}
 	
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', $compatibilityQuery);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', $compatibilityQuery);
 	
 	$compatibleObjectsArray = array();
 	$compatibleEnclosureArray = array();
-	while ($row = $qls->app_SQL->fetch_assoc($query)) {
+	while ($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['templateType'] == 'Insert') {
-			$queryInsert = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $elementID), 'AND', 'template_id' => array('=', $row['template_id'])));
-			while ($rowInsert = $qls->app_SQL->fetch_assoc($queryInsert)) {
+			$queryInsert = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $elementID), 'AND', 'template_id' => array('=', $row['template_id'])));
+			while ($rowInsert = $qls->SQL->fetch_assoc($queryInsert)) {
 				array_push($compatibleEnclosureArray, $rowInsert['parent_id']);
 			}
 		} else if($row['templateType'] == 'Standard') {
@@ -235,8 +235,8 @@ function buildObjectsPathFinder($elementID, $objectID, $objectFace, $objectDepth
 	$compatibleObjectsArray = array_unique($compatibleObjectsArray);
 	$compatibleEnclosureArray = array_unique($compatibleEnclosureArray);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $elementID), 'AND', 'parent_id' => array('=', 0)), array('name', 'ASC'));
-	while ($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $elementID), 'AND', 'parent_id' => array('=', 0)), array('name', 'ASC'));
+	while ($row = $qls->SQL->fetch_assoc($query)) {
 		if(in_array($row['template_id'], $compatibleObjectsArray) or in_array($row['id'], $compatibleEnclosureArray)) {
 			$mountConfig = $templateTable[$row['template_id']]['templateMountConfig'];
 			for($x=0; $x<=$mountConfig; $x++){
@@ -269,11 +269,11 @@ function buildPartitions($elementID, $elementFace, $object, $objectFace, $partit
 	$children = array();
 	$templateTable = buildTemplateTable($qls);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $elementID)));
-	$element = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
+	$element = $qls->SQL->fetch_assoc($query);
 	
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
-	$objectCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
+	$objectCompatibility = $qls->SQL->fetch_assoc($query);
 	
 	// Passive/Endpoint
 	$objectFunction = $templateTable[$object['template_id']]['templateFunction'];
@@ -281,9 +281,9 @@ function buildPartitions($elementID, $elementFace, $object, $objectFace, $partit
 	$elementType = $templateTable[$element['template_id']]['templateType'];
 	
 	// Find element partitions
-	$query = $qls->app_SQL->select('*','table_object_compatibility',array('template_id' => array('=',$element['template_id']),'AND','side' => array('=',$elementFace)));
+	$query = $qls->SQL->select('*','app_object_compatibility',array('template_id' => array('=',$element['template_id']),'AND','side' => array('=',$elementFace)));
 	
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['partitionType'] == 'Connectable') {
 			if($row['portTotal'] == $objectCompatibility['portTotal']) {
 				if($objectFunction == 'Endpoint' or $elementFunction == 'Endpoint') {
@@ -327,9 +327,9 @@ function buildPartitions($elementID, $elementFace, $object, $objectFace, $partit
 				}
 			}
 		} else if($row['partitionType'] == 'Enclosure') {
-			$queryInserts = $qls->app_SQL->select(
+			$queryInserts = $qls->SQL->select(
 				'*',
-				'table_object',
+				'app_object',
 				array(
 					'parent_id' => array(
 						'=',
@@ -348,9 +348,9 @@ function buildPartitions($elementID, $elementFace, $object, $objectFace, $partit
 				)
 			);
 			
-			while($insert = $qls->app_SQL->fetch_assoc($queryInserts)){
-				$queryCompatibility = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $insert['template_id'])));
-				$insertCompatibility = $qls->app_SQL->fetch_assoc($queryCompatibility);
+			while($insert = $qls->SQL->fetch_assoc($queryInserts)){
+				$queryCompatibility = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $insert['template_id'])));
+				$insertCompatibility = $qls->SQL->fetch_assoc($queryCompatibility);
 
 				if(($objectFunction == 'Endpoint' and $elementFunction == 'Passive') or ($objectFunction == 'Passive' and $elementFunction == 'Endpoint')) {
 					if(($objectCompatibility['portType'] == 1 or $objectCompatibility['portType'] == 4) and ($insertCompatibility['portType'] == 1 or $insertCompatibility['portType'] == 4)) {
@@ -369,8 +369,8 @@ function buildPartitions($elementID, $elementFace, $object, $objectFace, $partit
 				if($addChild and $insertCompatibility['portTotal'] == $objectCompatibility['portTotal']) {
 					if($insert['id'] != $object['id']) {
 						// Check if insert is already peered
-						$queryInsertPeer = $qls->app_SQL->select('*', 'table_object_peer', array('a_id' => array('=', $insert['id']), 'OR', 'b_id' => array('=', $insert['id'])));
-						if($qls->app_SQL->num_rows($queryInsertPeer) == 0) {
+						$queryInsertPeer = $qls->SQL->select('*', 'app_object_peer', array('a_id' => array('=', $insert['id']), 'OR', 'b_id' => array('=', $insert['id'])));
+						if($qls->SQL->num_rows($queryInsertPeer) == 0) {
 							$addChild = true;
 						} else {
 							$addChild = false;
@@ -409,22 +409,22 @@ function buildPartitions($elementID, $elementFace, $object, $objectFace, $partit
 function buildPorts($elementID, $elementFace, $cable, $connectorAttributePrefix, &$qls){
 	$children = array();
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $elementID)));
-	$element = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
+	$element = $qls->SQL->fetch_assoc($query);
 	
 	$object = $cable[$connectorAttributePrefix.'_object_id'];
 	$depth = $cable[$connectorAttributePrefix.'_object_depth'];
 	$port = $cable[$connectorAttributePrefix.'_port_id'];
 	
 	$mediaTypeArray = array();
-	$query = $qls->shared_SQL->select('*', 'table_mediaType');
-	while($row = $qls->shared_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'shared_mediaType');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$mediaTypeArray[$row['value']] = $row;
 	}
 	
 	$occupiedPorts = array();
-	$query = $qls->app_SQL->select('*', 'table_inventory');
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'app_inventory');
+	while($row = $qls->SQL->fetch_assoc($query)){
 		$attrPrefixArray = array('a','b');
 		foreach($attrPrefixArray as $attrPrefix) {
 			if($row[$attrPrefix.'_object_id'] != 0) {
@@ -437,8 +437,8 @@ function buildPorts($elementID, $elementFace, $cable, $connectorAttributePrefix,
 	}
 	/*
 	// Identify occupied ports of the element
-	$query = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$elementID.' AND a_object_face = '.$elementFace.') OR (b_object_id = '.$elementID.' AND b_object_face = '.$elementFace.')');
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$elementID.' AND a_object_face = '.$elementFace.') OR (b_object_id = '.$elementID.' AND b_object_face = '.$elementFace.')');
+	while($row = $qls->SQL->fetch_assoc($query)){
 		$attrPrefixArray = array('a','b');
 		foreach($attrPrefixArray as $attrPrefix) {
 			if($row[$attrPrefix.'_object_id'] == $elementID and $row[$attrPrefix.'_object_face'] == $elementFace) {
@@ -450,10 +450,10 @@ function buildPorts($elementID, $elementFace, $cable, $connectorAttributePrefix,
 		}
 	}
 	// Identify occupied ports of inserts which are installed in the element
-	$query = $qls->app_SQL->select('*', 'table_object', array('parent_id' => array('=', $elementID), 'AND', 'parent_face' => array('=', $elementFace)));
-	while($row = $qls->app_SQL->fetch_assoc($query)){
-		$queryInsert = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$row['id'].') OR (b_object_id = '.$row['id'].')');
-		while($rowInsert = $qls->app_SQL->fetch_assoc($queryInsert)){
+	$query = $qls->SQL->select('*', 'app_object', array('parent_id' => array('=', $elementID), 'AND', 'parent_face' => array('=', $elementFace)));
+	while($row = $qls->SQL->fetch_assoc($query)){
+		$queryInsert = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$row['id'].') OR (b_object_id = '.$row['id'].')');
+		while($rowInsert = $qls->SQL->fetch_assoc($queryInsert)){
 			$attrPrefixArray = array('a','b');
 			foreach($attrPrefixArray as $attrPrefix) {
 				if($rowInsert[$attrPrefix.'_object_id'] == $row['id']) {
@@ -468,8 +468,8 @@ function buildPorts($elementID, $elementFace, $cable, $connectorAttributePrefix,
 	*/
 	
 	// Retrieve selected object partitions
-	$query = $qls->app_SQL->select('*',
-		'table_object_compatibility',
+	$query = $qls->SQL->select('*',
+		'app_object_compatibility',
 		array(
 			'template_id' => array(
 				'=',
@@ -483,12 +483,12 @@ function buildPorts($elementID, $elementFace, $cable, $connectorAttributePrefix,
 		)
 	);
 	
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	while($row = $qls->SQL->fetch_assoc($query)){
 		$elementArray = array();
 		if($row['partitionType'] == 'Enclosure') {
-			$queryInsertObject = $qls->app_SQL->select(
+			$queryInsertObject = $qls->SQL->select(
 				'*',
-				'table_object',
+				'app_object',
 				array(
 					'parent_id' => array(
 						'=',
@@ -507,9 +507,9 @@ function buildPorts($elementID, $elementFace, $cable, $connectorAttributePrefix,
 				)
 			);
 			
-			while($rowInsertObject = $qls->app_SQL->fetch_assoc($queryInsertObject)) {
-				$queryInsertPartition = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
-				while($rowInsertPartition = $qls->app_SQL->fetch_assoc($queryInsertPartition)) {
+			while($rowInsertObject = $qls->SQL->fetch_assoc($queryInsertObject)) {
+				$queryInsertPartition = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
+				while($rowInsertPartition = $qls->SQL->fetch_assoc($queryInsertPartition)) {
 					if(!isObjectTrunkedAndEndpoint($rowInsertObject['id'], 0, $rowInsertPartition['depth'], $qls)) {
 						$rowInsertElement = $rowInsertPartition;
 						$rowInsertElement['objectID'] = $rowInsertObject['id'];
@@ -576,11 +576,11 @@ function buildPortsPathFinder($elementID, $elementFace, $selectedObjID, $selecte
 	$children = array();
 	$compatibilityTable = buildCompatibilityTable($qls);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $elementID)));
-	$element = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
+	$element = $qls->SQL->fetch_assoc($query);
 
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $selectedObjID)));
-	$object = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $selectedObjID)));
+	$object = $qls->SQL->fetch_assoc($query);
 
 	$mediaCategory = $compatibilityTable[$object['template_id']][$selectedObjFace][$selectedObjDepth];
 	
@@ -609,16 +609,16 @@ function buildPortsPathFinder($elementID, $elementFace, $selectedObjID, $selecte
 	// Build array containing ports that are already connected
 	$occupiedPorts = array();
 
-	$query = $qls->app_SQL->select('*', 'table_inventory', 'a_object_id = '.$elementID.' AND a_object_face = '.$elementFace);
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'app_inventory', 'a_object_id = '.$elementID.' AND a_object_face = '.$elementFace);
+	while($row = $qls->SQL->fetch_assoc($query)){
 		if($row['a_object_id'] != $selectedObjectID or $row['a_object_depth'] != $selectedObjectDepth or $row['a_port_id'] != $selectedObjectPortID) {
 			$portValue = $row['a_object_depth'].'-'.$row['a_port_id'];
 			array_push($occupiedPorts, $portValue);
 		}
 	}
 
-	$query = $qls->app_SQL->select('*', 'table_inventory', 'b_object_id = '.$elementID.' AND b_object_face = '.$elementFace);
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'app_inventory', 'b_object_id = '.$elementID.' AND b_object_face = '.$elementFace);
+	while($row = $qls->SQL->fetch_assoc($query)){
 		if($row['b_object_id'] != $selectedObjectID or $row['b_object_depth'] != $selectedObjectDepth or $row['b_port_id'] != $selectedObjectPortID) {
 			$portValue = $row['b_object_depth'].'-'.$row['b_port_id'];
 			array_push($occupiedPorts, $portValue);
@@ -627,8 +627,8 @@ function buildPortsPathFinder($elementID, $elementFace, $selectedObjID, $selecte
 
 	$occupiedPorts = array_unique($occupiedPorts);
 	
-	$query = $qls->app_SQL->select('*',
-		'table_object_compatibility',
+	$query = $qls->SQL->select('*',
+		'app_object_compatibility',
 		array(
 			'template_id' => array(
 				'=',
@@ -643,13 +643,13 @@ function buildPortsPathFinder($elementID, $elementFace, $selectedObjID, $selecte
 	);
 	
 	$elementArray = array();
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	while($row = $qls->SQL->fetch_assoc($query)){
 		
 		if($row['partitionType'] == 'Enclosure') {
 			// Find all the inserts installed in the enclosure
-			$queryInsertObject = $qls->app_SQL->select(
+			$queryInsertObject = $qls->SQL->select(
 				'*',
-				'table_object',
+				'app_object',
 				array(
 					'parent_id' => array(
 						'=',
@@ -668,13 +668,13 @@ function buildPortsPathFinder($elementID, $elementFace, $selectedObjID, $selecte
 				)
 			);
 			
-			while($rowInsertObject = $qls->app_SQL->fetch_assoc($queryInsertObject)) {
-				$queryInsertPartitions = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
-				while($rowInsertPartition = $qls->app_SQL->fetch_assoc($queryInsertPartitions)) {
+			while($rowInsertObject = $qls->SQL->fetch_assoc($queryInsertObject)) {
+				$queryInsertPartitions = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
+				while($rowInsertPartition = $qls->SQL->fetch_assoc($queryInsertPartitions)) {
 					if(!isObjectTrunkedAndEndpoint($rowInsertObject['id'], 0, $rowInsertPartition['depth'], $qls) or $row['partitionFunction'] == 'Endpoint') {
 						// Determine if the insert port media is compatible with the clicked object's port
-						$queryInsertCompatibility = $qls->app_SQL->select('*',
-							'table_object_compatibility',
+						$queryInsertCompatibility = $qls->SQL->select('*',
+							'app_object_compatibility',
 							array(
 								'template_id' => array(
 									'=',
@@ -693,8 +693,8 @@ function buildPortsPathFinder($elementID, $elementFace, $selectedObjID, $selecte
 							)
 						);
 						
-						if($qls->app_SQL->num_rows($queryInsertCompatibility)) {
-							$rowInsertElement = $qls->app_SQL->fetch_assoc($queryInsertCompatibility);
+						if($qls->SQL->num_rows($queryInsertCompatibility)) {
+							$rowInsertElement = $qls->SQL->fetch_assoc($queryInsertCompatibility);
 							$separator = $rowInsertElement['partitionFunction'] == 'Endpoint' ? '' : '.';
 							$rowInsertElement['objectID'] = $rowInsertObject['id'];
 							$rowInsertElement['portPrefix'] = $rowInsertObject['name'] == '' ? $rowInsertElement['portPrefix'] : $rowInsertObject['name'].$separator.$rowInsertElement['portPrefix'];
@@ -759,8 +759,8 @@ function buildConnectorPath($cable, $connectorAttributePrefix, &$qls){
 	$objectFace = $cable[$connectorAttributePrefix.'_object_face'];
 	$objectDepth = $cable[$connectorAttributePrefix.'_object_depth'];
 	$objectPortID = $cable[$connectorAttributePrefix.'_port_id'];
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objectID)));
-	$object = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
+	$object = $qls->SQL->fetch_assoc($query);
 	
 	// Ports
 	$children = buildPorts($objectID, $objectFace, $cable, $connectorAttributePrefix, $qls);
@@ -795,8 +795,8 @@ function buildConnectorPath($cable, $connectorAttributePrefix, &$qls){
 	
 	// Locations
 	$envObjectID = $object['env_tree_id'];
-	$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $envObjectID)));
-	$envObject = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $envObjectID)));
+	$envObject = $qls->SQL->fetch_assoc($query);
 	$envObjectParentID = $envObject['parent'];
 	while($envObjectParentID != '#'){
 		$envObjectType = $envObject['type'];
@@ -819,8 +819,8 @@ function buildConnectorPath($cable, $connectorAttributePrefix, &$qls){
 			'children' => $children
 		));
 		$envObjectID = $envObjectParentID;
-		$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $envObjectID)));
-		$envObject = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $envObjectID)));
+		$envObject = $qls->SQL->fetch_assoc($query);
 		$envObjectParentID = $envObject['parent'];
 	}
 	
@@ -852,8 +852,8 @@ function buildConnectorFlatPath($cable, $connectorEnd, &$qls){
 		$objectPortID = $cable[$connectorEnd.'_object_port'];
 		
 		// Object variables
-		$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objectID)));
-		$object = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
+		$object = $qls->SQL->fetch_assoc($query);
 		$objectName = $object['name'];
 		
 		// Partition variables
@@ -881,8 +881,8 @@ function buildConnectorFlatPath($cable, $connectorEnd, &$qls){
 		// Object
 		if($templateType == 'Insert') {
 			$parentID = $object['parent_id'];
-			$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $parentID)));
-			$object = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $parentID)));
+			$object = $qls->SQL->fetch_assoc($query);
 		}
 		$objectString = $object['name'];
 		
@@ -891,11 +891,11 @@ function buildConnectorFlatPath($cable, $connectorEnd, &$qls){
 		$envNodeID = $object['env_tree_id'];
 		$rootEnvNode = false;
 		while(!$rootEnvNode) {
-			$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $envNodeID)));
+			$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $envNodeID)));
 			
-			$envNode = $qls->app_SQL->fetch_assoc($query);
+			$envNode = $qls->SQL->fetch_assoc($query);
 			$envNodeID = $envNode['parent'];
-			$rootEnvNode = $envNodeID == '#' or !$qls->app_SQL->num_rows($query) ? true : false;
+			$rootEnvNode = $envNodeID == '#' or !$qls->SQL->num_rows($query) ? true : false;
 			$locationString = $envNode['name'].'.&#8203;'.$locationString;
 		}
 		
@@ -908,24 +908,24 @@ function buildConnectorFlatPath($cable, $connectorEnd, &$qls){
 }
 
 function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
-	$query = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$objectDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$objectDepth.')');
-	if($qls->app_SQL->num_rows($query)) {
+	$query = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$objectDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$objectDepth.')');
+	if($qls->SQL->num_rows($query)) {
 		// Peer variables
-		$peerRecord = $qls->app_SQL->fetch_assoc($query);
+		$peerRecord = $qls->SQL->fetch_assoc($query);
 		$peerAttr = $peerRecord['a_id'] == $objectID ? 'b' : 'a';
 		$peerID = $peerRecord[$peerAttr.'_id'];
 		$peerFace = $peerRecord[$peerAttr.'_face'];
 		$peerDepth = $peerRecord[$peerAttr.'_depth'];
 		
 		// Peer object variables
-		$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $peerID)));
-		$peer = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $peerID)));
+		$peer = $qls->SQL->fetch_assoc($query);
 		$peerName = $peer['name'];
 		$templateID = $peer['template_id'];
 		
 		// Partition variables
-		$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $peerFace), 'AND', 'depth' => array('=', $peerDepth)));
-		$partitionCompatibility = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $peerFace), 'AND', 'depth' => array('=', $peerDepth)));
+		$partitionCompatibility = $qls->SQL->fetch_assoc($query);
 		$templateType = $partitionCompatibility['templateType'];
 		$partitionFunction = $partitionCompatibility['partitionFunction'];
 		
@@ -951,8 +951,8 @@ function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
 		// Peer
 		if($templateType == 'Insert') {
 			$parentID = $peer['parent_id'];
-			$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $parentID)));
-			$peer = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $parentID)));
+			$peer = $qls->SQL->fetch_assoc($query);
 		}
 		$objectString = $peer['name'];
 		
@@ -961,11 +961,11 @@ function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
 		$envNodeID = $peer['env_tree_id'];
 		$rootEnvNode = false;
 		while(!$rootEnvNode) {
-			$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $envNodeID)));
+			$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $envNodeID)));
 			
-			$envNode = $qls->app_SQL->fetch_assoc($query);
+			$envNode = $qls->SQL->fetch_assoc($query);
 			$envNodeID = $envNode['parent'];
-			$rootEnvNode = $envNodeID == '#' or !$qls->app_SQL->num_rows($query) ? true : false;
+			$rootEnvNode = $envNodeID == '#' or !$qls->SQL->num_rows($query) ? true : false;
 			$locationString = $envNode['name'].'.&#8203;'.$locationString;
 		}
 		
@@ -1006,8 +1006,8 @@ function buildPath($peer, $peerFace, $peerDepth, $object, $objectFace, $objectDe
 	}
 	*/
 	$queryString = 'template_id = '.$peer['template_id'].' AND side = '.$peerFace.' AND depth = '.$peerDepth;
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', $queryString);
-	$partitionCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', $queryString);
+	$partitionCompatibility = $qls->SQL->fetch_assoc($query);
 	$portCount = $partitionCompatibility['portLayoutX']*$partitionCompatibility['portLayoutY'];
 	$portStart = $partitionCompatibility['portNumber'];
 	$portEnd = $portStart + ($portCount - 1);
@@ -1038,8 +1038,8 @@ function buildPath($peer, $peerFace, $peerDepth, $object, $objectFace, $objectDe
 	
 	// Locations
 	$envObjectID = $peer['env_tree_id'];
-	$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $envObjectID)));
-	$envObject = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $envObjectID)));
+	$envObject = $qls->SQL->fetch_assoc($query);
 	$envObjectParentID = $envObject['parent'];
 	while($envObjectParentID != '#'){
 		$envObjectType = $envObject['type'];
@@ -1062,8 +1062,8 @@ function buildPath($peer, $peerFace, $peerDepth, $object, $objectFace, $objectDe
 			'children' => $children
 		));
 		$envObjectID = $envObjectParentID;
-		$query = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $envObjectID)));
-		$envObject = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $envObjectID)));
+		$envObject = $qls->SQL->fetch_assoc($query);
 		$envObjectParentID = $envObject['parent'];
 	}
 	
@@ -1085,13 +1085,13 @@ function buildPath($peer, $peerFace, $peerDepth, $object, $objectFace, $objectDe
 }
 
 function isObjectTrunked($id, $face, $depth, &$qls){
-	$query = $qls->app_SQL->select('id', 'table_object_peer', '(a_id = '.$id.' AND a_face = '.$face.' AND a_depth = '.$depth.' AND floorplan_peer = 0) OR (b_id = '.$id.' AND b_face = '.$face.' AND b_depth = '.$depth.' AND floorplan_peer = 0)');
-	return $qls->app_SQL->num_rows($query);
+	$query = $qls->SQL->select('id', 'app_object_peer', '(a_id = '.$id.' AND a_face = '.$face.' AND a_depth = '.$depth.' AND floorplan_peer = 0) OR (b_id = '.$id.' AND b_face = '.$face.' AND b_depth = '.$depth.' AND floorplan_peer = 0)');
+	return $qls->SQL->num_rows($query);
 }
 
 function isObjectTrunkedAndEndpoint($id, $face, $depth, &$qls){
-	$query = $qls->app_SQL->select('id', 'table_object_peer', '(a_id = '.$id.' AND a_face = '.$face.' AND a_depth = '.$depth.' AND a_endpoint = True) OR (b_id = '.$id.' AND b_face = '.$face.' AND b_depth = '.$depth.' AND b_endpoint = True)');
-	return $qls->app_SQL->num_rows($query);
+	$query = $qls->SQL->select('id', 'app_object_peer', '(a_id = '.$id.' AND a_face = '.$face.' AND a_depth = '.$depth.' AND a_endpoint = True) OR (b_id = '.$id.' AND b_face = '.$face.' AND b_depth = '.$depth.' AND b_endpoint = True)');
+	return $qls->SQL->num_rows($query);
 }
 
 function loopDetected(&$qls, $aID, $aFace, $aDepth, $aPort, $bID, $bFace, $bDepth, $bPort){
@@ -1104,11 +1104,11 @@ function loopDetected(&$qls, $aID, $aFace, $aDepth, $aPort, $bID, $bFace, $bDept
 	
 	// If cable is connected to an object
 	if($aID != 0) {
-		$query = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$aID.' AND a_face = '.$aFace.' AND a_depth = '.$aDepth.') OR (b_id = '.$aID.' AND b_face = '.$aFace.' AND b_depth = '.$aDepth.')');
+		$query = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$aID.' AND a_face = '.$aFace.' AND a_depth = '.$aDepth.') OR (b_id = '.$aID.' AND b_face = '.$aFace.' AND b_depth = '.$aDepth.')');
 		
 		// If object is trunked
-		if($qls->app_SQL->num_rows($query)) {
-			$peerRecord = $qls->app_SQL->fetch_assoc($query);			// table_object_peer(5)
+		if($qls->SQL->num_rows($query)) {
+			$peerRecord = $qls->SQL->fetch_assoc($query);			// table_object_peer(5)
 			$peerNearAttr = $peerRecord['a_id'] == $aID ? 'a' : 'b';		// 'b'
 			$peerFarAttr = $peerRecord['a_id'] == $aID ? 'b' : 'a';		// 'a'
 			
@@ -1118,11 +1118,11 @@ function loopDetected(&$qls, $aID, $aFace, $aDepth, $aPort, $bID, $bFace, $bDept
 				$objFace = $peerRecord[$peerFarAttr.'_face'];			// 0
 				$objDepth = $peerRecord[$peerFarAttr.'_depth'];			// 0
 				
-				$query = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$objID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.' AND a_port_id = '.$aPort.') OR (b_object_id = '.$objID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.' AND b_port_id = '.$aPort.')');
+				$query = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$objID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.' AND a_port_id = '.$aPort.') OR (b_object_id = '.$objID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.' AND b_port_id = '.$aPort.')');
 				
 				// If peer has cable connected
-				if($qls->app_SQL->num_rows($query)) {
-					$peerCable = $qls->app_SQL->fetch_assoc($query);
+				if($qls->SQL->num_rows($query)) {
+					$peerCable = $qls->SQL->fetch_assoc($query);
 					$connectorAttrPrefix = $peerCable['a_object_id'] == $objID ? 'b' : 'a';
 					$peerID = $peerCable[$connectorAttrPrefix.'_object_id'];
 					$peerFace = $peerCable[$connectorAttrPrefix.'_object_face'];
@@ -1227,10 +1227,10 @@ function buildObject($obj){
 
 function getCable(&$qls, $objID, $portID, $objFace, $objDepth){
 	//Build the cable
-	$cbl = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$objID.' AND a_port_id = '.$portID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.') OR (b_object_id = '.$objID.' AND b_port_id = '.$portID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.')');
+	$cbl = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$objID.' AND a_port_id = '.$portID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.') OR (b_object_id = '.$objID.' AND b_port_id = '.$portID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.')');
 	
-	if($qls->app_SQL->num_rows($cbl)>0){
-		$cbl = $qls->app_SQL->fetch_assoc($cbl);
+	if($qls->SQL->num_rows($cbl)>0){
+		$cbl = $qls->SQL->fetch_assoc($cbl);
 		if($cbl['a_object_id'] == $objID and $cbl['a_port_id'] == $portID) {
 			$cbl['nearEnd'] = 'a';
 			$cbl['farEnd'] = 'b';
@@ -1247,11 +1247,11 @@ function getCable(&$qls, $objID, $portID, $objFace, $objDepth){
 
 function findPeer(&$qls, $objID, $objFace, $objDepth){
 	//Build the object 
-	$query = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$objID.' AND a_face = '.$objFace.' AND a_depth = '.$objDepth.') OR (b_id = '.$objID.' AND b_face = '.$objFace.' AND b_depth = '.$objDepth.')');
+	$query = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$objID.' AND a_face = '.$objFace.' AND a_depth = '.$objDepth.') OR (b_id = '.$objID.' AND b_face = '.$objFace.' AND b_depth = '.$objDepth.')');
 	
 	// If nothing found, quit the function.
-	if($qls->app_SQL->num_rows($query)>0){
-		$peer = $qls->app_SQL->fetch_assoc($query);
+	if($qls->SQL->num_rows($query)>0){
+		$peer = $qls->SQL->fetch_assoc($query);
 	} else {
 		return false;
 	}
@@ -1275,19 +1275,19 @@ function getObject($templateTable, &$qls, $objID, $portID=0, $objFace=0, $objDep
 	);
 	
 	//Build the object 
-	$query = $qls->app_SQL->select('*', 'table_object',array('id' => array('=',$objID)));
+	$query = $qls->SQL->select('*', 'app_object',array('id' => array('=',$objID)));
 	
 	// If nothing found, quit the function.
-	if($qls->app_SQL->num_rows($query)>0){
-		$obj = $qls->app_SQL->fetch_assoc($query);
+	if($qls->SQL->num_rows($query)>0){
+		$obj = $qls->SQL->fetch_assoc($query);
 	} else {
 		$return['id'] = 0;
 		return $return;
 	}
 
 	// Retrieve port info
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $obj['template_id']), 'AND', 'side' => array('=', $objFace), 'AND', 'depth' => array('=', $objDepth)));
-	$objCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $obj['template_id']), 'AND', 'side' => array('=', $objFace), 'AND', 'depth' => array('=', $objDepth)));
+	$objCompatibility = $qls->SQL->fetch_assoc($query);
 	$return['function'] = $objCompatibility['partitionFunction'];
 	
 	$portNameFormat = json_decode($objCompatibility['portNameFormat'], true);
@@ -1298,8 +1298,8 @@ function getObject($templateTable, &$qls, $objID, $portID=0, $objFace=0, $objDep
 		$separator = $return['function'] == 'Passive' ? '.' : ''; 
 		$portName = $obj['name'] == '' ? $portName : $obj['name'].$separator.$portName;
 		
-		$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $obj['parent_id'])));
-		$obj = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $obj['parent_id'])));
+		$obj = $qls->SQL->fetch_assoc($query);
 	}
 	
 	array_unshift($return['obj'], $portName);
@@ -1314,8 +1314,8 @@ function getObject($templateTable, &$qls, $objID, $portID=0, $objFace=0, $objDep
 	$objParentID = $obj['env_tree_id'];
 	
 	while($objParentID != '#'){
-		$obj = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $objParentID)));
-		$obj = $qls->app_SQL->fetch_assoc($obj);
+		$obj = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $objParentID)));
+		$obj = $qls->SQL->fetch_assoc($obj);
 		array_unshift($return['obj'], $obj['name']);
 		$objParentID = $obj['parent'];
 	}
@@ -1330,19 +1330,19 @@ function getObjectString($templateTable, &$qls, $objID, $portID=0, $objFace=0, $
 	);
 	
 	//Build the object 
-	$query = $qls->app_SQL->select('*', 'table_object',array('id' => array('=',$objID)));
+	$query = $qls->SQL->select('*', 'app_object',array('id' => array('=',$objID)));
 	
 	// If nothing found, quit the function.
-	if($qls->app_SQL->num_rows($query)>0){
-		$obj = $qls->app_SQL->fetch_assoc($query);
+	if($qls->SQL->num_rows($query)>0){
+		$obj = $qls->SQL->fetch_assoc($query);
 	} else {
 		$return['id'] = 0;
 		return $return;
 	}
 	
 	// Retrieve port info
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $obj['template_id']), 'AND', 'side' => array('=', $objFace), 'AND', 'depth' => array('=', $objDepth)));
-	$objCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $obj['template_id']), 'AND', 'side' => array('=', $objFace), 'AND', 'depth' => array('=', $objDepth)));
+	$objCompatibility = $qls->SQL->fetch_assoc($query);
 	
 	$return['function'] = $objCompatibility['partitionFunction'];
 	
@@ -1354,8 +1354,8 @@ function getObjectString($templateTable, &$qls, $objID, $portID=0, $objFace=0, $
 		$separator = $return['function'] == 'Passive' ? '.' : ''; 
 		$portNamePrefix = $obj['name'] == '' ? '' : $obj['name'].$separator;
 		
-		$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $obj['parent_id'])));
-		$obj = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $obj['parent_id'])));
+		$obj = $qls->SQL->fetch_assoc($query);
 	}
 	
 	$port = $portNamePrefix.$portName;
@@ -1371,8 +1371,8 @@ function getObjectString($templateTable, &$qls, $objID, $portID=0, $objFace=0, $
 	$objParentID = $obj['env_tree_id'];
 	
 	while($objParentID != '#'){
-		$obj = $qls->app_SQL->select('*', 'env_tree', array('id' => array('=', $objParentID)));
-		$obj = $qls->app_SQL->fetch_assoc($obj);
+		$obj = $qls->SQL->select('*', 'app_env_tree', array('id' => array('=', $objParentID)));
+		$obj = $qls->SQL->fetch_assoc($obj);
 		array_unshift($return['obj'], $obj['name']);
 		$objParentID = $obj['parent'];
 	}
@@ -1390,13 +1390,13 @@ function getAvailablePortArray($objID, $objFace, $objDepth, &$qls){
 	$occupiedPortArray = array();
 	$attrArray = array('a','b');
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objID)));
-	$obj = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objID)));
+	$obj = $qls->SQL->fetch_assoc($query);
 	$templateID = $obj['template_id'];
 	
-	$query = $qls->app_SQL->select(
+	$query = $qls->SQL->select(
 		'*',
-		'table_object_compatibility',
+		'app_object_compatibility',
 		array(
 			'template_id' => array(
 				'=',
@@ -1414,12 +1414,12 @@ function getAvailablePortArray($objID, $objFace, $objDepth, &$qls){
 			)
 		)
 	);
-	$templateCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$templateCompatibility = $qls->SQL->fetch_assoc($query);
 	$portTotal = $templateCompatibility['portLayoutX'] * $templateCompatibility['portLayoutY'];
 	
 	// Gather patched ports
-	$query = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$objID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.') OR (b_object_id = '.$objID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.')');
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$objID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.') OR (b_object_id = '.$objID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.')');
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		foreach($attrArray as $attr) {
 			if($row[$attr.'_object_id'] == $objID and $row[$attr.'_object_face'] == $objFace and $row[$attr.'_object_depth'] == $objDepth) {
 				array_push($occupiedPortArray, $row[$attr.'_port_id']);
@@ -1428,8 +1428,8 @@ function getAvailablePortArray($objID, $objFace, $objDepth, &$qls){
 	}
 	
 	// Gather populated ports
-	$query = $qls->app_SQL->select('*', 'table_populated_port', array('object_id' => array('=', $objID), 'AND', 'object_face' => array('=', $objFace), 'AND', 'object_depth' => array('=', $objDepth)));
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_populated_port', array('object_id' => array('=', $objID), 'AND', 'object_face' => array('=', $objFace), 'AND', 'object_depth' => array('=', $objDepth)));
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		array_push($occupiedPortArray, $row['port_id']);
 	}
 	
@@ -1454,8 +1454,8 @@ function getObjElevations($obj, $template, &$qls){
 	
 	// If obj is insert, then get distances of parent object
 	if($template['templateType'] == 'Insert') {
-		$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $obj['parent_id'])));
-		$obj = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $obj['parent_id'])));
+		$obj = $qls->SQL->fetch_assoc($query);
 	}
 	
 	$elevationMin = convertToHighestHalfMeter(($obj['RU'] - ($template['templateRUSize'] -1)) * $RUSize);
@@ -1499,8 +1499,8 @@ function convertToHighestHalfFeet($millimeter){
 }
 
 function getPortType(&$qls, $compatibilityTable, $portTable, $objID, $objFace, $objDepth){
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objID)));
-	$obj = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objID)));
+	$obj = $qls->SQL->fetch_assoc($query);
 	$template = $compatibilityTable[$obj['template_id']][$objFace][$objDepth];
 	$portType = $portTable[$template['portType']]['name'];
 	return $portType;
@@ -1535,8 +1535,8 @@ function calculateCableLength($mediaTypeTable, $mediaCategoryTypeTable, $cbl, $i
 function buildTreeLocation(&$qls){
 	$treeArray = array();
 	
-	$nodeQuery = $qls->app_SQL->select('*', 'env_tree', false, array('name', 'ASC'));
-	while ($envNode = $qls->app_SQL->fetch_assoc($nodeQuery)){
+	$nodeQuery = $qls->SQL->select('*', 'app_env_tree', false, array('name', 'ASC'));
+	while ($envNode = $qls->SQL->fetch_assoc($nodeQuery)){
 		
 		if($envNode['type'] == 'location' || $envNode['type'] == 'pod') {
 			$elementType = 0;
@@ -1562,8 +1562,8 @@ function buildTreeLocation(&$qls){
 function buildTreeObjects(&$qls, $cabinetID){
 	$treeArray = array();
 	
-	$objectQuery = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $cabinetID), 'AND', 'parent_id' => array('=', 0)));
-	while ($objectNode = $qls->app_SQL->fetch_assoc($objectQuery)){
+	$objectQuery = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $cabinetID), 'AND', 'parent_id' => array('=', 0)));
+	while ($objectNode = $qls->SQL->fetch_assoc($objectQuery)){
 		$objectID = $objectNode['id'];
 		$objectName = $objectNode['name'];
 		
@@ -1585,13 +1585,13 @@ function buildTreeObjects(&$qls, $cabinetID){
 function buildTreePorts(&$qls, $nodeID, $objectPortType, $objectPartitionFunction, $cablePortType, $cableMediaType, $forTrunk=false){
 	$treeArray = array();
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $nodeID)));
-	$element = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $nodeID)));
+	$element = $qls->SQL->fetch_assoc($query);
 	
 	$occupiedPorts = array();
 	if(!$forTrunk) {
-		$query = $qls->app_SQL->select('*', 'table_inventory');
-		while($row = $qls->app_SQL->fetch_assoc($query)){
+		$query = $qls->SQL->select('*', 'app_inventory');
+		while($row = $qls->SQL->fetch_assoc($query)){
 			$attrPrefixArray = array('a','b');
 			foreach($attrPrefixArray as $attrPrefix) {
 				if($row[$attrPrefix.'_object_id'] != 0) {
@@ -1609,18 +1609,18 @@ function buildTreePorts(&$qls, $nodeID, $objectPortType, $objectPartitionFunctio
 	}
 	
 	// Retrieve selected object partitions
-	$query = $qls->app_SQL->select('*',
-		'table_object_compatibility',
+	$query = $qls->SQL->select('*',
+		'app_object_compatibility',
 		$whereArray
 	);
 	
 	$elementArray = array();
-	while($row = $qls->app_SQL->fetch_assoc($query)){
+	while($row = $qls->SQL->fetch_assoc($query)){
 		
 		if($row['partitionType'] == 'Enclosure') {
-			$queryInsertObject = $qls->app_SQL->select(
+			$queryInsertObject = $qls->SQL->select(
 				'*',
-				'table_object',
+				'app_object',
 				array(
 					'parent_id' => array(
 						'=',
@@ -1639,9 +1639,9 @@ function buildTreePorts(&$qls, $nodeID, $objectPortType, $objectPartitionFunctio
 				)
 			);
 			
-			while($rowInsertObject = $qls->app_SQL->fetch_assoc($queryInsertObject)) {
-				$queryInsertPartition = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
-				while($rowInsertPartition = $qls->app_SQL->fetch_assoc($queryInsertPartition)) {
+			while($rowInsertObject = $qls->SQL->fetch_assoc($queryInsertObject)) {
+				$queryInsertPartition = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
+				while($rowInsertPartition = $qls->SQL->fetch_assoc($queryInsertPartition)) {
 					if(!isObjectTrunkedAndEndpoint($rowInsertObject['id'], 0, $rowInsertPartition['depth'], $qls)) {
 						$separator = $rowInsertPartition['partitionFunction'] == 'Endpoint' ? '' : '.';
 						$rowInsertPartition['objectID'] = $rowInsertObject['id'];
@@ -1675,8 +1675,8 @@ function buildTreePorts(&$qls, $nodeID, $objectPortType, $objectPartitionFunctio
 		
 		if($cablePortType) {
 			$mediaTypeArray = array();
-			$query = $qls->shared_SQL->select('*', 'table_mediaType');
-			while($row = $qls->shared_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'shared_mediaType');
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$mediaTypeArray[$row['value']] = $row;
 			}
 			
@@ -1728,14 +1728,14 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 	$treeArray = array();
 	$templateTable = buildTemplateTable($qls);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $elementID)));
-	$element = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
+	$element = $qls->SQL->fetch_assoc($query);
 	
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objectID)));
-	$object = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
+	$object = $qls->SQL->fetch_assoc($query);
 	
-	$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $objectDepth)));
-	$objectCompatibility = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $object['template_id']), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $objectDepth)));
+	$objectCompatibility = $qls->SQL->fetch_assoc($query);
 	
 	// Passive/Endpoint
 	$objectFunction = $templateTable[$object['template_id']]['templateFunction'];
@@ -1743,9 +1743,9 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 	$elementType = $templateTable[$element['template_id']]['templateType'];
 	
 	// Find element partitions
-	$query = $qls->app_SQL->select('*','table_object_compatibility',array('template_id' => array('=',$element['template_id'])));
+	$query = $qls->SQL->select('*','app_object_compatibility',array('template_id' => array('=',$element['template_id'])));
 	
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		if($row['partitionType'] == 'Connectable') {
 			if($row['portTotal'] == $objectCompatibility['portTotal']) {
 				if($objectFunction == 'Endpoint' or $elementFunction == 'Endpoint') {
@@ -1795,9 +1795,9 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 				}
 			}
 		} else if($row['partitionType'] == 'Enclosure') {
-			$queryInserts = $qls->app_SQL->select(
+			$queryInserts = $qls->SQL->select(
 				'*',
-				'table_object',
+				'app_object',
 				array(
 					'parent_id' => array(
 						'=',
@@ -1816,9 +1816,9 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 				)
 			);
 			
-			while($insert = $qls->app_SQL->fetch_assoc($queryInserts)){
-				$queryCompatibility = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $insert['template_id'])));
-				while($insertCompatibility = $qls->app_SQL->fetch_assoc($queryCompatibility)) {
+			while($insert = $qls->SQL->fetch_assoc($queryInserts)){
+				$queryCompatibility = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $insert['template_id'])));
+				while($insertCompatibility = $qls->SQL->fetch_assoc($queryCompatibility)) {
 
 					if(($objectFunction == 'Endpoint' and $elementFunction == 'Passive') or ($objectFunction == 'Passive' and $elementFunction == 'Endpoint')) {
 						if(($objectCompatibility['portType'] == 1 or $objectCompatibility['portType'] == 4) and ($insertCompatibility['portType'] == 1 or $insertCompatibility['portType'] == 4)) {
@@ -1846,8 +1846,8 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 					
 					if($addChild) {
 						// Check if insert is already peered
-						$queryInsertPeer = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$insert['id'].' AND a_face = '.$insertCompatibility['side'].' AND a_depth = '.$insertCompatibility['depth'].') OR (b_id = '.$insert['id'].' AND b_face = '.$insertCompatibility['side'].' AND b_depth = '.$insertCompatibility['depth'].')');
-						$trunkedFlag = $qls->app_SQL->num_rows($queryInsertPeer) ? '*' : '';
+						$queryInsertPeer = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$insert['id'].' AND a_face = '.$insertCompatibility['side'].' AND a_depth = '.$insertCompatibility['depth'].') OR (b_id = '.$insert['id'].' AND b_face = '.$insertCompatibility['side'].' AND b_depth = '.$insertCompatibility['depth'].')');
+						$trunkedFlag = $qls->SQL->num_rows($queryInsertPeer) ? '*' : '';
 					}
 					
 					if($addChild) {

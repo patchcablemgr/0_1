@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('administrator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	
@@ -22,7 +22,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		
 		$editable = $action == 'finalize' ? 0 : 1;
 		
-		$qls->app_SQL->update('table_inventory', array('editable' => $editable), array('id' => array('=', $cableID)));
+		$qls->SQL->update('app_inventory', array('editable' => $editable), array('id' => array('=', $cableID)));
 	}
 	echo json_encode($validate->returnData);
 }

@@ -1,9 +1,9 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('operator.php');
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
+require_once './includes/templateFunctions.php';
 ?>
 
 <?php require 'includes/header_start.php'; ?>
@@ -33,7 +33,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
 </style>
 
 <?php require 'includes/header_end.php'; ?>
-<?php require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-object_tree_modal.php'; ?>
+<?php require_once './includes/content-object_tree_modal.php'; ?>
 
 <!-- image upload modal -->
 <div id="modalImageUpload" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modalLabelImageUpload" aria-hidden="true">
@@ -313,8 +313,8 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/templateFunctions.php';
 								</select>
 								<?php
 									$template = false;
-									include_once($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-objectData.php');
-									include_once($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-objects.php');
+									include_once('./includes/content-build-objectData.php');
+									include_once('./includes/content-build-objects.php');
 								?>
 							</div>
 						</div>

@@ -6,7 +6,7 @@
 -->
 <?php
 $templateCatalog = true;
-include($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-objectData.php');
+include('./includes/content-build-objectData.php');
 
 foreach($templates as $category => $categoryTemplate) {
 	echo '<div class="categoryCatalogContainerEntire">';

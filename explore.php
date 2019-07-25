@@ -1,7 +1,7 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('user.php');
 ?>
 
@@ -30,7 +30,7 @@ $qls->Security->check_auth_page('user.php');
 </style>
 
 <?php require 'includes/header_end.php'; ?>
-<?php require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-object_tree_modal.php'; ?>
+<?php require_once './includes/content-object_tree_modal.php'; ?>
 
 <!-- sample modal content -->
 <div id="modalPathFinder" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

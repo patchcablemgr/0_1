@@ -1,7 +1,7 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+require_once '../includes/header.php';
+require_once '../includes/path_functions.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -23,8 +23,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$floorplanObjectTemplate = $qls->App->templateArray[$floorplanObject['template_id']];
 		
 		$peerArray = array();
-		$query = $qls->app_SQL->select('*', 'table_object_peer', array('a_id' => array('=', $objectID)));
-		while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'app_object_peer', array('a_id' => array('=', $objectID)));
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($peerArray, $row);
 		}
 		

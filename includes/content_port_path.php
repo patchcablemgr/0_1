@@ -9,14 +9,14 @@ $rootObjDepth = $objDepth;
 $rootPortID = $objPort;
 
 $mediaTypeTable = array();
-$query = $qls->shared_SQL->select('*', 'table_mediaType');
-while($row = $qls->shared_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'shared_mediaType');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$mediaTypeTable[$row['value']] = $row;
 }
 
 $mediaCategoryTypeTable = array();
-$query = $qls->shared_SQL->select('*', 'table_mediaCategoryType');
-while($row = $qls->shared_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'shared_mediaCategoryType');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$mediaCategoryTypeTable[$row['value']] = $row;
 }
 

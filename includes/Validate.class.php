@@ -37,7 +37,7 @@ class Validate {
 	}
 
 	function validateDBResult($query, $errMsg, &$qls) {
-		if(!$qls->app_SQL->num_rows($query)) {
+		if(!$qls->SQL->num_rows($query)) {
 			$errMsg = 'Internal error when searching for compatibility.';
 			array_push($this->returnData['error'], $errMsg);
 			return false;
@@ -87,8 +87,8 @@ class Validate {
 				array_push($this->returnData['error'], $errorMsg);
 				return false;
 			} else if(!$isEdit) {
-				$results = $this->qls->app_SQL->select('*', 'table_object_category', array('name' => array('=', $input)));
-				if($this->qls->app_SQL->num_rows($results)) {
+				$results = $this->qls->SQL->select('*', 'app_object_category', array('name' => array('=', $input)));
+				if($this->qls->SQL->num_rows($results)) {
 					$errorMsg = 'A category with that name already exists.  Category names must be unique.';
 					array_push($this->returnData['error'], $errorMsg);
 					return false;
@@ -122,8 +122,8 @@ class Validate {
 				array_push($this->returnData['error'], $errorMsg);
 				return false;
 			} else {
-				$results = $this->qls->app_SQL->select('*', 'table_object_templates', array('templateName' => array('=', $input)));
-				if($this->qls->app_SQL->num_rows($results)) {
+				$results = $this->qls->SQL->select('*', 'app_object_templates', array('templateName' => array('=', $input)));
+				if($this->qls->SQL->num_rows($results)) {
 					$errorMsg = 'A template with that name already exists.  Template names must be unique.';
 					array_push($this->returnData['error'], $errorMsg);
 					return false;
@@ -531,8 +531,8 @@ class Validate {
 				$errorMsg = 'Invalid cable ID.';
 				array_push($this->returnData['error'], $errorMsg);
 			} else {
-				$result = $qls->app_SQL->select('*', 'table_inventory', array('id' => array('=', $input)));
-				if ($qls->app_SQL->num_rows($result) == 0) {
+				$result = $qls->SQL->select('*', 'app_inventory', array('id' => array('=', $input)));
+				if ($qls->SQL->num_rows($result) == 0) {
 					$errorMsg = 'Cable ID does not exist.';
 					array_push($this->returnData['error'], $errorMsg);
 				}
@@ -550,8 +550,8 @@ class Validate {
 				$errorMsg = 'Invalid connector ID.';
 				array_push($this->returnData['error'], $errorMsg);
 			} else {
-				$result = $qls->app_SQL->select('*', 'table_inventory', array('a_id' => array('=', $input), 'OR', 'b_id' => array('=', $input)));
-				if ($qls->app_SQL->num_rows($result) == 0) {
+				$result = $qls->SQL->select('*', 'app_inventory', array('a_id' => array('=', $input), 'OR', 'b_id' => array('=', $input)));
+				if ($qls->SQL->num_rows($result) == 0) {
 					$errorMsg = 'Connector ID does not exist.';
 					array_push($this->returnData['error'], $errorMsg);
 				}
@@ -582,8 +582,8 @@ class Validate {
 				$errorMsg = 'Invalid cable connector ID.';
 				array_push($this->returnData['error'], $errorMsg);
 			} else {
-				$result = $qls->shared_SQL->select('*', 'table_cable_connectorType', array('value' => array('=', $input)));
-				if ($qls->app_SQL->num_rows($result) == 0) {
+				$result = $qls->SQL->select('*', 'shared_cable_connectorType', array('value' => array('=', $input)));
+				if ($qls->SQL->num_rows($result) == 0) {
 					$errorMsg = 'Cable connector ID does not exist.';
 					array_push($this->returnData['error'], $errorMsg);
 				}
@@ -601,8 +601,8 @@ class Validate {
 				$errorMsg = 'Invalid cable media type.';
 				array_push($this->returnData['error'], $errorMsg);
 			} else {
-				$result = $qls->shared_SQL->select('*', 'table_mediaType', array('value' => array('=', $input)));
-				if ($qls->app_SQL->num_rows($result) == 0) {
+				$result = $qls->SQL->select('*', 'shared_mediaType', array('value' => array('=', $input)));
+				if ($qls->SQL->num_rows($result) == 0) {
 					$errorMsg = 'Cable media type does not exist.';
 					array_push($this->returnData['error'], $errorMsg);
 				}
@@ -957,8 +957,8 @@ class Validate {
 	}
 
 	function validateDuplicate($table, $where, $errorMsg) {
-		$results = $this->qls->app_SQL->select('*', $table, $where);
-		if($this->qls->app_SQL->num_rows($results)) {
+		$results = $this->qls->SQL->select('*', $table, $where);
+		if($this->qls->SQL->num_rows($results)) {
 			array_push($this->returnData['error'], $errorMsg);
 			return false;
 		} else {
@@ -967,12 +967,12 @@ class Validate {
 	}
 	
 	function validateExistenceInDB($table, $where, $errorMsg) {
-		$results = $this->qls->app_SQL->select('*', $table, $where);
-		if(!$this->qls->app_SQL->num_rows($results)) {
+		$results = $this->qls->SQL->select('*', $table, $where);
+		if(!$this->qls->SQL->num_rows($results)) {
 			array_push($this->returnData['error'], $errorMsg);
 			return false;
 		} else {
-			$object = $this->qls->app_SQL->fetch_assoc($results);
+			$object = $this->qls->SQL->fetch_assoc($results);
 			return $object;
 		}
 	}

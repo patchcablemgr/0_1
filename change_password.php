@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once './includes/header.php';
 ?>
 
 
@@ -26,7 +26,7 @@ else {
 			if($change_link = $qls->User->get_password_reset_link()) {
 				$recipientEmail = $qls->Security->make_safe($_POST['username']);
 				$subject = 'Otterm8 - Reset Password';
-				$msg = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/app/html/email_password-reset.html');
+				$msg = file_get_contents('./html/email_password-reset.html');
 				$msg = str_replace('<!--btnURL-->', $change_link, $msg);
 			
 				$attributes = array('recipient', 'sender', 'subject', 'message');

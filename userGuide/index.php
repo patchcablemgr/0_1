@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once './includes/header.php';
 ?>
 
 <!DOCTYPE html>

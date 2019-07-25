@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -22,14 +22,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 			$cabinetID = $data['cabinetID'];
 			$objectTemplateID = $data['objectID'];
-			$name = $qls->App->findUniqueName($cabinetID, 'table_object');
+			$name = $qls->App->findUniqueName($cabinetID, 'app_object');
 			//$name = findUniqueName($qls, $cabinetID);
 			$RU = isset($data['RU']) ? $data['RU'] : 0;
 			$cabinetFace = $data['cabinetFace'];
-			$object = $qls->app_SQL->fetch_assoc(
-				$qls->app_SQL->select(
+			$object = $qls->SQL->fetch_assoc(
+				$qls->SQL->select(
 					'*',
-					'table_object_templates',
+					'app_object_templates',
 					array(
 						'id' => array(
 							'=',
@@ -77,7 +77,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 				
 			//Insert data into DB
-			$qls->app_SQL->insert('table_object', array(
+			$qls->SQL->insert('app_object', array(
 					'env_tree_id',
 					'template_id', 
 					'name',
@@ -104,7 +104,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				)
 			);
 			//This tells the client what the new object_id is
-			$validate->returnData['success'] = $qls->app_SQL->insert_id();
+			$validate->returnData['success'] = $qls->SQL->insert_id();
 				
 		} else if($action == 'updateObject') {
 			$cabinetID = $data['cabinetID'];
@@ -112,11 +112,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$name = 'New_Object';
 			$RU = $data['RU'];
 			$cabinetFace = $data['cabinetFace'];
-			$objectTemplateID = $qls->app_SQL->fetch_row($qls->app_SQL->select('template_id', 'table_object', array('id' => array('=', $objectID))))[0];
-			$object = $qls->app_SQL->fetch_assoc(
-				$qls->app_SQL->select(
+			$objectTemplateID = $qls->SQL->fetch_row($qls->SQL->select('template_id', 'app_object', array('id' => array('=', $objectID))))[0];
+			$object = $qls->SQL->fetch_assoc(
+				$qls->SQL->select(
 					'*',
-					'table_object_templates',
+					'app_object_templates',
 					array(
 						'id' => array(
 							'=',
@@ -137,7 +137,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 			
 			//Update DB entry
-			$qls->app_SQL->update('table_object', array(
+			$qls->SQL->update('app_object', array(
 				'RU' => $RU
 				),
 				'id = '.$objectID
@@ -150,7 +150,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$parent_depth = $data['parent_depth'];
 			$insertSlotX = $data['insertSlotX'];
 			$insertSlotY = $data['insertSlotY'];
-			$objectTemplateID = $qls->app_SQL->fetch_row($qls->app_SQL->select('template_id', 'table_object', array('id' => array('=', $objectID))))[0];
+			$objectTemplateID = $qls->SQL->fetch_row($qls->SQL->select('template_id', 'app_object', array('id' => array('=', $objectID))))[0];
 			
 			checkInsertCompatibility($parent_id, $parent_face, $parent_depth, $objectTemplateID, $objectID, $qls, $validate);
 			detectInsertCollision($parent_id, $parent_face, $parent_depth, $insertSlotX, $insertSlotY, $qls, $validate);
@@ -161,7 +161,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 			
 			//Update DB entry
-			$qls->app_SQL->update('table_object', array(
+			$qls->SQL->update('app_object', array(
 				'parent_id' => $parent_id,
 				'parent_face' => $parent_face,
 				'parent_depth' => $parent_depth,
@@ -174,7 +174,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$name = $data['value'];
 			$objectID = $data['objectID'];
 			
-			$qls->app_SQL->update('table_object',
+			$qls->SQL->update('app_object',
 				array('name' => $name),
 				array('id' => array('=', $objectID))
 			);
@@ -185,16 +185,16 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$safeToDelete = false;
 			
 			// Check object for connections
-			$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
-			if($qls->app_SQL->num_rows($query) == 0) {
+			$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
+			if($qls->SQL->num_rows($query) == 0) {
 				$safeToDelete = true;
 			}
 			
 			// Check insert(s) for connections
 			foreach($qls->App->insertArray[$objectID] as $insert) {
 				$insertID = $insert['id'];
-				$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $insertID), 'OR', 'b_object_id' => array('=', $insertID)));
-				if($qls->app_SQL->num_rows($query) == 0) {
+				$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $insertID), 'OR', 'b_object_id' => array('=', $insertID)));
+				if($qls->SQL->num_rows($query) == 0) {
 					$safeToDelete = true;
 				}
 			}
@@ -203,19 +203,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				// Remove insert peer entries and populated ports
 				foreach($qls->App->insertArray[$objectID] as $insert) {
 					$insertID = $insert['id'];
-					$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
-					$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $insertID)));
+					$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
+					$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $insertID)));
 				}
 				
 				// Remove object peer entries and populated ports
-				$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
-				$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $objectID)));
+				$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+				$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $objectID)));
 				
 				// Delete inserts
-				$qls->app_SQL->delete('table_object', array('parent_id'=>array('=', $objectID)));
+				$qls->SQL->delete('app_object', array('parent_id'=>array('=', $objectID)));
 				
 				//Delete object
-				$qls->app_SQL->delete('table_object', array('id'=>array('=', $objectID)));
+				$qls->SQL->delete('app_object', array('id'=>array('=', $objectID)));
 			} else {
 				$errorMsg = 'Object cannot be deleted.  Cables are connected to it.';
 				array_push($validate->returnData['error'], $errorMsg);
@@ -228,10 +228,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 function checkInsertCompatibility($parent_id, $parent_face, $parent_depth, $objectTemplateID, $objectID, &$qls, &$validate){
 	$compatible = true;
-	$parentTemplateID = $qls->app_SQL->fetch_row($qls->app_SQL->select('template_id', 'table_object', array('id' => array('=', $parent_id))))[0];
-	$objectTemplateID = $objectID ? $qls->app_SQL->fetch_row($qls->app_SQL->select('template_id', 'table_object', array('id' => array('=', $objectID))))[0] : $objectTemplateID;
-	$parent = $qls->app_SQL->fetch_assoc($qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $parentTemplateID), 'AND', 'side' => array('=', $parent_face), 'AND', 'depth' => array('=', $parent_depth))));
-	$insert = $qls->app_SQL->fetch_assoc($qls->app_SQL->select('*', 'table_object_templates', 'id='.$objectTemplateID));
+	$parentTemplateID = $qls->SQL->fetch_row($qls->SQL->select('template_id', 'app_object', array('id' => array('=', $parent_id))))[0];
+	$objectTemplateID = $objectID ? $qls->SQL->fetch_row($qls->SQL->select('template_id', 'app_object', array('id' => array('=', $objectID))))[0] : $objectTemplateID;
+	$parent = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $parentTemplateID), 'AND', 'side' => array('=', $parent_face), 'AND', 'depth' => array('=', $parent_depth))));
+	$insert = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'app_object_templates', 'id='.$objectTemplateID));
 	
 	if($parent['hUnits'] != $insert['templateHUnits']) {
 		$compatible = false;
@@ -257,9 +257,9 @@ function checkInsertCompatibility($parent_id, $parent_face, $parent_depth, $obje
 }
 
 function detectInsertCollision($parent_id, $parent_face, $parent_depth, $insertSlotX, $insertSlotY, &$qls, &$validate){
-	$query = $qls->app_SQL->select(
+	$query = $qls->SQL->select(
 		'id',
-		'table_object',
+		'app_object',
 		array(
 			'parent_id' => array(
 				'=',
@@ -287,7 +287,7 @@ function detectInsertCollision($parent_id, $parent_face, $parent_depth, $insertS
 			)
 		)
 	);
-	$results = $qls->app_SQL->num_rows($query);
+	$results = $qls->SQL->num_rows($query);
 	if($results > 0){
 		$errorMsg = 'Enclosure slot is occupied.';
 		array_push($validate->returnData['error'], $errorMsg);
@@ -298,15 +298,15 @@ function detectInsertCollision($parent_id, $parent_face, $parent_depth, $insertS
 function detectCollision($RUSize, $cabinetFace, $RU, $objectMountConfig, $cabinetID, &$qls, &$validate, $objectID=0){
 	$cabinetFaceAttr = $cabinetFace == 0 ? 'cabinet_front' : 'cabinet_back';
 	if($objectMountConfig == 0) {
-		$query = $qls->app_SQL->select(
+		$query = $qls->SQL->select(
 			'*',
-			'table_object',
+			'app_object',
 			'env_tree_id = '.$cabinetID.' AND id <> '.$objectID.' AND RU <> 0 AND '.$cabinetFaceAttr.' IS NOT NULL'
 		);
 	} else {
-		$query = $qls->app_SQL->select(
+		$query = $qls->SQL->select(
 			'*',
-			'table_object',
+			'app_object',
 			'env_tree_id = '.$cabinetID.' AND id <> '.$objectID.' AND RU <> 0 AND (cabinet_front IS NOT NULL OR cabinet_back IS NOT NULL)'
 		);
 	}
@@ -314,8 +314,8 @@ function detectCollision($RUSize, $cabinetFace, $RU, $objectMountConfig, $cabine
 	$occupiedSpacialArray = array();
 	$objectSpacialArray = range(($RU-$RUSize)+1, $RU);
 	
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
-		$template = $qls->app_SQL->fetch_row($qls->app_SQL->select('templateRUSize', 'table_object_templates', array('id' => array('=', $row['template_id']))));
+	while($row = $qls->SQL->fetch_assoc($query)) {
+		$template = $qls->SQL->fetch_row($qls->SQL->select('templateRUSize', 'app_object_templates', array('id' => array('=', $row['template_id']))));
 		$tempArray = range(($row['RU']-$template[0])+1, $row['RU']);
 		$occupiedSpacialArray = array_merge($occupiedSpacialArray, $tempArray);
 	}
@@ -330,8 +330,8 @@ function detectCollision($RUSize, $cabinetFace, $RU, $objectMountConfig, $cabine
 function detectOverlap($RUSize, $RU, $cabinetID, &$qls, &$validate){
 	$objectBtmRU = ($RU-$RUSize)+1;
 	$objectTopRU = $RU;
-	$query = $qls->app_SQL->select('size', 'env_tree', array('id' => array('=', $cabinetID)));
-	$cabinet = $qls->app_SQL->fetch_row($query);
+	$query = $qls->SQL->select('size', 'app_env_tree', array('id' => array('=', $cabinetID)));
+	$cabinet = $qls->SQL->fetch_row($query);
 	$cabinetSize = $cabinet[0];
 	if($objectBtmRU < 1 || $objectTopRU > $cabinetSize){
 		$errorMsg = 'Object extends past the cabinet space.';
@@ -389,14 +389,14 @@ function validate($data, &$validate, &$qls){
 			if($validate->validateID($data['objectID'], 'object ID')) {
 				
 				//Validate object existence
-				$table = 'table_object';
+				$table = 'app_object';
 				$where = array('id' => array('=', $data['objectID']));
 				if($object = $validate->validateExistenceInDB($table, $where, 'Object does not exist.')) {
 					$parentID = $object['parent_id'];
 					//Validate objectName
 					$cabinetID = $object['env_tree_id'];
 					if($validate->validateNameText($data['value'], 'object name')) {
-						$table = 'table_object';
+						$table = 'app_object';
 						if($parentID) {
 							$where = array('name' => array('=', $data['value']), 'AND', 'env_tree_id' => array('=', $cabinetID), 'AND', 'parent_id' => array('=', $parentID));
 						} else {
@@ -423,8 +423,8 @@ function findUniqueName(&$qls, $cabinetID){
 			$uniqueString .= $characters[rand(0, $charactersLength - 1)];
 		}
 		$uniqueName = $rootName.$uniqueString;
-		$query = $qls->app_SQL->select('*', 'table_object', array('env_tree_id' => array('=', $cabinetID), 'AND', 'name' => array('=', $uniqueName)));
-		if(!$qls->app_SQL->num_rows($query)) {
+		$query = $qls->SQL->select('*', 'app_object', array('env_tree_id' => array('=', $cabinetID), 'AND', 'name' => array('=', $uniqueName)));
+		if(!$qls->SQL->num_rows($query)) {
 			$count = 100;
 		}
 	}

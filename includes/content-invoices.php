@@ -3,7 +3,7 @@ define('QUADODO_IN_SYSTEM', true);
 require_once('header.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/shared_tables.php';
+	require_once './includes/shared_tables.php';
 	
 	$orgID = $qls->user_info['org_id'];
 	$invoiceID = $_POST['invoiceID'];
@@ -23,7 +23,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	$datetimeString = date($invoice['date']);
 	$datetime = new DateTime($datetimeString, new DateTimeZone('UTC'));
 	$datetime->setTimezone(new DateTimeZone($qls->user_info['timezone']));
-	$address = $qls->app_SQL->fetch_assoc($qls->app_SQL->select('*', 'table_address', array('id' => array('=', $invoice['addr_id']))));
+	$address = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'table_address', array('id' => array('=', $invoice['addr_id']))));
 }
 ?>
 <div class="row">

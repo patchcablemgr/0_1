@@ -1,11 +1,11 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/image-uploader.class.php';
+require_once '../includes/header.php';
+require_once '../includes/image-uploader.class.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
@@ -52,8 +52,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			
 			// Delete current image if one exists
 			/*
-			$query = $qls->app_SQL->select($imgAttr, 'table_object_templates', array('id' => array('=', $templateID)));
-			$templateImg = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select($imgAttr, 'app_object_templates', array('id' => array('=', $templateID)));
+			$templateImg = $qls->SQL->fetch_assoc($query);
 			$templateImgFilename = $templateImg[$imgAttr];
 			
 			if($qls->user_info['group_id'] != 1) {
@@ -65,10 +65,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			*/
 			
 			// Update database with new filname
-			$qls->app_SQL->update('table_object_templates', array($imgAttr => $imgFilename), array('id' => array('=', $templateID)));
+			$qls->SQL->update('app_object_templates', array($imgAttr => $imgFilename), array('id' => array('=', $templateID)));
 			
-			$query = $qls->app_SQL->select('*', 'table_object_templates', array('id' => array('=', $templateID)));
-			$templateInfo = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'app_object_templates', array('id' => array('=', $templateID)));
+			$templateInfo = $qls->SQL->fetch_assoc($query);
 			$RUSize = $templateInfo['templateRUSize'];
 			
 			if($templateInfo['templateType'] == 'Standard') {

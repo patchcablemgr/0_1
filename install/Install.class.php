@@ -454,7 +454,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// The permission masks
 			foreach($masks as $masks_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix}masks` (`name`,`auth_admin`,`auth_admin_phpinfo`,`auth_admin_configuration`,`auth_admin_add_user`,`auth_admin_user_list`,`auth_admin_remove_user`,`auth_admin_edit_user`,`auth_admin_add_page`,`auth_admin_page_list`,`auth_admin_remove_page`,`auth_admin_edit_page`,`auth_admin_page_stats`,`auth_admin_add_mask`,`auth_admin_list_masks`,`auth_admin_remove_mask`,`auth_admin_edit_mask`,`auth_admin_add_group`,`auth_admin_list_groups`,`auth_admin_remove_group`,`auth_admin_edit_group`, `auth_admin_activate_account`,`auth_admin_send_invite`,`auth_9e6a55b6b4563e652a23be9d623ca5055c356940`, `auth_b3f0c7f6bb763af1be91d9e74eabfeb199dc1f1f`, `auth_91032ad7bbcb6cf72875e8e8207dcfba80173f7c`, `auth_472b07b9fcf2c2451e8781e944bf5f77cd8457c8`) VALUES({$masks_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}masks` (`name`,`auth_admin`,`auth_admin_phpinfo`,`auth_admin_configuration`,`auth_admin_add_user`,`auth_admin_user_list`,`auth_admin_remove_user`,`auth_admin_edit_user`,`auth_admin_add_page`,`auth_admin_page_list`,`auth_admin_remove_page`,`auth_admin_edit_page`,`auth_admin_page_stats`,`auth_admin_add_mask`,`auth_admin_list_masks`,`auth_admin_remove_mask`,`auth_admin_edit_mask`,`auth_admin_add_group`,`auth_admin_list_groups`,`auth_admin_remove_group`,`auth_admin_edit_group`, `auth_admin_activate_account`,`auth_admin_send_invite`,`auth_356a192b7913b04c54574d18c28d46e6395428ab`, `auth_da4b9237bacccdf19c0760cab7aec4a8359010b0`, `auth_77de68daecd823babbb58edb1c8e14d7106e83bb`, `auth_1b6453892473a467d07372d45eb05abc2031647a`) VALUES({$masks_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -475,15 +475,15 @@ var $install_error = 'There was an error with the installation! This is most lik
 			}
 
 			$pages = array(
-				"'admin.php',0",
-				"'administrator.php',0",
-				"'operator.php',0",
-				"'user.php',0"
+				"1,'admin.php',0",
+				"2,'administrator.php',0",
+				"3,'operator.php',0",
+				"4,'user.php',0"
 			);
 			
 			// The pages
 			foreach($pages as $pages_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix}pages` (`name`,`hits`) VALUES({$pages_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}pages` (`id`,`name`,`hits`) VALUES({$pages_item})")) {
 					$this->test->output_error();
 				}
 			}

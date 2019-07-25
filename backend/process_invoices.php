@@ -13,7 +13,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	
 	$qls->SQL->update('invoices', array('status' => $orderStatus), array('id' => array('=', $orderID)));
 	$active = $orderStatus == 'Delivered' ? 1 : 0;
-	$qls->assume_SQL->update('table_inventory', array(
+	$qls->assume_SQL->update('app_inventory', array(
 			'active' => $active
 		), array(
 			'order_id' => array(

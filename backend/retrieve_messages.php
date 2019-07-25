@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
@@ -20,8 +20,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	if (!count($validate->returnData['error'])){
 		if(!isset($data['messageID'])) {
 			$validate->returnData['success'] = array();
-			$query = $qls->app_SQL->select('*', 'table_user_messages', array('to_id' => array('=', $qls->user_info['id'])));
-			while($row = $qls->app_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'shared_user_messages', array('to_id' => array('=', $qls->user_info['id'])));
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$from = $qls->User->id_to_username($row['from_id']);
 				array_push($validate->returnData['success'], array(
 					'messageID' => $row['message_id'],
@@ -33,9 +33,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 		} else {
 			$messageID = $data['messageID'];
-			$query = $qls->app_SQL->select('*', 'table_user_messages', array('message_id' => array('=', $messageID)));
-			if($qls->app_SQL->num_rows($query)) {
-				$message = $qls->app_SQL->fetch_assoc($query);
+			$query = $qls->SQL->select('*', 'shared_user_messages', array('message_id' => array('=', $messageID)));
+			if($qls->SQL->num_rows($query)) {
+				$message = $qls->SQL->fetch_assoc($query);
 				$from = $qls->User->id_to_username($message['from_id']);
 				$validate->returnData['success'] = array(
 					'messageID' => $message['message_id'],
@@ -44,7 +44,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					'subject' => $message['subject'],
 					'message' => $message['message']
 				);
-				$qls->app_SQL->update('table_user_messages', array('viewed' => 1), array('message_id' => array('=', $messageID)));
+				$qls->SQL->update('shared_user_messages', array('viewed' => 1), array('message_id' => array('=', $messageID)));
 
 			}
 		}

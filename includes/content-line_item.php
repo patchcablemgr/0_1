@@ -8,38 +8,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 	$error = validate($lineID);
 	if ($error == '') {
 		$connectorTypeTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_cable_connectorOptions');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_cable_connectorOptions');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($connectorTypeTable, array('value'=>$row['value'], 'name'=>$row['name'], 'category_type_id'=>$row['category_type_id']));
 		}
 		
 		$mediaCategoryTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaCategory');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaCategory');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$mediaCategoryTable[$row['id']] = array('name' => $row['name'], 'category' => $row['category']);
 		}
 		
 		$mediaCategoryTypeTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaCategoryType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaCategoryType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$mediaCategoryTypeTable[$row['value']] = array('name' => $row['name'], 'unit_of_length' => $row['unit_of_length']);
 		}
 		
 		$mediaTypeTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($mediaTypeTable, array('value'=>$row['value'], 'name'=>$row['name'], 'category_id'=>$row['category_id'], 'category_type_id'=>$row['category_type_id']));
 		}
 		
 		$cableLengthTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_cable_length', false, array('value', 'ASC'));
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_cable_length', false, array('value', 'ASC'));
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($cableLengthTable, array('value'=>$row['value'], 'name'=>$row['name'], 'category_type_id'=>$row['category_type_id']));
 		}
 		
 		$cableColorTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_cable_color');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_cable_color');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($cableColorTable, array('value'=>$row['value'], 'name'=>$row['name'], 'short_name'=>$row['short_name']));
 		}
 		?>

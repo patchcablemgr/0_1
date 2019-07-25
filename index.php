@@ -28,16 +28,16 @@ $qls->Security->check_auth_page('user.php');
             <h4 class="header-title m-t-0 m-b-30">Cable Inventory</h4>
 			<?php
 				$mediaCategoryTypeArray = array();
-				$query = $qls->shared_SQL->select('*', 'table_mediaCategory');
-				while($row = $qls->shared_SQL->fetch_assoc($query)) {
+				$query = $qls->SQL->select('*', 'shared_mediaCategory');
+				while($row = $qls->SQL->fetch_assoc($query)) {
 					$mediaCategoryTypeArray[$row['value']] = $row;
 				}
 			?>
 			<div class="form-inline">
 			<select class="form-control" id="inventorySelectConnectorType">
 				<?php
-					$query = $qls->shared_SQL->select('*', 'table_cable_connectorOptions', false, array('value', 'ASC'));
-					while($row = $qls->shared_SQL->fetch_assoc($query)) {
+					$query = $qls->SQL->select('*', 'shared_cable_connectorOptions', false, array('value', 'ASC'));
+					while($row = $qls->SQL->fetch_assoc($query)) {
 						$selected = $row['defaultOption'] == 1 ? 'selected' : '';
 						echo '<option value="'.$row['value'].'" data-categoryType="categoryType'.$mediaCategoryTypeArray[$row['category_type_id']]['value'].'" '.$selected.'>'.$row['name'].'</option>';
 					}
@@ -46,8 +46,8 @@ $qls->Security->check_auth_page('user.php');
 			
 			<select class="form-control" id="inventorySelectMediaType">
 				<?php
-					$query = $qls->shared_SQL->select('*', 'table_mediaType', false, array('value', 'ASC'));
-					while($row = $qls->shared_SQL->fetch_assoc($query)) {
+					$query = $qls->SQL->select('*', 'shared_mediaType', false, array('value', 'ASC'));
+					while($row = $qls->SQL->fetch_assoc($query)) {
 						$selected = $row['defaultOption'] == 1 ? 'selected' : '';
 						echo '<option value="'.$row['value'].'" class="categoryType'.$mediaCategoryTypeArray[$row['category_type_id']]['value'].'" '.$selected.'>'.$row['name'].'</option>';
 					}

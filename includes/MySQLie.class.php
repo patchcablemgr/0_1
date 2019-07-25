@@ -175,7 +175,7 @@ var $qls;
      * @optional array  $limit    - Contains offset and number
      * @return void
 	 * Example:
-	 * $result = $qls->app_SQL->select('*','table',array('attr1' => array('=',$value),'AND','attr1' => array('=',$value)));
+	 * $result = $qls->SQL->select('*','table',array('attr1' => array('=',$value),'AND','attr1' => array('=',$value)));
      */
 	function select($what, $from, $where = false, $order_by = false, $limit = false) {
         $new_what = '';
@@ -343,7 +343,7 @@ var $qls;
 			    die(SQL_SELECT_QUERY_FAILED);
 			}
 		}
-
+		
 		// If exists add to query
 		if ($new_limit != '') {
 		    $query .= " LIMIT {$new_limit}";

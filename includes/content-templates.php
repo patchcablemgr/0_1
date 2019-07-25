@@ -4,8 +4,8 @@
 //$inputCategory = '<option value="" selected>--Select Category--</option>';
 $inputCategory = '';
 $categoryList = '';
-$results = $qls->app_SQL->select('*', 'table_object_category');
-while ($row = $qls->app_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'app_object_category');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$default = [];
 	if ($row['defaultOption'] == 1){
 		$default['option'] = 'selected';
@@ -18,8 +18,8 @@ while ($row = $qls->app_SQL->fetch_assoc($results)){
 function generateOrientation(&$qls){
 	#Orientation
 	$inputOrientation = '';
-	$results = $qls->shared_SQL->select('*', 'table_object_portOrientation');
-	while ($row = $qls->shared_SQL->fetch_assoc($results)){
+	$results = $qls->SQL->select('*', 'shared_object_portOrientation');
+	while ($row = $qls->SQL->fetch_assoc($results)){
 		$default = '';
 		if ($row['defaultOption'] == 1){
 			$default = 'checked';
@@ -32,8 +32,8 @@ function generateOrientation(&$qls){
 function generatePortType(&$qls){
 	#PortType
 	$inputPortType = '';
-	$results = $qls->shared_SQL->select('*', 'table_object_portType');
-	while ($row = $qls->shared_SQL->fetch_assoc($results)){
+	$results = $qls->SQL->select('*', 'shared_object_portType');
+	while ($row = $qls->SQL->fetch_assoc($results)){
 		$default = '';
 		if ($row['defaultOption'] == 1){
 			$default = 'selected';
@@ -46,8 +46,8 @@ function generatePortType(&$qls){
 function generateMediaType(&$qls){
 	#MediaType
 	$inputMediaType = '';
-	$results = $qls->shared_SQL->select('*', 'table_mediaType', array('display' => array('=', 1)));
-	while ($row = $qls->shared_SQL->fetch_assoc($results)){
+	$results = $qls->SQL->select('*', 'shared_mediaType', array('display' => array('=', 1)));
+	while ($row = $qls->SQL->fetch_assoc($results)){
 		$default = '';
 		if ($row['defaultOption'] == 1){
 			$default = 'selected';

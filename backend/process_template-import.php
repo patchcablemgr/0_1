@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -18,13 +18,13 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	if (!count($validate->returnData['error'])){
 		$templateID = $data['templateID'];
 		
-		$query = $qls->app_SQL->select('*', 'table_object_category', array('defaultOption' => array('=', 1)));
-		$defaultCategory = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object_category', array('defaultOption' => array('=', 1)));
+		$defaultCategory = $qls->SQL->fetch_assoc($query);
 		$defaultCategoryName = $defaultCategory['name'];
 		$defaultCategoryID = $defaultCategory['id'];
 		
-		$query = $qls->shared_SQL->select('*', 'table_template_object_templates', array('id' => array('=', $templateID)));
-		$template = $qls->shared_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'table_template_object_templates', array('id' => array('=', $templateID)));
+		$template = $qls->SQL->fetch_assoc($query);
 		
 		$templateNameArray = array();
 		$templateValueArray = array();
@@ -40,13 +40,13 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		}
 		
 		$templateCompatibilityArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_template_object_compatibility', array('template_id' => array('=', $templateID)));
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'table_template_object_compatibility', array('template_id' => array('=', $templateID)));
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($templateCompatibilityArray, $row);
 		}
 		
-		$qls->app_SQL->insert('table_object_templates', $templateNameArray, $templateValueArray);
-		$newTemplateID = $qls->app_SQL->insert_id();
+		$qls->SQL->insert('app_object_templates', $templateNameArray, $templateValueArray);
+		$newTemplateID = $qls->SQL->insert_id();
 		
 		foreach($templateCompatibilityArray as $templateCompatibility) {
 			$templateCompatibilityNameArray = array();
@@ -62,7 +62,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				}
 			}
 			
-			$qls->app_SQL->insert('table_object_compatibility', $templateCompatibilityNameArray, $templateCompatibilityValueArray);
+			$qls->SQL->insert('app_object_compatibility', $templateCompatibilityNameArray, $templateCompatibilityValueArray);
 		}
 		$validate->returnData['success'] = 'This template has been imported to the default category named '.$defaultCategoryName;
 	}

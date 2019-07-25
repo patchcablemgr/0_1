@@ -1,11 +1,11 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+require_once '../includes/path_functions.php';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
@@ -37,60 +37,60 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		//$templateTable = buildTemplateTable($qls);
 
 		$portTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_object_portType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_object_portType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$portTable[$row['value']] = $row;
 		}
 		
 		$compatibilityTable = array();
-		$query = $qls->app_SQL->select('*', 'table_object_compatibility');
-		while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'app_object_compatibility');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$compatibilityTable[$row['template_id']][$row['side']][$row['depth']] = $row;
 		}
 
 		$mediaTypeTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$mediaTypeTable[$row['value']] = $row;
 		}
 		
 		$mediaCategoryTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaCategory');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaCategory');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$mediaCategoryTable[$row['value']] = $row;
 		}
 		
 		$mediaCategoryTypeTable = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaCategoryType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaCategoryType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$mediaCategoryTypeTable[$row['value']] = $row;
 		}
 		
 		$envTreeTable = array();
 		$parentTable = array();
-		$query = $qls->app_SQL->select('*', 'table_object');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'app_object');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$envTreeTable[$row['id']] = $row['env_tree_id'];
 			$parentTable[$row['id']] = $row['parent_id'];
 		}
 
 		// Create endpointA & B objects
-		$query = $qls->app_SQL->select('*', 'table_object', 'id = '.$endpointAObjID.' OR id = '.$endpointBObjID);
-		while($row = $qls->app_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'app_object', 'id = '.$endpointAObjID.' OR id = '.$endpointBObjID);
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			if($row['id'] == $endpointAObjID) {
 				// If object is an endpoint
 				$endpointAObjFunction = $compatibilityTable[$row['template_id']][$endpointAObjFace][$endpointAObjDepth]['partitionFunction'];
 				if($endpointAObjFunction == 'Endpoint') {
 					// If object is an endpoint and trunked
-					$queryPeer = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$endpointAObjID.' AND a_face = '.$endpointAObjFace.' AND a_depth = '.$endpointAObjDepth.') OR (b_id = '.$endpointAObjID.' AND b_face = '.$endpointAObjFace.' AND b_depth = '.$endpointAObjDepth.')');
-					if($qls->app_SQL->num_rows($queryPeer)) {
+					$queryPeer = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$endpointAObjID.' AND a_face = '.$endpointAObjFace.' AND a_depth = '.$endpointAObjDepth.') OR (b_id = '.$endpointAObjID.' AND b_face = '.$endpointAObjFace.' AND b_depth = '.$endpointAObjDepth.')');
+					if($qls->SQL->num_rows($queryPeer)) {
 						// Create object to append to front of path array
 						$nearEndpointObject = getObjectString($templateTable, $qls, $endpointAObjID, $endpointAObjPortID, $endpointAObjFace, $endpointAObjDepth);
 						// Change endpoint to trunk peer
-						$peerEntry = $qls->app_SQL->fetch_assoc($queryPeer);
+						$peerEntry = $qls->SQL->fetch_assoc($queryPeer);
 						$peerAttr = $endpointAObjID == $peerEntry['a_id'] ? 'b' : 'a';
-						$queryEndpoint = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $peerEntry[$peerAttr.'_id'])));
-						$endpointAObj = $qls->app_SQL->fetch_assoc($queryEndpoint);
+						$queryEndpoint = $qls->SQL->select('*', 'app_object', array('id' => array('=', $peerEntry[$peerAttr.'_id'])));
+						$endpointAObj = $qls->SQL->fetch_assoc($queryEndpoint);
 						$endpointAObjFace = $peerEntry[$peerAttr.'_face'];
 						$endpointAObjDepth = $peerEntry[$peerAttr.'_depth'];
 					} else {
@@ -104,15 +104,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$endpointBObjFunction = $compatibilityTable[$row['template_id']][$endpointBObjFace][$endpointBObjDepth]['partitionFunction'];
 				if($endpointBObjFunction == 'Endpoint') {
 					// If object is an endpoint and trunked
-					$queryPeer = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$endpointBObjID.' AND a_face = '.$endpointBObjFace.' AND a_depth = '.$endpointBObjDepth.') OR (b_id = '.$endpointBObjID.' AND b_face = '.$endpointBObjFace.' AND b_depth = '.$endpointBObjDepth.')');
-					if($qls->app_SQL->num_rows($queryPeer)) {
+					$queryPeer = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$endpointBObjID.' AND a_face = '.$endpointBObjFace.' AND a_depth = '.$endpointBObjDepth.') OR (b_id = '.$endpointBObjID.' AND b_face = '.$endpointBObjFace.' AND b_depth = '.$endpointBObjDepth.')');
+					if($qls->SQL->num_rows($queryPeer)) {
 						// Create object to append to front of path array
 						$farEndpointObject = getObjectString($templateTable, $qls, $endpointBObjID, $endpointBObjPortID, $endpointBObjFace, $endpointBObjDepth);
 						// Change endpoint to trunk peer
-						$peerEntry = $qls->app_SQL->fetch_assoc($queryPeer);
+						$peerEntry = $qls->SQL->fetch_assoc($queryPeer);
 						$peerAttr = $endpointBObjID == $peerEntry['a_id'] ? 'b' : 'a';
-						$queryEndpoint = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $peerEntry[$peerAttr.'_id'])));
-						$endpointBObj = $qls->app_SQL->fetch_assoc($queryEndpoint);
+						$queryEndpoint = $qls->SQL->select('*', 'app_object', array('id' => array('=', $peerEntry[$peerAttr.'_id'])));
+						$endpointBObj = $qls->SQL->fetch_assoc($queryEndpoint);
 						$endpointBObjFace = $peerEntry[$peerAttr.'_face'];
 						$endpointBObjDepth = $peerEntry[$peerAttr.'_depth'];
 					} else {
@@ -173,9 +173,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		// Get compatible template IDs
 		$compatibleTemplateArray = array();
 		
-		$query = $qls->app_SQL->select('*', 'table_object_compatibility', $compatibilityQuery);
+		$query = $qls->SQL->select('*', 'app_object_compatibility', $compatibilityQuery);
 		$workingArray = array();
-		while($row = $qls->app_SQL->fetch_assoc($query)) {
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$workingArray[$row['mediaType']][$row['mediaCategory']][$row['mediaCategoryType']][] = $row['template_id'];
 		}
 		
@@ -201,16 +201,16 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 		// Build array containing all cabinets
 		$cabinetArray = array();
-		$queryCabinets = $qls->app_SQL->select('*', 'env_tree', array('type' => array('=', 'cabinet')));
-		while($cabinet = $qls->app_SQL->fetch_assoc($queryCabinets)) {
+		$queryCabinets = $qls->SQL->select('*', 'app_env_tree', array('type' => array('=', 'cabinet')));
+		while($cabinet = $qls->SQL->fetch_assoc($queryCabinets)) {
 			$cabinetArray[$cabinet['id']] = $cabinet;
 		}
 		
 		// Build array containing all peer relationships
 		// indexed as $peerArray[<objID>][<objFace>][<objDepth>]
 		$peerArray = array();
-		$queryPeers = $qls->app_SQL->select('*', 'table_object_peer');
-		while($peer = $qls->app_SQL->fetch_assoc($queryPeers)) {
+		$queryPeers = $qls->SQL->select('*', 'app_object_peer');
+		while($peer = $qls->SQL->fetch_assoc($queryPeers)) {
 			$peerEndpoints = array(array('a','b'), array('b','a'));
 			foreach($peerEndpoints as $endpointAttr) {
 				$peerAttr = $endpointAttr[1];
@@ -228,9 +228,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 		// Build array containing all compatible objects
 		$objectArray = array();
-		$queryObjects = $qls->app_SQL->select('*', 'table_object');
+		$queryObjects = $qls->SQL->select('*', 'app_object');
 		$objects = array();
-		while($row = $qls->app_SQL->fetch_assoc($queryObjects)) {
+		while($row = $qls->SQL->fetch_assoc($queryObjects)) {
 			array_push($objects, $row);
 		}
 		foreach($compatibleTemplateArray as $compatibilityType => $compatibilityArray) {
@@ -245,8 +245,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		// Build array containing all cabinet adjacencies
 		// indexed as $cabinetAdjacencyArray[<cabinetID >]
 		$cabinetAdjacencyArray = array();
-		$queryCabinetAdjacencies = $qls->app_SQL->select('*', 'table_cabinet_adj');
-		while($cabinetAdjacency = $qls->app_SQL->fetch_assoc($queryCabinetAdjacencies)) {
+		$queryCabinetAdjacencies = $qls->SQL->select('*', 'app_cabinet_adj');
+		while($cabinetAdjacency = $qls->SQL->fetch_assoc($queryCabinetAdjacencies)) {
 			$peerEndpoints = array(array('left', 'right'), array('right', 'left'));
 			foreach($peerEndpoints as $endpointAttr) {
 				$peerAttr = $endpointAttr[1];
@@ -263,8 +263,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		// Build array containing all cable paths
 		// indexed as $cablePathArray[<cabinetID >]
 		$cablePathArray = array();
-		$queryCablePaths = $qls->app_SQL->select('*', 'table_cable_path');
-		while($cablePath = $qls->app_SQL->fetch_assoc($queryCablePaths)) {
+		$queryCablePaths = $qls->SQL->select('*', 'app_cable_path');
+		while($cablePath = $qls->SQL->fetch_assoc($queryCablePaths)) {
 			$peerEndpoints = array(array('a','b'), array('b','a'));
 			foreach($peerEndpoints as $endpointAttr) {
 				$peerAttr = $endpointAttr[1];
@@ -281,12 +281,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		
 		// Include pod neighbors in cable path array
 		// indexed as $cablePathArray[<cabinetID >]
-		$queryPods = $qls->app_SQL->select('*', 'env_tree', array('type' => array('=', 'pod')));
-		while($pod = $qls->app_SQL->fetch_assoc($queryPods)) {
+		$queryPods = $qls->SQL->select('*', 'app_env_tree', array('type' => array('=', 'pod')));
+		while($pod = $qls->SQL->fetch_assoc($queryPods)) {
 			
-			$queryPodNeighbors = $qls->app_SQL->select('*', 'env_tree', array('parent' => array('=', $pod['id'])));
+			$queryPodNeighbors = $qls->SQL->select('*', 'app_env_tree', array('parent' => array('=', $pod['id'])));
 			$podNeighbors = array();
-			while($row = $qls->app_SQL->fetch_assoc($queryPodNeighbors)){
+			while($row = $qls->SQL->fetch_assoc($queryPodNeighbors)){
 				array_push($podNeighbors, $row);
 			}
 			
@@ -687,9 +687,9 @@ function getDistance($objARU, $objASize, $objBRU, $objBSize, $adj){
 }
 
 function getRU($ID, &$qls){
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $ID)));
-	if($qls->app_SQL->num_rows($query)) {
-		$parentObj = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $ID)));
+	if($qls->SQL->num_rows($query)) {
+		$parentObj = $qls->SQL->fetch_assoc($query);
 		$RU = $parentObj['RU'];
 	} else {
 		$RU = 0;
@@ -698,9 +698,9 @@ function getRU($ID, &$qls){
 }
 
 function getSize($ID, $templateTable, &$qls){
-	$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $ID)));
-	if($qls->app_SQL->num_rows($query)) {
-		$parentObj = $qls->app_SQL->fetch_assoc($query);
+	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $ID)));
+	if($qls->SQL->num_rows($query)) {
+		$parentObj = $qls->SQL->fetch_assoc($query);
 		$size = $templateTable[$parentObj['template_id']]['templateRUSize'];
 	} else {
 		$size = 0;

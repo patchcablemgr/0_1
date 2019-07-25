@@ -83,8 +83,8 @@
                            aria-haspopup="false" aria-expanded="false">
                             <i class="zmdi zmdi-email noti-icon"></i>
 							<?php
-								$query = $qls->app_SQL->select('*', 'table_user_messages', 'to_id = '.$qls->user_info['id'].' AND viewed = 0');
-								if($qls->app_SQL->num_rows($query)) {
+								$query = $qls->SQL->select('*', 'shared_user_messages', 'to_id = '.$qls->user_info['id'].' AND viewed = 0');
+								if($qls->SQL->num_rows($query)) {
 							?>
                             		<span class="noti-icon-badge"></span>
 							<?php
@@ -95,16 +95,16 @@
                             <!-- item->
                             <div class="dropdown-item noti-title bg-success">
 								<?php
-									$query = $qls->app_SQL->select('*', 'table_user_messages', array('to_id' => array('=', $qls->user_info['id'])));
-									$messageNumber = $qls->app_SQL->num_rows($query);
+									$query = $qls->SQL->select('*', 'shared_user_messages', array('to_id' => array('=', $qls->user_info['id'])));
+									$messageNumber = $qls->SQL->num_rows($query);
 									$messageString = $messageNumber ? 'Messages' : 'Message';
 								?>
                                 <h5><small>Messages<span class="label label-danger pull-xs-right"><?php echo $messageNumber; ?></span></small></h5>
                             </div>
 							<?php
 								$dateNow = new DateTime('now', $qls->user_info['timezoneObject']);
-								$query = $qls->app_SQL->select('*', 'table_user_messages', array('to_id' => array('=', $qls->user_info['id'])));
-								while($row = $qls->app_SQL->fetch_assoc($query)) {
+								$query = $qls->SQL->select('*', 'shared_user_messages', array('to_id' => array('=', $qls->user_info['id'])));
+								while($row = $qls->SQL->fetch_assoc($query)) {
 									$dateSent = new DateTime($row['date'], new DateTimeZone('UTC'));
 									$dateSent->setTimezone($qls->user_info['timezoneObject']);
 									$difference = $dateNow->diff($dateSent);

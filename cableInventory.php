@@ -1,7 +1,7 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('administrator.php');
 ?>
 
@@ -33,7 +33,7 @@ $qls->Security->check_auth_page('administrator.php');
                             Cables that have been initialized or purchased through Otterm8.
                         </p>
 						<div class="table-responsive">
-							<?php require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-cable_inventory.php';?>
+							<?php require_once './includes/content-cable_inventory.php';?>
 						</div>
 					</div>
 					<div class="card-box">
@@ -43,7 +43,7 @@ $qls->Security->check_auth_page('administrator.php');
                         </p>
 						
 						<div class="table-responsive">
-							<?php require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-available_user_ids.php';?>
+							<?php require_once './includes/content-available_user_ids.php';?>
 						</div>
 					</div>
 				</div>

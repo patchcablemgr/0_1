@@ -5,22 +5,22 @@ $path = array();
 $workingArray = array();
 
 $mediaTypeTable = array();
-$query = $qls->shared_SQL->select('*', 'table_mediaType');
-while($row = $qls->shared_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'shared_mediaType');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$mediaTypeTable[$row['value']] = $row;
 }
 
 $mediaCategoryTypeTable = array();
-$query = $qls->shared_SQL->select('*', 'table_mediaCategoryType');
-while($row = $qls->shared_SQL->fetch_assoc($query)) {
+$query = $qls->SQL->select('*', 'shared_mediaCategoryType');
+while($row = $qls->SQL->fetch_assoc($query)) {
 	$mediaCategoryTypeTable[$row['value']] = $row;
 }
 
 // Get cable.
-$query = $qls->app_SQL->select('*', 'table_inventory', array('a_code39' => array('=', $connectorCode39), 'OR', 'b_code39' => array('=', $connectorCode39)));
+$query = $qls->SQL->select('*', 'app_inventory', array('a_code39' => array('=', $connectorCode39), 'OR', 'b_code39' => array('=', $connectorCode39)));
 
-if($qls->app_SQL->num_rows($query)>0){
-	$rootCable = $qls->app_SQL->fetch_assoc($query);
+if($qls->SQL->num_rows($query)>0){
+	$rootCable = $qls->SQL->fetch_assoc($query);
 	$nearCblAttrPrefix = $rootCable['a_code39'] == $connectorCode39 ? 'a' : 'b';
 	$farCblAttrPrefix = $rootCable['a_code39'] == $connectorCode39 ? 'b' : 'a';
 } else {

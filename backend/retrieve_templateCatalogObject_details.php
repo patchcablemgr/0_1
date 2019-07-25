@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -25,8 +25,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$objectName = $trunkedTo = 'N/A';
 		
 		//Retrieve partition info
-		$query = $qls->shared_SQL->select('*', 'table_template_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
-		$partitionData = $qls->shared_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'table_template_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
+		$partitionData = $qls->SQL->fetch_assoc($query);
 		$partitionType = $partitionData['partitionType'];
 		//$portName = '';
 		$portRange = false;
@@ -58,8 +58,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		}
 
 		// Retrieve template info
-		$templateInfo = $qls->shared_SQL->select('*', 'table_template_object_templates', 'id='.$templateID);
-		$templateInfo = $qls->shared_SQL->fetch_assoc($templateInfo);
+		$templateInfo = $qls->SQL->select('*', 'table_template_object_templates', 'id='.$templateID);
+		$templateInfo = $qls->SQL->fetch_assoc($templateInfo);
 		
 		if($templateInfo['templateType'] == 'Standard') {
 			$mountConfig = $templateInfo['templateMountConfig'] == 0 ? '2-Post' : '4-Post';
@@ -86,8 +86,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		
 		// Retrieve category info
 		$categoryArray = array();
-		$result = $qls->shared_SQL->select('*', 'table_template_object_category');
-		while($row = $qls->shared_SQL->fetch_assoc($result)){
+		$result = $qls->SQL->select('*', 'table_template_object_category');
+		while($row = $qls->SQL->fetch_assoc($result)){
 			array_push($categoryArray, array('value'=>$row['id'], 'text'=>$row['name']));
 			if($row['id'] == $templateInfo['templateCategory_id']){
 				$categoryID = $row['id'];
@@ -151,18 +151,18 @@ function generatePortCount($number, $x, $y){
 function getPortProperties(&$qls){
 	$portProperties = array();
 	
-	$query = $qls->shared_SQL->select('*', 'table_object_portType');
-	while($row = $qls->shared_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'shared_object_portType');
+	while($row = $qls->SQL->fetch_assoc($query)){
 		$portProperties['portType'][$row['value']] = $row['name'];
 	}
 	
-	$query = $qls->shared_SQL->select('*', 'table_object_portOrientation');
-	while($row = $qls->shared_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'shared_object_portOrientation');
+	while($row = $qls->SQL->fetch_assoc($query)){
 		$portProperties['portOrientation'][$row['value']] = $row['name'];
 	}
 	
-	$query = $qls->shared_SQL->select('*', 'table_mediaType');
-	while($row = $qls->shared_SQL->fetch_assoc($query)){
+	$query = $qls->SQL->select('*', 'shared_mediaType');
+	while($row = $qls->SQL->fetch_assoc($query)){
 		$portProperties['mediaType'][$row['value']] = $row['name'];
 	}
 	return $portProperties;

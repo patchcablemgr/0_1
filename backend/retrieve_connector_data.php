@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -17,7 +17,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	validate($data, $validate);
 	
 	if (!count($validate->returnData['error'])){
-		require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+		require_once '../includes/path_functions.php';
 		
 		$connectorCode39 = strtoupper($data['connectorCode39']);
 		$connectorID = base_convert($connectorCode39, 36, 10);
@@ -80,10 +80,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				if($initializeCode39 != $connectorCode39) {
 					// Is initializeID already initialized?
 					if($initializedExisting = $qls->App->inventoryByIDArray[$initializeID]) {
-						$initializedExisting = $qls->app_SQL->fetch_assoc($query);
+						$initializedExisting = $qls->SQL->fetch_assoc($query);
 						if($initializedExisting['localEndID'] == 0 or $initializedExisting['remoteEndID'] == 0) {
-							$qls->app_SQL->update(
-								'table_inventory',
+							$qls->SQL->update(
+								'app_inventory',
 								array(
 									$remoteAttrPrefix.'_id' => $initializedExisting['localEndID'],
 									$remoteAttrPrefix.'_code39' => $initializedExisting['localEndCode39'],
@@ -98,7 +98,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 								)
 							);
 							
-							$qls->app_SQL->delete('table_inventory', array('id' => array('=', $initializedExisting['rowID'])));
+							$qls->SQL->delete('app_inventory', array('id' => array('=', $initializedExisting['rowID'])));
 							
 							// Update cable object
 							$qls->App->inventoryByIDArray[$connectorID]['remoteEndID'] = $initializedExisting['localEndID'];
@@ -119,8 +119,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 							array_push($qls->App->returnData['error'], $errorMsg);
 						}
 					} else {
-						$qls->app_SQL->update(
-							'table_inventory',
+						$qls->SQL->update(
+							'app_inventory',
 							array(
 								$remoteAttrPrefix.'_id' => $initializeID,
 								$remoteAttrPrefix.'_code39' => $initializeCode39,
@@ -148,8 +148,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 		// Cable doesn't exist
 		} else {
-			$qls->app_SQL->insert(
-				'table_inventory',
+			$qls->SQL->insert(
+				'app_inventory',
 				array(
 					'a_id',
 					'a_code39'
@@ -159,7 +159,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$connectorCode39
 				)
 			);
-			$rowID = $qls->app_SQL->insert_id();
+			$rowID = $qls->SQL->insert_id();
 			
 			$validate->returnData['success']['connectorTypeInfo'] = $qls->App->connectorTypeArray;
 			$validate->returnData['success']['cableMediaTypeInfo'] = getCableMediaTypeInfo($mediaTypeArray);

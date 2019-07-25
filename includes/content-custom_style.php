@@ -3,8 +3,8 @@ if (!defined('QUADODO_IN_SYSTEM')){
 	define('QUADODO_IN_SYSTEM', true);
 	require_once('header.php');
 }
-$results = $qls->app_SQL->select('*', 'table_object_category');
-while ($row = $qls->app_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'app_object_category');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	?>
 	.category<?php echo $row['name']; ?> {
 		background-color: <?php echo $row['color']; ?>;

@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -23,8 +23,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$portPopulated = $data['portPopulated'];
 		
 		if($portPopulated) {
-			$qls->app_SQL->insert(
-				'table_populated_port',
+			$qls->SQL->insert(
+				'app_populated_port',
 				array(
 					'object_id',
 					'object_face',
@@ -39,8 +39,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				)
 			);
 		} else {
-			$qls->app_SQL->delete(
-				'table_populated_port',
+			$qls->SQL->delete(
+				'app_populated_port',
 				array(
 					'object_id' => array('=', $objectID),
 					'AND',

@@ -47,51 +47,51 @@ var $qls;
 	    $this->qls = &$qls;
 		
 		$this->envTreeArray = array();
-	$query = $this->qls->SQL->select('*', "{$qls->config['sql_prefix_app']}env_tree", false, array('name', 'ASC'));
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+	$query = $this->qls->SQL->select('*', 'app_env_tree', false, array('name', 'ASC'));
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->envTreeArray[$row['id']] = $row;
 		}
 		
 		$this->objectArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_object');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_object');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->objectArray[$row['id']] = $row;
 		}
 		
 		$this->insertArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_object', array('parent_id' => array('<>', 0)));
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_object', array('parent_id' => array('<>', 0)));
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->insertArray[$row['parent_id']] = $row;
 		}
 		
 		$this->templateArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_object_templates');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_object_templates');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->templateArray[$row['id']] = $row;
 		}
 		
 		$this->categoryArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_object_category');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_object_category');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->categoryArray[$row['id']] = $row;
 		}
 		
 		$this->cablePathArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_cable_path');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_cable_path');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->cablePathArray[$row['id']] = $row;
 		}
 		
 		$this->compatibilityArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_object_compatibility');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_object_compatibility');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->compatibilityArray[$row['template_id']][$row['side']][$row['depth']] = $row;
 		}
 		
 		$this->connectorTypeArray = array();
 		$this->connectorTypeValueArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_cable_connectorType');
-		while ($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_cable_connectorType');
+		while ($row = $qls->SQL->fetch_assoc($query)) {
 			if(strtolower($row['name']) != 'label') {
 				$this->connectorTypeArray[$row['id']] = $row['name'];
 				$this->connectorTypeValueArray[$row['value']] = $row;
@@ -99,28 +99,28 @@ var $qls;
 		}
 		
 		$this->mediaTypeArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaType', array('display' => array('=', 1)));
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaType', array('display' => array('=', 1)));
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			array_push($this->mediaTypeArray, $row);
 		}
 		
 		$this->mediaTypeValueArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$this->mediaTypeValueArray[$row['value']] = $row;
 		}
 		
 		$this->mediaCategoryTypeArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_mediaCategoryType');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_mediaCategoryType');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$this->mediaCategoryTypeArray[$row['value']] = $row;
 		}
 		
 		$this->inventoryArray = array();
 		$this->inventoryAllArray = array();
 		$this->inventoryByIDArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_inventory');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_inventory');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			array_push($this->inventoryAllArray, $row);
 			if($row['a_object_id'] != 0) {
 				$this->inventoryArray[$row['a_object_id']][$row['a_object_face']][$row['a_object_depth']][$row['a_port_id']] = array(
@@ -200,8 +200,8 @@ var $qls;
 		
 		$this->populatedPortArray = array();
 		$this->populatedPortAllArray = array();
-		$query = $this->qls->app_SQL->select('*', 'table_populated_port');
-		while ($row = $this->qls->app_SQL->fetch_assoc($query)){
+		$query = $this->qls->SQL->select('*', 'app_populated_port');
+		while ($row = $this->qls->SQL->fetch_assoc($query)){
 			array_push($this->populatedPortAllArray, $row);
 			$this->populatedPortArray[$row['object_id']][$row['object_face']][$row['object_depth']][$row['port_id']] = array(
 				'rowID' => $row['id']
@@ -212,8 +212,8 @@ var $qls;
 		$this->peerArrayStandardFloorplan = array();
 		$this->peerArrayWalljack = array();
 		$this->peerArrayWalljackEntry = array();
-		$query = $this->qls->app_SQL->select('*', 'table_object_peer');
-		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
+		$query = $this->qls->SQL->select('*', 'app_object_peer');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			if(!$row['floorplan_peer']) {
 				$this->peerArrayStandard[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
 					'rowID' => $row['id'],
@@ -275,15 +275,15 @@ var $qls;
 		
 		// History Action Type
 		$this->historyActionTypeArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_history_action_type');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_history_action_type');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$this->historyActionTypeArray[$row['value']] = $row;
 		}
 		
 		// History Function
 		$this->historyFunctionArray = array();
-		$query = $qls->shared_SQL->select('*', 'table_history_function');
-		while($row = $qls->shared_SQL->fetch_assoc($query)) {
+		$query = $qls->SQL->select('*', 'shared_history_function');
+		while($row = $qls->SQL->fetch_assoc($query)) {
 			$this->historyFunctionArray[$row['value']] = $row;
 		}
 	}
@@ -398,8 +398,8 @@ var $qls;
 				$uniqueString .= $characters[rand(0, $charactersLength - 1)];
 			}
 			$uniqueName = $rootName.$uniqueString;
-			$query = $this->qls->app_SQL->select('*', $table, array('env_tree_id' => array('=', $nodeID), 'AND', 'name' => array('=', $uniqueName)));
-			if(!$this->qls->app_SQL->num_rows($query)) {
+			$query = $this->qls->SQL->select('*', $table, array('env_tree_id' => array('=', $nodeID), 'AND', 'name' => array('=', $uniqueName)));
+			if(!$this->qls->SQL->num_rows($query)) {
 				$count = 100;
 			}
 		}
@@ -455,8 +455,8 @@ var $qls;
 			$separator = $return['function'] == 'Passive' ? '.' : ''; 
 			$portName = $obj['name'] == '' ? $portName : $obj['name'].$separator.$portName;
 			
-			$query = $this->qls->app_SQL->select('*', 'table_object', array('id' => array('=', $obj['parent_id'])));
-			$obj = $this->qls->app_SQL->fetch_assoc($query);
+			$query = $this->qls->SQL->select('*', 'app_object', array('id' => array('=', $obj['parent_id'])));
+			$obj = $this->qls->SQL->fetch_assoc($query);
 		}
 		
 		if($incPortName) {
@@ -580,10 +580,10 @@ var $qls;
 
 	function getCable($objID, $portID, $objFace, $objDepth){
 		//Build the cable
-		$cbl = $this->qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$objID.' AND a_port_id = '.$portID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.') OR (b_object_id = '.$objID.' AND b_port_id = '.$portID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.')');
+		$cbl = $this->qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$objID.' AND a_port_id = '.$portID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.') OR (b_object_id = '.$objID.' AND b_port_id = '.$portID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.')');
 		
-		if($this->qls->app_SQL->num_rows($cbl)>0){
-			$cbl = $this->qls->app_SQL->fetch_assoc($cbl);
+		if($this->qls->SQL->num_rows($cbl)>0){
+			$cbl = $this->qls->SQL->fetch_assoc($cbl);
 			if($cbl['a_object_id'] == $objID and $cbl['a_port_id'] == $portID) {
 				$cbl['nearEnd'] = 'a';
 				$cbl['farEnd'] = 'b';
@@ -731,18 +731,18 @@ var $qls;
 		}
 		
 		// Retrieve selected object partitions
-		$query = $this->qls->app_SQL->select('*',
-			'table_object_compatibility',
+		$query = $this->qls->SQL->select('*',
+			'app_object_compatibility',
 			$whereArray
 		);
 		
 		$elementArray = array();
-		while($row = $this->qls->app_SQL->fetch_assoc($query)){
+		while($row = $this->qls->SQL->fetch_assoc($query)){
 			
 			if($row['partitionType'] == 'Enclosure') {
-				$queryInsertObject = $this->qls->app_SQL->select(
+				$queryInsertObject = $this->qls->SQL->select(
 					'*',
-					'table_object',
+					'app_object',
 					array(
 						'parent_id' => array(
 							'=',
@@ -761,9 +761,9 @@ var $qls;
 					)
 				);
 				
-				while($rowInsertObject = $this->qls->app_SQL->fetch_assoc($queryInsertObject)) {
-					$queryInsertPartition = $this->qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
-					while($rowInsertPartition = $this->qls->app_SQL->fetch_assoc($queryInsertPartition)) {
+				while($rowInsertObject = $this->qls->SQL->fetch_assoc($queryInsertObject)) {
+					$queryInsertPartition = $this->qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $rowInsertObject['template_id'])));
+					while($rowInsertPartition = $this->qls->SQL->fetch_assoc($queryInsertPartition)) {
 						// Cannot be a trunked endpoint
 						if(!$this->peerArrayStandard[$rowInsertObject['id']][0][$rowInsertPartition['depth']]['selfEndpoint']) {
 							$separator = $rowInsertPartition['partitionFunction'] == 'Endpoint' ? '' : '.';
@@ -800,8 +800,8 @@ var $qls;
 			
 			if($cablePortType) {
 				$mediaTypeArray = array();
-				$query = $this->qls->shared_SQL->select('*', 'table_mediaType');
-				while($row = $this->qls->shared_SQL->fetch_assoc($query)) {
+				$query = $this->qls->SQL->select('*', 'shared_mediaType');
+				while($row = $this->qls->SQL->fetch_assoc($query)) {
 					$mediaTypeArray[$row['value']] = $row;
 				}
 				
@@ -999,7 +999,7 @@ var $qls;
 			$rowID = $inventoryEntry['rowID'];
 			if($inventoryEntry['localEndID'] === 0 and $inventoryEntry['remoteEndID'] === 0) {
 				// If this is an unmanaged connection, delete the entry
-				$this->qls->app_SQL->delete('table_inventory', array('id' => array('=', $rowID)));
+				$this->qls->SQL->delete('app_inventory', array('id' => array('=', $rowID)));
 			} else {
 				// If this is a managed connection, just clear the data
 				$attrPrefix = $inventoryEntry['localAttrPrefix'];
@@ -1009,7 +1009,7 @@ var $qls;
 					$attrPrefix.'_object_depth' => 0,
 					$attrPrefix.'_port_id' => 0
 				);
-				$this->qls->app_SQL->update('table_inventory', $set, array('id' => array('=', $rowID)));
+				$this->qls->SQL->update('app_inventory', $set, array('id' => array('=', $rowID)));
 				if(isset($this->inventoryArray[$inventoryEntry['id']][$inventoryEntry['face']][$inventoryEntry['depth']][$inventoryEntry['port']])) {
 					$this->inventoryArray[$inventoryEntry['id']][$inventoryEntry['face']][$inventoryEntry['depth']][$inventoryEntry['port']]['id'] = 0;
 					$this->inventoryArray[$inventoryEntry['id']][$inventoryEntry['face']][$inventoryEntry['depth']][$inventoryEntry['port']]['face'] = 0;
@@ -1024,14 +1024,14 @@ var $qls;
 	function clearPopulatedTable($objID, $objFace, $objDepth, $objPort){
 		if($populatedPortEntry = $this->populatedPortArray[$objID][$objFace][$objDepth][$objPort]) {
 			$rowID = $populatedPortEntry['rowID'];
-			$this->qls->app_SQL->delete('table_populated_port', array('id' => array('=', $rowID)));
+			$this->qls->SQL->delete('app_populated_port', array('id' => array('=', $rowID)));
 			unset($this->populatedPortArray[$objID][$objFace][$objDepth][$objPort]);
 		}
 	}
 	
 	// Not sure if this is useful :/
 	function clearPeerTable($rowID){
-		//$qls->app_SQL->delete('table_object_peer', array('id' => array('=', $rowID)));
+		//$qls->SQL->delete('app_object_peer', array('id' => array('=', $rowID)));
 		//unset($qls->App->peerArrayWalljack[$entry['selfID']]);
 	}
 
@@ -1088,7 +1088,7 @@ var $qls;
 	function logAction($function, $actionType, $actionString){
 		$columns = array('date', 'function', 'action_type', 'user_id', 'action');
 		$values = array(time(), $function, $actionType, $this->qls->user_info['id'], $actionString);
-		$this->qls->app_SQL->insert('table_history', $columns, $values);
+		$this->qls->SQL->insert('app_history', $columns, $values);
 	}
 	
 	function buildPathFull($path){

@@ -1,8 +1,8 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+require_once '../includes/path_functions.php';
 
 //[0] = element type
 //[1] = element ID
@@ -11,7 +11,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
 //[4] = port index
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();

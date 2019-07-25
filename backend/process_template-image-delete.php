@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	//$validate->returnData['success'] = array();
@@ -21,7 +21,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$templateID = $data['templateID'];
 		$templateFace = $data['templateFace'];
 		$imgAttr = $templateFace == 0 ? 'frontImage' : 'rearImage';
-		$qls->app_SQL->update('table_object_templates', array($imgAttr => null), array('id' => array('=', $templateID)));
+		$qls->SQL->update('app_object_templates', array($imgAttr => null), array('id' => array('=', $templateID)));
 		
 		/*
 		$file = $_SERVER['DOCUMENT_ROOT'].'/images/templateImages/' . $_POST['file'];

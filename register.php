@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once './includes/header.php';
 $qls->Security->check_auth_registration();
 ?>
 
@@ -15,7 +15,7 @@ if ($qls->user_info['username'] == '') {
 			$email = (isset($_POST['email']) && strlen($_POST['email']) > 6 && strlen($_POST['email']) < 256 && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) ? $qls->Security->make_safe($_POST['email']) : false;
 			if($email) {
 				$subject = 'New Live User';
-				$msg = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/app/html/emailAdminNotify.html');
+				$msg = file_get_contents('./html/emailAdminNotify.html');
 				$msg = str_replace('<!--MESSAGE-->', $email, $msg);
 				
 				$attributes = array('recipient', 'sender', 'subject', 'message');

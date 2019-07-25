@@ -1,7 +1,7 @@
 <?php
 $_SERVER = array('DOCUMENT_ROOT' => '/var/www/html');
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 
 $query = $qls->SQL->select('*', 'email_queue', array('sent' => array('=', 0)));
 while($row = $qls->SQL->fetch_assoc($query)) {

@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -23,14 +23,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$type= $data['type'];
 			
 			$mediaTypeArray = array();
-			$query = $qls->shared_SQL->select('*', 'table_mediaType');
-			while($row = $qls->shared_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'shared_mediaType');
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$mediaTypeArray[$row['value']] = $row;
 			}
 			
 			$objectPortTypeArray = array();
-			$query = $qls->shared_SQL->select('*', 'table_object_portType');
-			while($row = $qls->shared_SQL->fetch_assoc($query)) {
+			$query = $qls->SQL->select('*', 'shared_object_portType');
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				$objectPortTypeArray[$row['value']] = $row;
 			}
 			
@@ -44,7 +44,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$partitionData = json_encode($data['objects']);
 			
 			// Insert template data into DB
-			$qls->app_SQL->insert('table_object_templates', array(
+			$qls->SQL->insert('app_object_templates', array(
 					'templateName',
 					'templateCategory_id',
 					'templateType',
@@ -71,7 +71,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				)
 			);
 			
-			$objectID = $qls->app_SQL->insert_id();
+			$objectID = $qls->SQL->insert_id();
 			
 			// Gather compatibility data
 			$compatibilityArray = array();
@@ -88,7 +88,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$mediaCategoryType = $objectPortTypeArray[$portType]['category_type_id'];
 					$portTotal = array_key_exists('portX', $element) ? $element['portX'] * $element['portY'] : 0;
 					
-					$qls->app_SQL->insert('table_object_compatibility', array(
+					$qls->SQL->insert('app_object_compatibility', array(
 							'template_id',
 							'side',
 							'depth',
@@ -146,11 +146,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 		} else if($action == 'delete') {
 			$id = $data['id'];
-			$result = $qls->app_SQL->select('id', 'table_object', array('template_id' => array('=', $id)));
-			if ($qls->app_SQL->num_rows($result) == 0) {
+			$result = $qls->SQL->select('id', 'app_object', array('template_id' => array('=', $id)));
+			if ($qls->SQL->num_rows($result) == 0) {
 				$name = $qls->App->templateArray[$id]['templateName'];
-				$qls->app_SQL->delete('table_object_templates', array('id' => array('=', $id)));
-				$qls->app_SQL->delete('table_object_compatibility', array('template_id' => array('=', $id)));
+				$qls->SQL->delete('app_object_templates', array('id' => array('=', $id)));
+				$qls->SQL->delete('app_object_compatibility', array('template_id' => array('=', $id)));
 				$validate->returnData['success'] = 'Object was deleted.';
 				
 				// Log action in history
@@ -168,7 +168,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$origName = $qls->App->templateArray[$templateID]['templateName'];
 				$attribute = 'templateName';
 				$return = $value;
-				$qls->app_SQL->update('table_object_templates', array($attribute => $value), array('id' => array('=', $templateID)));
+				$qls->SQL->update('app_object_templates', array($attribute => $value), array('id' => array('=', $templateID)));
 				
 				// Log action in history
 				// $qls->App->logAction($function, $actionType, $actionString)
@@ -180,8 +180,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$origCategoryName = $qls->App->categoryArray[$origCategoryID]['name'];
 				$newCategoryName = $qls->App->categoryArray[$value]['name'];
 				$attribute = 'templateCategory_id';
-				$return = $qls->app_SQL->fetch_row($qls->app_SQL->select('name', 'table_object_category', array('id' => array('=', $value))))[0];
-				$qls->app_SQL->update('table_object_templates', array($attribute => $value), array('id' => array('=', $templateID)));
+				$return = $qls->SQL->fetch_row($qls->SQL->select('name', 'app_object_category', array('id' => array('=', $value))))[0];
+				$qls->SQL->update('app_object_templates', array($attribute => $value), array('id' => array('=', $templateID)));
 				
 				// Log action in history
 				// $qls->App->logAction($function, $actionType, $actionString)
@@ -194,19 +194,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$portNameFormatJSON = json_encode($portNameFormat);
 				
 				// Update compatibility port name format
-				$qls->app_SQL->update('table_object_compatibility', array('portNameFormat' => $portNameFormatJSON), array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $side), 'AND', 'depth' => array('=', $depth)));
+				$qls->SQL->update('app_object_compatibility', array('portNameFormat' => $portNameFormatJSON), array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $side), 'AND', 'depth' => array('=', $depth)));
 				
 				// Update template partition data
-				$query = $qls->app_SQL->select('*', 'table_object_templates', array('id' => array('=', $templateID)));
-				$template = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'app_object_templates', array('id' => array('=', $templateID)));
+				$template = $qls->SQL->fetch_assoc($query);
 				$templatePartitionData = json_decode($template['templatePartitionData'], true);
 				updatePortNameFormat($templatePartitionData[$side], $depth, $portNameFormat);
 				$templatePartitionDataJSON = json_encode($templatePartitionData);
-				$qls->app_SQL->update('table_object_templates', array('templatePartitionData' => $templatePartitionDataJSON), array('id' => array('=', $templateID)));
+				$qls->SQL->update('app_object_templates', array('templatePartitionData' => $templatePartitionDataJSON), array('id' => array('=', $templateID)));
 				
 				// Generate new port name range
-				$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $side), 'AND', 'depth' => array('=', $depth)));
-				$compatibility = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $side), 'AND', 'depth' => array('=', $depth)));
+				$compatibility = $qls->SQL->fetch_assoc($query);
 				$portLayoutX = $compatibility['portLayoutX'];
 				$portLayoutY = $compatibility['portLayoutY'];
 				$portTotal = $portLayoutX * $portLayoutY;
@@ -290,7 +290,7 @@ function validate($data, &$validate, &$qls){
 		if($validate->validateNameText($data['name'], 'template name')) {
 			//Validate templateName duplicate
 			$templateName = $data['name'];
-			$table = 'table_object_templates';
+			$table = 'app_object_templates';
 			$where = array('templateName' => array('=', $templateName));
 			$errorMsg = 'Duplicate template name.';
 			$validate->validateDuplicate($table, $where, $errorMsg);
@@ -300,7 +300,7 @@ function validate($data, &$validate, &$qls){
 		if($validate->validateID($data['category'], 'categoryID')) {
 			//Validate category existence
 			$categoryID = $data['category'];
-			$table = 'table_object_category';
+			$table = 'app_object_category';
 			$where = array('id' => array('=', $categoryID));
 			$errorMsg = 'Invalid categoryID.';
 			$validate->validateExistenceInDB($table, $where, $errorMsg);
@@ -344,7 +344,7 @@ function validate($data, &$validate, &$qls){
 			$templateDepth = $data['templateDepth'];
 			
 			//Validate object existence
-			$table = 'table_object_templates';
+			$table = 'app_object_templates';
 			$where = array('id' => array('=', $templateID));
 			$errorMsg = 'Invalid templateID.';
 			if($validate->validateExistenceInDB($table, $where, $errorMsg)) {
@@ -354,7 +354,7 @@ function validate($data, &$validate, &$qls){
 					
 					//Validate categoryID
 					if($validate->validateID($categoryID, 'categoryID')) {
-						$table = 'table_object_category';
+						$table = 'app_object_category';
 						$where = array('id' => array('=', $categoryID));
 						$errorMsg = 'Invalid categoryID.';
 						$validate->validateExistenceInDB($table, $where, $errorMsg);
@@ -366,15 +366,15 @@ function validate($data, &$validate, &$qls){
 					if($validate->validateNameText($templateName, 'template name')) {
 						
 						//Validate templateName duplicate
-						$table = 'table_object_templates';
+						$table = 'app_object_templates';
 						$where = array('templateName' => array('=', $templateName));
 						$errorMsg = 'Duplicate template name.';
 						$validate->validateDuplicate($table, $where, $errorMsg);
 					}
 				} else if($data['attribute'] == 'portNameFormat') {
-					$query = $qls->app_SQL->select('*', 'table_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $templateFace), 'AND', 'depth' => array('=', $templateDepth)));
-					if($qls->app_SQL->num_rows($query) == 1) {
-						$compatibility = $qls->app_SQL->fetch_assoc($query);
+					$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $templateFace), 'AND', 'depth' => array('=', $templateDepth)));
+					if($qls->SQL->num_rows($query) == 1) {
+						$compatibility = $qls->SQL->fetch_assoc($query);
 						
 						if($compatibility['partitionType'] == 'Connectable') {
 							$portNameFormat = $data['value'];

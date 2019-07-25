@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -21,7 +21,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		
 		if($action == 'add') {
 			$nodeID = $data['nodeID'];
-			$name = $qls->App->findUniqueName($nodeID, 'table_object');
+			$name = $qls->App->findUniqueName($nodeID, 'app_object');
 			$type = $data['type'];
 			$positionTop = $data['positionTop'];
 			$positionLeft = $data['positionLeft'];
@@ -35,7 +35,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 			
 			//Insert data into DB
-			$qls->app_SQL->insert('table_object', array(
+			$qls->SQL->insert('app_object', array(
 					'env_tree_id',
 					'name',
 					'template_id',
@@ -51,7 +51,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			);
 			
 			//This tells the client what the new object_id is
-			$validate->returnData['success']['id'] = $qls->app_SQL->insert_id();
+			$validate->returnData['success']['id'] = $qls->SQL->insert_id();
 			$validate->returnData['success']['name'] = $name;
 		} else if($action == 'editLocation') {
 			$objectID = $data['objectID'];
@@ -59,7 +59,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$positionLeft = $data['positionLeft'];
 			
 			//Update DB entry
-			$qls->app_SQL->update('table_object', array(
+			$qls->SQL->update('app_object', array(
 				'position_top' => $positionTop,
 				'position_left' => $positionLeft
 				),
@@ -70,7 +70,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$name = $data['value'];
 			
 			//Update DB entry
-			$qls->app_SQL->update('table_object', array(
+			$qls->SQL->update('app_object', array(
 				'name' => $name
 				),
 				'id = '.$objectID
@@ -79,11 +79,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$objectID = $data['objectID'];
 			
 			//Delete DB entry
-			$qls->app_SQL->delete('table_object', array('id' => array('=', $objectID)));
-			$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID)));
-			$qls->app_SQL->delete('table_populated_port', array('object_id' => array('=', $objectID)));
-			$query = $qls->app_SQL->select('*', 'table_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
-			while($row = $qls->app_SQL->fetch_assoc($query)) {
+			$qls->SQL->delete('app_object', array('id' => array('=', $objectID)));
+			$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID)));
+			$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $objectID)));
+			$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
+			while($row = $qls->SQL->fetch_assoc($query)) {
 				if($row['a_id'] or $row['b_id']) {
 					$attrArray = array('a', 'b');
 					foreach($attrArray as $attrPrefix) {
@@ -94,11 +94,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 								$attrPrefix.'_object_face' => 0,
 								$attrPrefix.'_object_depth' => 0
 							);
-							$qls->app_SQL->update('table_inventory', $set, array('id' => array('=', $row['id'])));
+							$qls->SQL->update('app_inventory', $set, array('id' => array('=', $row['id'])));
 						}
 					}
 				} else {
-					$qls->app_SQL->delete('table_inventory', array('id' => array('=', $row['id'])));
+					$qls->SQL->delete('app_inventory', array('id' => array('=', $row['id'])));
 				}
 			}
 		} else {
@@ -194,14 +194,14 @@ function validate($data, &$validate, &$qls){
 			if($validate->validateID($data['objectID'], 'object ID')) {
 				
 				//Validate object existence
-				$table = 'table_object';
+				$table = 'app_object';
 				$where = array('id' => array('=', $data['objectID']));
 				if($object = $validate->validateExistenceInDB($table, $where, 'Object does not exist.')) {
 					$parentID = $object['parent_id'];
 					//Validate objectName
 					$cabinetID = $object['env_tree_id'];
 					if($validate->validateNameText($data['value'], 'object name')) {
-						$table = 'table_object';
+						$table = 'app_object';
 						if($parentID) {
 							$where = array('name' => array('=', $data['value']), 'AND', 'env_tree_id' => array('=', $cabinetID), 'AND', 'parent_id' => array('=', $parentID));
 						} else {

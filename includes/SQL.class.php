@@ -68,8 +68,6 @@ var $qls;
 		 */
 
         $this->qls->config['sql_prefix'] = $database_prefix;
-		$this->qls->config['sql_prefix_app'] = $database_prefix_app;
-		$this->qls->config['sql_prefix_shared'] = $database_prefix_shared;
 
         // Get the actual database class
         require_once('MySQLie.class.php');

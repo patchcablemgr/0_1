@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -31,35 +31,35 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$defaultOption = $data['defaultOption'];
 			if($categoryID > 0){
 				
-				$results = $qls->app_SQL->select('*', 'table_object_category', array('id' => array('=', $categoryID)));
-				if($qls->app_SQL->num_rows($results)) {
+				$results = $qls->SQL->select('*', 'app_object_category', array('id' => array('=', $categoryID)));
+				if($qls->SQL->num_rows($results)) {
 					$defaultCategoryChanged = false;
 					
 					
-					$rows = $qls->app_SQL->fetch_assoc($results);
+					$rows = $qls->SQL->fetch_assoc($results);
 					$originalCategoryName = $rows['name'];
 					$originalCategoryColor = $rows['color'];
 					
 					// Handle default category selection
 					if($rows['defaultOption'] == 1 and $defaultOption == 0) {
 						// Find new default category
-						$result = $qls->app_SQL->select('*', 'table_object_category', false, false, array(1));
-						$row = $qls->app_SQL->fetch_assoc($result);
-						$qls->app_SQL->update('table_object_category', array('defaultOption' => 1), array('id' => array('=', $row['id'])));
+						$result = $qls->SQL->select('*', 'app_object_category', false, false, array(1));
+						$row = $qls->SQL->fetch_assoc($result);
+						$qls->SQL->update('app_object_category', array('defaultOption' => 1), array('id' => array('=', $row['id'])));
 						
 						// Prepare to log default category change
 						$defaultCategoryChanged = true;
 						$newDefaultName = $qls->App->categoryArray[$row['id']]['name'];
 					} else if($rows['defaultOption'] == 0 and $defaultOption == 1) {
 						// Remove default status from current default
-						$qls->app_SQL->update('table_object_category', array('defaultOption' => 0), array('defaultOption' => array('=', 1)));
+						$qls->SQL->update('app_object_category', array('defaultOption' => 0), array('defaultOption' => array('=', 1)));
 						
 						// Prepare to log default category change
 						$defaultCategoryChanged = true;
 						$newDefaultName = $name;
 					}
 					
-					$qls->app_SQL->update('table_object_category', array(
+					$qls->SQL->update('app_object_category', array(
 							'name' => $name,
 							'color' => $color,
 							'defaultOption' => $defaultOption
@@ -96,14 +96,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			} else {
 				
 				if($defaultOption == 1) {
-					$qls->app_SQL->update('table_object_category', array('defaultOption' => 0), array('defaultOption' => array('=', 1)));
+					$qls->SQL->update('app_object_category', array('defaultOption' => 0), array('defaultOption' => array('=', 1)));
 					// Log action in history
 					// $qls->App->logAction($function, $actionType, $actionString)
 					$actionString = 'Default template category changed to <strong>'.$name.'</strong>';
 					$qls->App->logAction(1, 2, $actionString);
 				}
-				$qls->app_SQL->insert('table_object_category', array('name', 'color', 'defaultOption'), array($name, $color, $defaultOption));
-				$categoryID = $qls->app_SQL->insert_id();
+				$qls->SQL->insert('app_object_category', array('name', 'color', 'defaultOption'), array($name, $color, $defaultOption));
+				$categoryID = $qls->SQL->insert_id();
 				$validate->returnData['success'] = array('action' => 'add', 'id' => $categoryID, 'name' => $name, 'color' => $color, 'defaultOption' => $defaultOption);
 				
 				// Log action in history
@@ -114,19 +114,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		} else if($action == 'delete') {
 				
 			// Check if category is in use
-			$result = $qls->app_SQL->select('id', 'table_object_templates', array('templateCategory_id' => array('=', $categoryID)));
-			if ($qls->app_SQL->num_rows($result) == 0) {
+			$result = $qls->SQL->select('id', 'app_object_templates', array('templateCategory_id' => array('=', $categoryID)));
+			if ($qls->SQL->num_rows($result) == 0) {
 				// Check if only 1 category exists
-				$result = $qls->app_SQL->select('*', 'table_object_category');
-				if($qls->app_SQL->num_rows($result) > 1){
+				$result = $qls->SQL->select('*', 'app_object_category');
+				if($qls->SQL->num_rows($result) > 1){
 					
 					$name = $qls->App->categoryArray[$categoryID]['name'];
-					$result = $qls->app_SQL->select('*', 'table_object_category', array('id' => array('=', $categoryID)));
-					$row = $qls->app_SQL->fetch_assoc($result);
+					$result = $qls->SQL->select('*', 'app_object_category', array('id' => array('=', $categoryID)));
+					$row = $qls->SQL->fetch_assoc($result);
 					if($row['defaultOption'] == 1) {
-						$result = $qls->app_SQL->select('*', 'table_object_category', false, false, array(1));
-						$row = $qls->app_SQL->fetch_assoc($result);
-						$qls->app_SQL->update('table_object_category', array('defaultOption' => 1), array('id' => array('=', $row['id'])));
+						$result = $qls->SQL->select('*', 'app_object_category', false, false, array(1));
+						$row = $qls->SQL->fetch_assoc($result);
+						$qls->SQL->update('app_object_category', array('defaultOption' => 1), array('id' => array('=', $row['id'])));
 						
 						$newDefaultName = $qls->App->categoryArray[$row['id']]['name'];
 						// Log action in history
@@ -134,7 +134,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 						$actionString = 'Default template category changed to <strong>'.$newDefaultName.'</strong>';
 						$qls->App->logAction(1, 2, $actionString);
 					}
-					$qls->app_SQL->delete('table_object_category', array('id' => array('=', $categoryID)));
+					$qls->SQL->delete('app_object_category', array('id' => array('=', $categoryID)));
 					$validate->returnData['success'] = $categoryID;
 					
 					// Log action in history

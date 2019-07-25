@@ -1,8 +1,8 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+require_once '../includes/path_functions.php';
 
 //[0] = element type
 //[1] = element ID
@@ -37,14 +37,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$partitionDepth = $data['partitionDepth'];
 		$action = $data['action'];
 		
-		$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $objectID)));
-		$object = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
+		$object = $qls->SQL->fetch_assoc($query);
 		
 		if($action == 'SELECT'){
 			// Clear path
 			if($elementID == 0) {
-				$query = $qls->app_SQL->select('*', 'table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
-				$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+				$query = $qls->SQL->select('*', 'app_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+				$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
 				$children = buildLocation('#', $qls);
 				$resultData = array('selected' => 'clear', 'children' => $children);
 				array_push($validate->returnData['success'], $resultData);
@@ -69,23 +69,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 			// Partition selected
 			} else if($elementType == 3) {
-				$query = $qls->app_SQL->select('partitionFunction', 'table_object_compatibility', array('template_id' => array('=', $object['template_id'])));
-				$partitionFunction = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('partitionFunction', 'app_object_compatibility', array('template_id' => array('=', $object['template_id'])));
+				$partitionFunction = $qls->SQL->fetch_assoc($query);
 				$objectEndpoint = $partitionFunction['partitionFunction'] == 'Endpoint' ? 1 : 0;
 				
-				$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $elementID)));
-				$element = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
+				$element = $qls->SQL->fetch_assoc($query);
 				
-				$query = $qls->app_SQL->select('partitionFunction', 'table_object_compatibility', array('template_id' => array('=', $element['template_id'])));
-				$partitionFunction = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('partitionFunction', 'app_object_compatibility', array('template_id' => array('=', $element['template_id'])));
+				$partitionFunction = $qls->SQL->fetch_assoc($query);
 				$elementEndpoint = $partitionFunction['partitionFunction'] == 'Endpoint' ? 1 : 0;
 				
-				$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $objectID), 'AND', 'a_face' => array('=', $objectFace), 'AND', 'a_depth' => array('=', $partitionDepth)));
-				$qls->app_SQL->delete('table_object_peer', array('b_id' => array('=', $objectID), 'AND', 'b_face' => array('=', $objectFace), 'AND', 'b_depth' => array('=', $partitionDepth)));
-				$qls->app_SQL->delete('table_object_peer', array('a_id' => array('=', $elementID), 'AND', 'a_face' => array('=', $elementFace), 'AND', 'a_depth' => array('=', $elementDepth)));
-				$qls->app_SQL->delete('table_object_peer', array('b_id' => array('=', $elementID), 'AND', 'b_face' => array('=', $elementFace), 'AND', 'b_depth' => array('=', $elementDepth)));
-				$qls->app_SQL->insert(
-					'table_object_peer',
+				$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $objectID), 'AND', 'a_face' => array('=', $objectFace), 'AND', 'a_depth' => array('=', $partitionDepth)));
+				$qls->SQL->delete('app_object_peer', array('b_id' => array('=', $objectID), 'AND', 'b_face' => array('=', $objectFace), 'AND', 'b_depth' => array('=', $partitionDepth)));
+				$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $elementID), 'AND', 'a_face' => array('=', $elementFace), 'AND', 'a_depth' => array('=', $elementDepth)));
+				$qls->SQL->delete('app_object_peer', array('b_id' => array('=', $elementID), 'AND', 'b_face' => array('=', $elementFace), 'AND', 'b_depth' => array('=', $elementDepth)));
+				$qls->SQL->insert(
+					'app_object_peer',
 					array(
 						'a_id',
 						'a_face',
@@ -112,9 +112,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 		} else if($action == 'GET') {
 			$queryString = '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$partitionDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$partitionDepth.')';
-			//$query = $qls->app_SQL->select('*', 'table_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
-			$query = $qls->app_SQL->select('*', 'table_object_peer', $queryString);
-			$peerRecord = $qls->app_SQL->fetch_assoc($query);
+			//$query = $qls->SQL->select('*', 'app_object_peer', array('a_id' => array('=', $objectID), 'OR', 'b_id' => array('=', $objectID)));
+			$query = $qls->SQL->select('*', 'app_object_peer', $queryString);
+			$peerRecord = $qls->SQL->fetch_assoc($query);
 			if(!count($peerRecord)) {
 				$children = buildLocation('#', $qls);
 				$resultData = array('selected' => $selected, 'children' => $children);
@@ -130,8 +130,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$objectFace = $peerRecord[$objectPrefix.'_face'];
 				$objectDepth = $peerRecord[$objectPrefix.'_depth'];
 				
-				$query = $qls->app_SQL->select('*', 'table_object', array('id' => array('=', $peerID)));
-				$peer = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $peerID)));
+				$peer = $qls->SQL->fetch_assoc($query);
 				
 				$path = buildPath($peer, $peerFace, $peerDepth, $object, $objectFace, $objectDepth, $qls);
 				

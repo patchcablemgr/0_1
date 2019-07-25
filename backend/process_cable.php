@@ -1,10 +1,10 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	$validate = new Validate($qls);
 	
 	if ($validate->returnData['active'] == 'inactive') {
@@ -21,23 +21,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			case 'connectorType':
 				$connectorTypeID = $data['value'];
 				$cableEndID = $data['id'];
-				$query = $qls->app_SQL->select('*', 'table_inventory', array('a_id' => array('=', $cableEndID), 'OR', 'b_id' => array('=', $cableEndID)));
-				$cable = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'app_inventory', array('a_id' => array('=', $cableEndID), 'OR', 'b_id' => array('=', $cableEndID)));
+				$cable = $qls->SQL->fetch_assoc($query);
 				$cableAttrPrefix = $cable['a_id'] == $cableEndID ? 'a' : 'b';
 				
-				$qls->app_SQL->update('table_inventory', array($cableAttrPrefix.'_connector' => $connectorTypeID), array($cableAttrPrefix.'_id' => array('=', $cableEndID)));
+				$qls->SQL->update('app_inventory', array($cableAttrPrefix.'_connector' => $connectorTypeID), array($cableAttrPrefix.'_id' => array('=', $cableEndID)));
 				break;
 				
 			case 'cableLength':
 				$cableLength = $data['value'];
 				$cableID = $data['id'];
 				
-				$query = $qls->app_SQL->select('*', 'table_inventory', array('id' => array('=', $cableID)));
-				$cable = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'app_inventory', array('id' => array('=', $cableID)));
+				$cable = $qls->SQL->fetch_assoc($query);
 				$mediaTypeID = $cable['mediaType'];
 				
-				$query = $qls->shared_SQL->select('*', 'table_mediaType', array('value' => array('=', $mediaTypeID)));
-				$mediaType = $cable = $qls->app_SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'shared_mediaType', array('value' => array('=', $mediaTypeID)));
+				$mediaType = $cable = $qls->SQL->fetch_assoc($query);
 				$mediaCategoryTypeID = $mediaType['category_type_id'];
 				
 				if($mediaCategoryTypeID == 1) {
@@ -46,29 +46,29 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$cableLength = $qls->App->convertMetersToMillimeters($cableLength);
 				}
 				
-				$qls->app_SQL->update('table_inventory', array('length' => $cableLength), array('id' => array('=', $cableID)));
+				$qls->SQL->update('app_inventory', array('length' => $cableLength), array('id' => array('=', $cableID)));
 				break;
 				
 			case 'cableMediaType':
 				$mediaTypeID = $data['value'];
 				$cableID = $data['id'];
 				
-				$qls->app_SQL->update('table_inventory', array('mediaType' => $mediaTypeID), array('id' => array('=', $cableID)));
-				$query = $qls->shared_SQL->select('*', 'table_mediaType', array('value' => array('=', $mediaTypeID)));
-				$mediaType = $qls->shared_SQL->fetch_assoc($query);
-				$query = $qls->shared_SQL->select('*', 'table_mediaCategoryType', array('value' => array('=', $mediaType['category_id'])));
-				$mediaCategoryType = $qls->shared_SQL->fetch_assoc($query);;
+				$qls->SQL->update('app_inventory', array('mediaType' => $mediaTypeID), array('id' => array('=', $cableID)));
+				$query = $qls->SQL->select('*', 'shared_mediaType', array('value' => array('=', $mediaTypeID)));
+				$mediaType = $qls->SQL->fetch_assoc($query);
+				$query = $qls->SQL->select('*', 'shared_mediaCategoryType', array('value' => array('=', $mediaType['category_id'])));
+				$mediaCategoryType = $qls->SQL->fetch_assoc($query);;
 				$validate->returnData['success'] = $mediaCategoryType['unit_of_length'];
 				break;
 				
 			case 'cableEditable':
 				$cableID = $data['id'];
 				
-				$qls->app_SQL->update('table_inventory', array('editable' => 0), array('id' => array('=', $cableID)));
+				$qls->SQL->update('app_inventory', array('editable' => 0), array('id' => array('=', $cableID)));
 				break;
 				
 			case 'connectionScan':
-				require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+				require_once '../includes/path_functions.php';
 				$validate->returnData['success'] = array();
 				$value = $data['value'];
 				if($value == 'clear') {
@@ -81,8 +81,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$elementPort = (int)$valueArray[4];
 				}
 				$connectorID = $data['connectorID'];
-				//$query = $qls->app_SQL->select('*', 'table_inventory', array('a_id' => array('=', $connectorID), 'OR', 'b_id' => array('=', $connectorID)));
-				//$cable = $qls->app_SQL->fetch_assoc($query);
+				//$query = $qls->SQL->select('*', 'app_inventory', array('a_id' => array('=', $connectorID), 'OR', 'b_id' => array('=', $connectorID)));
+				//$cable = $qls->SQL->fetch_assoc($query);
 				$cable = $qls->App->inventoryByIDArray[$connectorID];
 				//$connectorAttributePrefix = $cable['a_id'] == $connectorID ? 'a' : 'b';
 				//$inverseConnectorAttributePrefix = $connectorAttributePrefix == 'a' ? 'b' : 'a';
@@ -102,8 +102,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				} else {
 					
 					// Update connection in database
-					$qls->app_SQL->update(
-						'table_inventory',
+					$qls->SQL->update(
+						'app_inventory',
 						array(
 							$localAttrPrefix.'_object_id' => $elementID,
 							$localAttrPrefix.'_port_id' => $elementPort,
@@ -122,8 +122,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$cable = $qls->App->inventoryByIDArray[$connectorID];
 					
 					// Remove any populated port entries that may exist
-					$qls->app_SQL->delete(
-						'table_populated_port',
+					$qls->SQL->delete(
+						'app_populated_port',
 						array(
 							'object_id' => array('=', $elementID),
 							'AND',
@@ -142,7 +142,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				break;
 				
 			case 'connectionExplore':
-				require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+				require_once '../includes/path_functions.php';
 				$validate->returnData['success'] = array();
 				$value = $data['value'];
 				$clear = $value == 'clear' ? true : false;
@@ -168,8 +168,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					array_push($validate->returnData['error'], $errMsg);
 				} else {
 					
-					$query = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$objID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.' AND a_port_id = '.$objPort.') OR (b_object_id = '.$objID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.' AND b_port_id = '.$objPort.')');
-					$objEntry = $qls->app_SQL->num_rows($query) ? $qls->app_SQL->fetch_assoc($query) : false;
+					$query = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$objID.' AND a_object_face = '.$objFace.' AND a_object_depth = '.$objDepth.' AND a_port_id = '.$objPort.') OR (b_object_id = '.$objID.' AND b_object_face = '.$objFace.' AND b_object_depth = '.$objDepth.' AND b_port_id = '.$objPort.')');
+					$objEntry = $qls->SQL->num_rows($query) ? $qls->SQL->fetch_assoc($query) : false;
 					
 					if($clear) {
 						$elementEntry = false;
@@ -180,8 +180,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 							$peerPortID = 'port-0-0-0-0';
 						}
 					} else {
-						$query = $qls->app_SQL->select('*', 'table_inventory', '(a_object_id = '.$elementID.' AND a_object_face = '.$elementFace.' AND a_object_depth = '.$elementDepth.' AND a_port_id = '.$elementPort.') OR (b_object_id = '.$elementID.' AND b_object_face = '.$elementFace.' AND b_object_depth = '.$elementDepth.' AND b_port_id = '.$elementPort.')');
-						$elementEntry = $qls->app_SQL->num_rows($query) ? $qls->app_SQL->fetch_assoc($query) : false;
+						$query = $qls->SQL->select('*', 'app_inventory', '(a_object_id = '.$elementID.' AND a_object_face = '.$elementFace.' AND a_object_depth = '.$elementDepth.' AND a_port_id = '.$elementPort.') OR (b_object_id = '.$elementID.' AND b_object_face = '.$elementFace.' AND b_object_depth = '.$elementDepth.' AND b_port_id = '.$elementPort.')');
+						$elementEntry = $qls->SQL->num_rows($query) ? $qls->SQL->fetch_assoc($query) : false;
 						$peerPortID = 'port-'.$elementID.'-'.$elementFace.'-'.$elementDepth.'-'.$elementPort;
 					}
 					
@@ -197,19 +197,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 								clearTableInventory($qls, 'a', $entryID);
 								clearTableInventory($qls, 'b', $entryID);
 							} else {
-								$qls->app_SQL->delete('table_inventory', array('id' => array('=', $entryID)));
+								$qls->SQL->delete('app_inventory', array('id' => array('=', $entryID)));
 							}
 						} else {
 							if($objEntry['a_id'] or $objEntry['b_id']) {
 								clearTableInventory($qls, $objAttr, $objEntry['id']);
 							} else {
-								$qls->app_SQL->delete('table_inventory', array('id' => array('=', $objEntry['id'])));
+								$qls->SQL->delete('app_inventory', array('id' => array('=', $objEntry['id'])));
 							}
 							
 							if($elementEntry['a_id'] or $elementEntry['b_id']) {
 								clearTableInventory($qls, $elementAttr, $elementEntry['id']);
 							} else {
-								$qls->app_SQL->delete('table_inventory', array('id' => array('=', $elementEntry['id'])));
+								$qls->SQL->delete('app_inventory', array('id' => array('=', $elementEntry['id'])));
 							}
 						}
 					} else if($objEntry) {
@@ -218,7 +218,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 						if($objEntry['a_id'] or $objEntry['b_id']) {
 							clearTableInventory($qls, $objAttr, $objEntry['id']);
 						} else {
-							$qls->app_SQL->delete('table_inventory', array('id' => array('=', $objEntry['id'])));
+							$qls->SQL->delete('app_inventory', array('id' => array('=', $objEntry['id'])));
 						}
 						
 					} else if($elementEntry) {
@@ -227,7 +227,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 						if($elementEntry['a_id'] or $elementEntry['b_id']) {
 							clearTableInventory($qls, $elementAttr, $elementEntry['id']);
 						} else {
-							$qls->app_SQL->delete('table_inventory', array('id' => array('=', $elementEntry['id'])));
+							$qls->SQL->delete('app_inventory', array('id' => array('=', $elementEntry['id'])));
 						}
 					}
 					
@@ -238,7 +238,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 						insertTableInventory($qls, $objID, $objFace, $objDepth, $objPort, $elementID, $elementFace, $elementDepth, $elementPort);
 					}
 					
-					include_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content_port_path.php';
+					include_once './includes/content_port_path.php';
 				
 					$validate->returnData['success']['pathFull'] = buildPathFull($path);
 					$validate->returnData['success']['peerPortID'] = $peerPortID;
@@ -288,8 +288,8 @@ function validate($data, &$validate, &$qls){
 }
 
 function clearTableInventory(&$qls, $attr, $id){
-	$qls->app_SQL->update(
-		'table_inventory',
+	$qls->SQL->update(
+		'app_inventory',
 		array(
 			$attr.'_object_id' => 0,
 			$attr.'_object_face' => 0,
@@ -303,8 +303,8 @@ function clearTableInventory(&$qls, $attr, $id){
 }
 
 function insertTableInventory(&$qls, $objID, $objFace, $objDepth, $objPort, $elementID, $elementFace, $elementDepth, $elementPort){
-	$qls->app_SQL->insert(
-		'table_inventory',
+	$qls->SQL->insert(
+		'app_inventory',
 		array(
 			'a_object_id',
 			'a_object_face',
@@ -337,8 +337,8 @@ function insertTableInventory(&$qls, $objID, $objFace, $objDepth, $objPort, $ele
 }
 
 function clearTablePopulated(&$qls, $objID, $objFace, $objDepth, $objPort){
-	$qls->app_SQL->delete(
-		'table_populated_port',
+	$qls->SQL->delete(
+		'app_populated_port',
 		array(
 			'object_id' => array('=', $objID),
 			'AND',

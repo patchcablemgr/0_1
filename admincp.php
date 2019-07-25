@@ -25,8 +25,8 @@
 * Comments are always before the code they are commenting.
 *** *** *** *** *** ***/
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('admin.php');
 
 // Is the user logged in and an admin?

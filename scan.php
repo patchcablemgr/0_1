@@ -1,7 +1,7 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('operator.php');
 ?>
 
@@ -13,7 +13,7 @@ $qls->Security->check_auth_page('operator.php');
 <link type="text/css" href="assets/plugins/x-editable/css/bootstrap-editable.css" rel="stylesheet">
 
 <?php require 'includes/header_end.php'; ?>
-<?php require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-object_tree_modal.php'; ?>
+<?php require_once './includes/content-object_tree_modal.php'; ?>
 
 <!-- scan modal -->
 <div id="scanModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

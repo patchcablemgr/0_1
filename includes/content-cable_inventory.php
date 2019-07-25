@@ -1,6 +1,6 @@
 <?php
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/shared_tables.php';
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+	require_once './includes/shared_tables.php';
+	require_once './includes/path_functions.php';
 	
 	$pillYes = '<span class="label label-pill label-success">Yes</span>';
 	$pillNo = '<span class="label label-pill label-danger">No</span>';
@@ -25,8 +25,8 @@
 		echo '</tr>';
 	echo '</thead>';
 	echo '<tbody>';
-	$query = $qls->app_SQL->select('*', 'table_inventory', array('active' => array('=', 1)));
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_inventory', array('active' => array('=', 1)));
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		$mediaTypeID = $row['mediaType'];
 		$categoryTypeID = $mediaTypeTable[$mediaTypeID]['category_type_id'];
 		$length = calculateCableLength($mediaTypeTable, $mediaCategoryTypeTable, $row);

@@ -6,7 +6,7 @@
 -->
 <?php
 $templateCatalog = false;
-include($_SERVER['DOCUMENT_ROOT'].'/app/includes/content-build-objectData.php');
+include('./includes/content-build-objectData.php');
 $page = basename($_SERVER['PHP_SELF']);
 $cursorClass = ($page == 'templates.php') or ($page == 'retrieve_build-objects.php') ? 'cursorPointer' : 'cursorGrab';
 

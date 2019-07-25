@@ -126,10 +126,10 @@ CREATE TABLE `{database_prefix}masks`(
 	`auth_admin_edit_group` TINYINT(1) DEFAULT '0' NOT NULL,
 	`auth_admin_activate_account` TINYINT(1) DEFAULT '0' NOT NULL,
 	`auth_admin_send_invite` TINYINT(1) DEFAULT '0' NOT NULL,
-	`auth_9e6a55b6b4563e652a23be9d623ca5055c356940` TINYINT(1) NOT NULL DEFAULT '0',
-	`auth_b3f0c7f6bb763af1be91d9e74eabfeb199dc1f1f` TINYINT(1) NOT NULL DEFAULT '0',
-	`auth_91032ad7bbcb6cf72875e8e8207dcfba80173f7c` TINYINT(1) NOT NULL DEFAULT '0',
-	`auth_472b07b9fcf2c2451e8781e944bf5f77cd8457c8` TINYINT(1) NOT NULL DEFAULT '0',
+	`auth_356a192b7913b04c54574d18c28d46e6395428ab` TINYINT(1) NOT NULL DEFAULT '0',
+	`auth_da4b9237bacccdf19c0760cab7aec4a8359010b0` TINYINT(1) NOT NULL DEFAULT '0',
+	`auth_77de68daecd823babbb58edb1c8e14d7106e83bb` TINYINT(1) NOT NULL DEFAULT '0',
+	`auth_1b6453892473a467d07372d45eb05abc2031647a` TINYINT(1) NOT NULL DEFAULT '0',
 	PRIMARY KEY(`id`),
 	INDEX `masks_idx` (`name`)
 );
@@ -217,6 +217,18 @@ CREATE TABLE `{database_prefix}app_floorplan_object_peer` (
   `peer_face` int(11) NOT NULL,
   `peer_depth` int(11) NOT NULL,
   `peer_port` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix}app_history`;
+
+CREATE TABLE `{database_prefix}app_history` (
+  `id` int(11) NOT NULL,
+  `date` int(11) NOT NULL,
+  `function` varchar(255) NOT NULL,
+  `action_type` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `action` varchar(255) NOT NULL,
   PRIMARY KEY(`id`)
 );
 
@@ -475,5 +487,18 @@ CREATE TABLE `{database_prefix}shared_object_portType` (
   `name` varchar(255) NOT NULL,
   `category_type_id` int(11) DEFAULT NULL,
   `defaultOption` tinyint(1) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix}shared_user_messages`;
+
+CREATE TABLE `{database_prefix}shared_user_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `to_id` int(11) NOT NULL,
+  `from_id` int(11) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `subject` varchar(255) NOT NULL,
+  `message` varchar(1000) NOT NULL,
+  `viewed` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY(`id`)
 );

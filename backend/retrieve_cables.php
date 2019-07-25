@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('admin.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -10,8 +10,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		);
 	$return['result'] = array();
 	
-	$result = $qls->app_SQL->select('*', 'table_inventory');
-	while($row = $qls->app_SQL->fetch_assoc($result)){
+	$result = $qls->SQL->select('*', 'app_inventory');
+	while($row = $qls->SQL->fetch_assoc($result)){
 		array_push($return['result'], array(
 				'a'=>array(
 					'id'=>$row['a_id'],

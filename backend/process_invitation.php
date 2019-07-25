@@ -1,9 +1,9 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
@@ -27,8 +27,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$recipientEmail = $data['email'];
 				$recipientID = 0;
 				$orgID = $qls->user_info['org_id'];
-				$query = $qls->app_SQL->select('*', 'table_organization_data');
-				$orgName = $qls->app_SQL->fetch_assoc($query)['name'];
+				$query = $qls->SQL->select('*', 'app_organization_data');
+				$orgName = $qls->SQL->fetch_assoc($query)['name'];
 
 				if ($qls->User->check_username_existence($recipientEmail)) {
 					$query = $qls->SQL->select('*', 'users', array('email' => array('=', $recipientEmail)));
@@ -63,7 +63,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					)
 				);
 
-				$msg = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/app/html/email_invitation.html');
+				$msg = file_get_contents('./html/email_invitation.html');
 				$msg = str_replace('<!--btnURL-->', $btnURL, $msg);
 				$msg = str_replace('<!--btnText-->', $btnText, $msg);
 				$attributes = array('recipient', 'sender', 'subject', 'message');

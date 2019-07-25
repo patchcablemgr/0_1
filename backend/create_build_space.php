@@ -1,6 +1,6 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 //Retreive name of the cabinet or location
@@ -8,8 +8,8 @@ $node_id = $_POST['id'];
 $cabinetFace = $_POST['face'];
 $cabinetView = $_POST['view'];
 $cabinetFace = $cabinetFace == 0 ? 'cabinet_front' : 'cabinet_back';
-$node_info = $qls->app_SQL->select('*', 'env_tree', 'id='.$node_id);
-$node_info = $qls->app_SQL->fetch_assoc($node_info);
+$node_info = $qls->SQL->select('*', 'app_env_tree', 'id='.$node_id);
+$node_info = $qls->SQL->fetch_assoc($node_info);
 $node_id = $node_info['id'];
 $node_name = $node_info['name'];
 $cabinetSize = $node_info['size'];
@@ -17,9 +17,9 @@ $cabinetSize = $node_info['size'];
 //Retreive cabinet object info
 $object = array();
 $insert = array();
-$results = $qls->app_SQL->select('*', 'table_object', 'env_tree_id = '.$node_id.' AND '.$cabinetFace.' IS NOT NULL');
+$results = $qls->SQL->select('*', 'app_object', 'env_tree_id = '.$node_id.' AND '.$cabinetFace.' IS NOT NULL');
 
-while ($row = $qls->app_SQL->fetch_assoc($results)){
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$RU = $row['RU'];
 	$object[$RU] = $row;
 	$object[$RU]['face'] = $row[$cabinetFace];
@@ -30,36 +30,36 @@ while ($row = $qls->app_SQL->fetch_assoc($results)){
 
 //Retreive categories
 $category = array();
-$categoryInfo = $qls->app_SQL->select('*', 'table_object_category');
-while ($categoryRow = $qls->app_SQL->fetch_assoc($categoryInfo)){
+$categoryInfo = $qls->SQL->select('*', 'app_object_category');
+while ($categoryRow = $qls->SQL->fetch_assoc($categoryInfo)){
 	$category[$categoryRow['id']]['name'] = $categoryRow['name'];
 }
 
 //Retreive port orientation
 $portOrientation = array();
-$results = $qls->shared_SQL->select('*', 'table_object_portOrientation');
-while ($row = $qls->shared_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'shared_object_portOrientation');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$portOrientation[$row['id']]['name'] = $row['name'];
 }
 
 //Retreive port type
 $portType = array();
-$results = $qls->shared_SQL->select('*', 'table_object_portType');
-while ($row = $qls->shared_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'shared_object_portType');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$portType[$row['id']]['name'] = $row['name'];
 }
 
 //Retreive media type
 $mediaType = array();
-$results = $qls->shared_SQL->select('*', 'table_mediaType');
-while ($row = $qls->shared_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'shared_mediaType');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$mediaType[$row['value']]['name'] = $row['name'];
 }
 
 //Retreive rackable objects
 $objectTemplate = array();
-$results = $qls->app_SQL->select('*', 'table_object_templates');
-while ($row = $qls->app_SQL->fetch_assoc($results)){
+$results = $qls->SQL->select('*', 'app_object_templates');
+while ($row = $qls->SQL->fetch_assoc($results)){
 	$objectTemplate[$row['id']] = $row;
 	$objectTemplate[$row['id']]['partitionData'] = json_decode($row['templatePartitionData'], true);
 	$objectTemplate[$row['id']]['categoryName'] = $category[$row['templateCategory_id']]['name'];
@@ -68,16 +68,16 @@ while ($row = $qls->app_SQL->fetch_assoc($results)){
 
 //Retreive patched ports
 $patchedPortTable = array();
-$query = $qls->app_SQL->select('*', 'table_inventory');
-while ($row = $qls->app_SQL->fetch_assoc($query)){
+$query = $qls->SQL->select('*', 'app_inventory');
+while ($row = $qls->SQL->fetch_assoc($query)){
 	array_push($patchedPortTable, $row['a_object_id'].'-'.$row['a_object_face'].'-'.$row['a_object_depth'].'-'.$row['a_port_id']);
 	array_push($patchedPortTable, $row['b_object_id'].'-'.$row['b_object_face'].'-'.$row['b_object_depth'].'-'.$row['b_port_id']);
 }
 
 //Retreive populated ports
 $populatedPortTable = array();
-$query = $qls->app_SQL->select('*', 'table_populated_port');
-while ($row = $qls->app_SQL->fetch_assoc($query)){
+$query = $qls->SQL->select('*', 'app_populated_port');
+while ($row = $qls->SQL->fetch_assoc($query)){
 	array_push($populatedPortTable, $row['object_id'].'-'.$row['object_face'].'-'.$row['object_depth'].'-'.$row['port_id']);
 }
 
@@ -163,8 +163,8 @@ function buildPortPartitions($data, $objectID, $face, &$qls, $function, $objName
 				$portPrefix = $element['portPrefix'];
 				$portNumber = $element['portNumber'];
 				if($function == 'Endpoint') {
-					$query = $qls->app_SQL->select('*', 'table_object_peer', '(a_id = '.$objectID.' AND a_face = '.$face.' AND a_depth = '.$depthCounter.') OR (b_id = '.$objectID.' AND b_face = '.$face.' AND b_depth = '.$depthCounter.')');
-					$endpointTrunked = $qls->app_SQL->num_rows($query) ? true : false;
+					$query = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$objectID.' AND a_face = '.$face.' AND a_depth = '.$depthCounter.') OR (b_id = '.$objectID.' AND b_face = '.$face.' AND b_depth = '.$depthCounter.')');
+					$endpointTrunked = $qls->SQL->num_rows($query) ? true : false;
 				} else {
 					$endpointTrunked = false;
 				}
@@ -198,8 +198,8 @@ function buildPortPartitions($data, $objectID, $face, &$qls, $function, $objName
 								$insertData = $insertTemplate['partitionData'][0];
 								$categoryName = $GLOBALS['category'][$insertTemplate['templateCategory_id']]['name'];
 								if($function == 'Endpoint') {
-									$query = $qls->app_SQL->select('*', 'table_object_peer', array('a_id' => array('=', $insertObject['id']), 'OR', 'b_id' => array('=', $insertObject['id'])));
-									$endpointTrunked = $qls->app_SQL->num_rows($query) ? true : false;
+									$query = $qls->SQL->select('*', 'app_object_peer', array('a_id' => array('=', $insertObject['id']), 'OR', 'b_id' => array('=', $insertObject['id'])));
+									$endpointTrunked = $qls->SQL->num_rows($query) ? true : false;
 								} else {
 									$endpointTrunked = false;
 								}

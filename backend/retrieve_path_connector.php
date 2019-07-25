@@ -1,8 +1,8 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 $qls->Security->check_auth_page('operator.php');
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/path_functions.php';
+require_once '../includes/path_functions.php';
 
 //[0] = element type
 //[1] = element ID
@@ -41,14 +41,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$connectorDepthAttribute = $cableEnd == 'a' ? 'a_object_depth' : 'b_object_depth';
 		$action = $data['action'];
 		
-		$query = $qls->app_SQL->select('*', 'table_inventory', array($connectorIDAttribute => array('=', $connectorID)));
-		$cable = $qls->app_SQL->fetch_assoc($query);
+		$query = $qls->SQL->select('*', 'app_inventory', array($connectorIDAttribute => array('=', $connectorID)));
+		$cable = $qls->SQL->fetch_assoc($query);
 		
 		if($action == 'SELECT'){
 			// Clear path
 			if($elementID == 0) {
-				$qls->app_SQL->update(
-					'table_inventory',
+				$qls->SQL->update(
+					'app_inventory',
 					array(
 						$connectorAttributePrefix.'_object_id' => 0,
 						$connectorAttributePrefix.'_port_id' => 0,
@@ -92,8 +92,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				if(loopDetected($qls, $peerID, $peerFace, $peerDepth, $peerPort, $elementID, $elementFace, $elementDepth, $elementPortIndex)) {
 					array_push($return['error'], 'Loop detected.');
 				} else {
-					$qls->app_SQL->update(
-						'table_inventory',
+					$qls->SQL->update(
+						'app_inventory',
 						array(
 							$connectorAttributePrefix.'_object_id' => $elementID,
 							$connectorAttributePrefix.'_port_id' => $elementPortIndex,
@@ -104,8 +104,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 							$connectorAttributePrefix.'_id' => array('=', $cable[$connectorIDAttribute])
 						)
 					);
-					$qls->app_SQL->delete(
-						'table_populated_port',
+					$qls->SQL->delete(
+						'app_populated_port',
 						array(
 							'object_id' => array('=', $elementID),
 							'AND',

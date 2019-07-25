@@ -120,12 +120,11 @@ class qls {
 		}
 		
 		if (isset($this->user_info['username'])){
-			
 			require_once('App.class.php');
 			$this->App = new App($this);
 			
 			// Get all the organization information
-			$result = $this->SQL->select("*", "{$this->config['sql_prefix_app']}organization_data");
+			$result = $this->SQL->select('*', 'app_organization_data');
 			$row = $this->SQL->fetch_array($result);
 			
 			// Loop through and add to $org_info

@@ -1,7 +1,7 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/redirectToLogin.php';
+require_once './includes/header.php';
+require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('administrator.php');
 ?>
 
@@ -26,7 +26,7 @@ $qls->Security->check_auth_page('administrator.php');
 <div class="row">
 	<div class="col-sm-12">
 		<div class="card-box table-responsive">
-			<?php require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/content-demo_inventory.php';?>
+			<?php require_once './includes/content-demo_inventory.php';?>
 		</div>
 	</div>
 </div> <!-- end row -->

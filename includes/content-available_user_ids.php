@@ -9,8 +9,8 @@
 	echo '<tbody>';
 	
 	$initializedCableEndIDs = array();
-	$query = $qls->app_SQL->select('*', 'table_inventory', array('order_id' => array('=', 0)));
-	while($row = $qls->app_SQL->fetch_assoc($query)) {
+	$query = $qls->SQL->select('*', 'app_inventory', array('order_id' => array('=', 0)));
+	while($row = $qls->SQL->fetch_assoc($query)) {
 		array_push($initializedCableEndIDs, $row['a_id']);
 		array_push($initializedCableEndIDs, $row['b_id']);
 	}

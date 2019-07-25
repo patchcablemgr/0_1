@@ -1,9 +1,9 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/header.php';
+require_once '../includes/header.php';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once $_SERVER['DOCUMENT_ROOT'].'/app/includes/Validate.class.php';
+	require_once '../includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	
@@ -17,7 +17,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		
 		// Send notification to admin
 		$subject = 'New Demo User';
-		$msg = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/app/html/emailAdminNotify.html');
+		$msg = file_get_contents('./html/emailAdminNotify.html');
 		$msg = str_replace('<!--MESSAGE-->', $email, $msg);
 		
 		$attributes = array('recipient', 'sender', 'subject', 'message');
