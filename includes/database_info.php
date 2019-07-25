@@ -17,7 +17,7 @@ $database_prefix = '';
 $database_type = '';
 $database_server_name = '';
 $database_username = '';
-$database_password = '=-01';
+$database_password = '';
 $database_name = '';
 $database_port = false;
 
