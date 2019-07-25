@@ -3,7 +3,7 @@
 * @package   Quadodo Login Script
 * @file      database_info.php
 * @author    Douglas Rennehan
-* @generated November 26th, 2016
+* @generated 
 * @link      http://www.quadodo.net
 *** *** *** *** *** ***
 * Comments are always before the code they are commenting

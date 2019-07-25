@@ -7,13 +7,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	
 	$validate = new Validate($qls);
 	$validate->returnData['success'] = array();
-	
-	if($qls->org_info['sub_level'] == 0) {
-		$errMsg = 'User invitations are not available in demo mode.';
-		array_push($validate->returnData['error'], $errMsg);
-		echo json_encode($validate->returnData);
-		return;
-	}
 
 	if ($validate->returnData['active'] == 'inactive') {
 		echo json_encode($validate->returnData);

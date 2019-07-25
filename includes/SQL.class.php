@@ -43,17 +43,17 @@ var $qls;
 	 * @param object $qls - Contains all the other classes
 	 * @return void but will output error if found
 	 */
-	function __construct(&$qls, $dbInfo='', $org_id=NULL) {
+	function __construct(&$qls) {
 	    $this->qls = &$qls;
 		
-		require $dbInfo.'database_info.php';
+		require 'database_info.php';
         $this->database_type = $database_type;
 
 		/**
 		 * These security functions are in here because of the file
 		 * included above. I'll have to change it in later versions 0.o
 		 */
-		if (!defined('SYSTEM_INSTALLED')) {
+		if (!SYSTEM_INSTALLED) {
 		    die(SYSTEM_NOT_INSTALLED);
 		}
 
@@ -68,6 +68,8 @@ var $qls;
 		 */
 
         $this->qls->config['sql_prefix'] = $database_prefix;
+		$this->qls->config['sql_prefix_app'] = $database_prefix_app;
+		$this->qls->config['sql_prefix_shared'] = $database_prefix_shared;
 
         // Get the actual database class
         require_once('MySQLie.class.php');

@@ -252,7 +252,6 @@ var $sql_class;
 			}
 
 			if (!empty($sql[$x])) {
-				error_log($sql[$x]);
 			    $this->connection->query($sql[$x]) or die($this->connection->error);
 			}
 		}

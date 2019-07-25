@@ -163,7 +163,7 @@ else {
 					Cookie Information
 				</legend>
 				<table border="0">
-					<tr style="">
+					<tr style="display: none;">
 						<td>
 							Cookie Prefix:
 						</td>
@@ -179,7 +179,7 @@ else {
 							<input type="text" name="cookie_path" maxlength="255" value="<?php if (isset($_SESSION['cookie_path'])) { echo $_SESSION['cookie_path']; } else { echo str_replace('install/install.php', '', $_SERVER['REQUEST_URI']); } ?>" />
 						</td>
 					</tr>
-					<tr style="">
+					<tr style="display: none;">
 						<td>
 							Cookie Secure:
 						</td>
@@ -228,7 +228,7 @@ else {
 							<input type="hidden" name="security_image" value="no" />
 						</td>
 					</tr>
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Maximum Upload Size:
 						</td>
@@ -236,7 +236,7 @@ else {
 							<input type="text" name="max_upload_size" maxlength="11" value="<?php if (isset($_SESSION['max_upload_size'])) { echo $_SESSION['max_upload_size']; } else { echo '1048576'; } ?>" />
 						</td>
 					</tr>
-					<tr>
+					<tr style="display: none;">
 						<td>
 							Public Registrations:
 						</td>
@@ -249,9 +249,9 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-			<br />
-			<br />
-			<fieldset style="width: 50%;">
+			<!--br />
+			<br /-->
+			<fieldset style="display: none; width: 50%;">
 				<legend>
 					User Settings
 				</legend>
@@ -261,7 +261,7 @@ else {
 							Maximum Username Length:
 						</td>
 						<td>
-							<input type="text" name="max_username" maxlength="2" value="<?php if (isset($_SESSION['max_username'])) { echo $_SESSION['max_username']; } else { echo '15'; } ?>" />
+							<input type="text" name="max_username" maxlength="2" value="<?php if (isset($_SESSION['max_username'])) { echo $_SESSION['max_username']; } else { echo '99'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -269,7 +269,7 @@ else {
 							Minimum Username Length:
 						</td>
 						<td>
-							<input type="text" name="min_username" maxlength="2" value="<?php if (isset($_SESSION['min_username'])) { echo $_SESSION['min_username']; } else { echo '2'; } ?>" />
+							<input type="text" name="min_username" maxlength="2" value="<?php if (isset($_SESSION['min_username'])) { echo $_SESSION['min_username']; } else { echo '5'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -406,7 +406,7 @@ else {
 							Password:
 						</td>
 						<td>
-							<input type="text" name="password" maxlength="255" value="<?php if (isset($_SESSION['password'])) { echo $_SESSION['password']; } ?>" />
+							<input type="password" name="password" maxlength="255" value="<?php if (isset($_SESSION['password'])) { echo $_SESSION['password']; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -414,7 +414,7 @@ else {
 							Confirm:
 						</td>
 						<td>
-							<input type="text" name="password_confirm" maxlength="255" value="<?php if (isset($_SESSION['password_confirm'])) { echo $_SESSION['password_confirm']; } ?>" />
+							<input type="password" name="password_confirm" maxlength="255" value="<?php if (isset($_SESSION['password_confirm'])) { echo $_SESSION['password_confirm']; } ?>" />
 						</td>
 					</tr>
 				</table>

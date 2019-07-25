@@ -363,3 +363,117 @@ CREATE TABLE `{database_prefix_app}populated_port` (
   `port_id` int(11) NOT NULL,
   PRIMARY KEY(`id`)
 );
+
+DROP TABLE IF EXISTS `{database_prefix_shared}cable_color`;
+
+CREATE TABLE `{database_prefix_shared}cable_color` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `short_name` varchar(3) NOT NULL,
+  `defaultOption` tinyint(1) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}cable_connectorOptions`;
+
+CREATE TABLE `{database_prefix_shared}cable_connectorOptions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `defaultOption` tinyint(1) NOT NULL,
+  `category_type_id` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}cable_connectorType`;
+
+CREATE TABLE `{database_prefix_shared}cable_connectorType` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `defaultOption` tinyint(1) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}cable_length`;
+
+CREATE TABLE `{database_prefix_shared}cable_length` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `category_type_id` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}history_action_type`;
+
+CREATE TABLE `{database_prefix_shared}history_action_type` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}history_function`;
+
+CREATE TABLE `{database_prefix_shared}history_function` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}mediaCategory`;
+
+CREATE TABLE `{database_prefix_shared}mediaCategory` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `category_type_id` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}mediaCategoryType`;
+
+CREATE TABLE `{database_prefix_shared}mediaCategoryType` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `unit_of_length` varchar(255) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}mediaType`;
+
+CREATE TABLE `{database_prefix_shared}mediaType` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `category_id` varchar(255) NOT NULL,
+  `category_type_id` int(11) NOT NULL,
+  `defaultOption` tinyint(4) NOT NULL,
+  `display` tinyint(4) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}object_portOrientation`;
+
+CREATE TABLE `{database_prefix_shared}object_portOrientation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `defaultOption` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+DROP TABLE IF EXISTS `{database_prefix_shared}object_portType`;
+
+CREATE TABLE `{database_prefix_shared}object_portType` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `value` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `category_type_id` int(11) DEFAULT NULL,
+  `defaultOption` tinyint(1) NOT NULL,
+  PRIMARY KEY(`id`)
+);

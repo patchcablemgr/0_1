@@ -611,6 +611,174 @@ var $install_error = 'There was an error with the installation! This is most lik
 			if (!$this->test->query("INSERT INTO `{$database_prefix_app}organization_data` (`name`) VALUES('Acme, Inc.')")) {
 				$this->test->output_error();
 			}
+			
+			$cable_color = array(
+				"1, 'Blue', 'blu', 1",
+				"2, 'White', 'wht', 0",
+				"3, 'Yellow', 'ylw', 0",
+				"4, 'Red', 'red', 0",
+				"5, 'Black', 'blk', 0"
+			);
+			
+			// Add cable color
+			foreach($cable_color as $cable_color_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_color` (`value`, `name`, `short_name`, `defaultOption`) VALUES({$cable_color_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$cable_connectorOptions = array(
+				"'2-2', 'LC-LC', 0, 2",
+				"'2-3', 'LC-SC', 0, 2",
+				"'3-3', 'SC-SC', 0, 2",
+				"'1-1', 'RJ45', 1, 1",
+				"'4-4', 'Label', 0, 3"
+			);
+			
+			// Add cable connector options
+			foreach($cable_connectorOptions as $cable_connectorOptions_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_connectorOptions` (`value`, `name`, `defaultOption`, `category_type_id`) VALUES({$cable_connectorOptions_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$cable_connectorType = array(
+				"1, 'RJ45', 1",
+				"2, 'LC', 0",
+				"3, 'SC', 0",
+				"4, 'Label', 0"
+			);
+			
+			// Add cable connector type
+			foreach($cable_connectorType as $cable_connectorType_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_connectorType` (`value`, `name`, `defaultOption`) VALUES({$cable_connectorType_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$cable_length = array(
+				"305, '1', 1",
+				"610, '2', 1",
+				"914, '3', 1",
+				"1524, '5', 1",
+				"3048, '10', 1",
+				"152, '0.5', 1",
+				"500, '0.5', 2",
+				"1000, '1', 2",
+				"2000, '2', 2",
+				"3000, '3', 2",
+				"5000, '5', 2"
+			);
+			
+			// Add cable length
+			foreach($cable_length as $cable_length_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_length` (`value`, `name`, `category_type_id`) VALUES({$cable_length_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$history_action_type = array(
+				"1, 'Add'",
+				"2, 'Change'",
+				"3, 'Delete'"
+			);
+			
+			// Add history action type
+			foreach($history_action_type as $history_action_type_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}history_action_type` (`value`, `name`) VALUES({$history_action_type_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$history_function = array(
+				"1, 'Build->Templates'",
+				"2, 'Build->Cabinets'",
+				"3, 'Explore'",
+				"4, 'Scan'",
+				"5, 'Inventory'",
+				"6, 'Admin->General'",
+				"7, 'Admin->Integration'"
+			);
+			
+			// Add history function
+			foreach($history_function as $history_function_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}history_function` (`value`, `name`) VALUES({$history_function_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$mediaCategory = array(
+				"1, 'Copper', 1",
+				"2, 'Multimode Fiber', 2",
+				"3, 'Label', 3",
+				"4, 'Singlemode Fiber', 2",
+				"5, 'Unspecified', 4"
+			);
+			
+			// Add media category
+			foreach($mediaCategory as $mediaCategory_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}mediaCategory` (`value`, `name`, `category_type_id`) VALUES({$mediaCategory_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$mediaCategoryType = array(
+				"1, 'Copper', 'ft.'",
+				"2, 'Fiber', 'm.'",
+				"3, 'Label', ''",
+				"4, 'Unspecified', 'm.'"
+			);
+			
+			// Add media category type
+			foreach($mediaCategoryType as $mediaCategoryType_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}mediaCategoryType` (`value`, `name`, `unit_of_length`) VALUES({$mediaCategoryType_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$mediaType = array(
+				"1, 'Cat5e', '1', 1, 1, 1",
+				"2, 'Cat6', '1', 1, 0, 1",
+				"3, 'Cat6a', '1', 1, 0, 1",
+				"5, 'SM-OS1', '4', 2, 0, 1",
+				"6, 'MM-OM4', '2', 2, 0, 1",
+				"7, 'MM-OM3', '2', 2, 0, 1",
+				"8, 'Unspecified', '5', 4, 0, 0"
+			);
+			
+			// Add media type
+			foreach($mediaType as $mediaType_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}mediaType` (`value`, `name`, `category_id`, `category_type_id`, `defaultOption`, `display`) VALUES({$mediaType_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$object_portOrientation = array(
+				"1, 'Left-Right', 1",
+				"2, 'Top-Bottom', 0",
+				"3, 'Right-Left', 0"
+			);
+			
+			// Add object port orientation
+			foreach($object_portOrientation as $object_portOrientation_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}object_portOrientation` (`value`, `name`, `defaultOption`) VALUES({$object_portOrientation_item})")) {
+					$this->test->output_error();
+				}
+			}
+			
+			$object_portType = array(
+				"1, 'RJ45', 1, 1",
+				"2, 'LC', 2, 0",
+				"3, 'SC', 2, 0",
+				"4, 'SFP', 4, 0"
+			);
+			
+			// Add object port type
+			foreach($object_portType as $object_portType_item) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}object_portType` (`value`, `name`, `category_type_id`, `defaultOption`) VALUES({$object_portType_item})")) {
+					$this->test->output_error();
+				}
+			}
 
             // Configuration information to be inserted
             $sql_start = "INSERT INTO `{$database_prefix}config` (`name`,`value`) VALUES(";

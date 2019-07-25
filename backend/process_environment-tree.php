@@ -160,23 +160,6 @@ function validate($data, &$validate, &$qls){
 			if($type == 'cabinet') {
 				$query = $qls->app_SQL->select('id', 'env_tree', array('type' => array('=', 'cabinet')));
 				$cabNum = $qls->app_SQL->num_rows($query) + 1;
-				$subLevel = $qls->org_info['sub_level'];
-				
-				$cabLimitExceeded = false;
-				if($subLevel == 0 or $subLevel == 1) {
-					if($cabNum > ENTRY_CABINET_LIMIT) {
-						$cabLimitExceeded = true;
-					}
-				} else if($subLevel == 2) {
-					if($cabNum > STANDARD_CABINET_LIMIT) {
-						$cabLimitExceeded = true;
-					}
-				}
-				
-				if($cabLimitExceeded) {
-					$errMsg = 'Exceeded number of cabinets allowed by subscription level.';
-					//array_push($validate->returnData['error'], $errMsg);
-				}
 			}
 				
 		} else if ($operation == 'rename_node') {

@@ -1,5 +1,6 @@
 <?php
 if ($qls->user_info['username'] == '') {
-	header('Location: /app/login.php');
+	$uri = str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']);
+	header('Location: '.$uri.'login.php');
 }
 ?>

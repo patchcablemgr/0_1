@@ -25,7 +25,7 @@
 * Comments are always before the code they are commenting.
 *** *** *** *** *** ***/
 if (!defined('QUADODO_IN_SYSTEM')) {
-exit;	
+exit;
 }
 
 /**
@@ -120,29 +120,17 @@ class qls {
 		}
 		
 		if (isset($this->user_info['username'])){
-			//$this->app_SQL = new SQL($this, True);
-			$this->app_SQL = new SQL($this, 'app_');
-			$this->shared_SQL = new SQL($this, 'shared_');
 			
 			require_once('App.class.php');
 			$this->App = new App($this);
 			
 			// Get all the organization information
-			$result = $this->app_SQL->select('*', 'table_organization_data');
-			$row = $this->app_SQL->fetch_array($result);
+			$result = $this->SQL->select("*", "{$this->config['sql_prefix_app']}organization_data");
+			$row = $this->SQL->fetch_array($result);
 			
 			// Loop through and add to $org_info
 			foreach ($row as $key => $value) {
 				$this->org_info[$key] = stripslashes($value);
-			}
-			
-			// Get all the subscription information
-			$result = $this->SQL->select('*', 'subscriptions', array('org_id' => array('=', $this->user_info['org_id'])));
-			if($row = $this->SQL->fetch_array($result)) {
-				// Loop through and add to $org_info
-				foreach ($row as $key => $value) {
-					$this->sub_info[$key] = stripslashes($value);
-				}
 			}
 		}
 	}

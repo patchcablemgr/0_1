@@ -148,62 +148,57 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			}
 		// Cable doesn't exist
 		} else {
-			if($qls->org_info['sub_level'] != 0) {
-				$qls->app_SQL->insert(
-					'table_inventory',
-					array(
-						'a_id',
-						'a_code39'
-					),
-					array(
-						$connectorID,
-						$connectorCode39
-					)
-				);
-				$rowID = $qls->app_SQL->insert_id();
-				
-				$validate->returnData['success']['connectorTypeInfo'] = $qls->App->connectorTypeArray;
-				$validate->returnData['success']['cableMediaTypeInfo'] = getCableMediaTypeInfo($mediaTypeArray);
-				
-				$qls->App->inventoryByIDArray[$connectorID] = array(
-					'rowID' => $rowID,
-					'local_object_id' => 0,
-					'local_object_face' => 0,
-					'local_object_depth' => 0,
-					'local_object_port' => 0,
-					'remote_object_id' => 0,
-					'remote_object_face' => 0,
-					'remote_object_depth' => 0,
-					'remote_object_port' => 0,
-					'localEndID' => $connectorID,
-					'localEndCode39' => $connectorCode39,
-					'localConnector' => 0,
-					'localAttrPrefix' => 'a',
-					'remoteEndID' => 0,
-					'remoteEndCode39' => 0,
-					'remoteConnector' => 0,
-					'remoteAttrPrefix' => 'b',
-					'mediaType' => 0,
-					'length' => 1,
-					'editable' => 1
-				);
-				
-				$cable = $validate->returnData['success']['cable'] = $qls->App->inventoryByIDArray[$connectorID];
-				$mediaTypeID = $validate->returnData['success']['cable']['mediaType'];
-				if($mediaTypeID != 0) {
-					$unitOfLength = $qls->App->getCableUnitOfLength($mediaTypeID);
-				} else {
-					$unitOfLength = 'm./ft.';
-				}
-				
-				$length = calculateCableLength($cableMediaTypeValueTable, $cableMediaCategoryTypeTable, $cable, false);
-				$validate->returnData['success']['cable']['length'] = $length;
-				$validate->returnData['success']['cable']['unitOfLength'] = $unitOfLength;
-				$validate->returnData['success']['localConnectorFlatPath'] = 'None';
+			$qls->app_SQL->insert(
+				'table_inventory',
+				array(
+					'a_id',
+					'a_code39'
+				),
+				array(
+					$connectorID,
+					$connectorCode39
+				)
+			);
+			$rowID = $qls->app_SQL->insert_id();
+			
+			$validate->returnData['success']['connectorTypeInfo'] = $qls->App->connectorTypeArray;
+			$validate->returnData['success']['cableMediaTypeInfo'] = getCableMediaTypeInfo($mediaTypeArray);
+			
+			$qls->App->inventoryByIDArray[$connectorID] = array(
+				'rowID' => $rowID,
+				'local_object_id' => 0,
+				'local_object_face' => 0,
+				'local_object_depth' => 0,
+				'local_object_port' => 0,
+				'remote_object_id' => 0,
+				'remote_object_face' => 0,
+				'remote_object_depth' => 0,
+				'remote_object_port' => 0,
+				'localEndID' => $connectorID,
+				'localEndCode39' => $connectorCode39,
+				'localConnector' => 0,
+				'localAttrPrefix' => 'a',
+				'remoteEndID' => 0,
+				'remoteEndCode39' => 0,
+				'remoteConnector' => 0,
+				'remoteAttrPrefix' => 'b',
+				'mediaType' => 0,
+				'length' => 1,
+				'editable' => 1
+			);
+			
+			$cable = $validate->returnData['success']['cable'] = $qls->App->inventoryByIDArray[$connectorID];
+			$mediaTypeID = $validate->returnData['success']['cable']['mediaType'];
+			if($mediaTypeID != 0) {
+				$unitOfLength = $qls->App->getCableUnitOfLength($mediaTypeID);
 			} else {
-				$errMsg = 'Scanning new cable inventory is not available in demo mode.';
-				array_push($validate->returnData['error'], $errMsg);
+				$unitOfLength = 'm./ft.';
 			}
+			
+			$length = calculateCableLength($cableMediaTypeValueTable, $cableMediaCategoryTypeTable, $cable, false);
+			$validate->returnData['success']['cable']['length'] = $length;
+			$validate->returnData['success']['cable']['unitOfLength'] = $unitOfLength;
+			$validate->returnData['success']['localConnectorFlatPath'] = 'None';
 		}
 	}
 	echo json_encode($validate->returnData);
