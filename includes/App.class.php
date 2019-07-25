@@ -47,7 +47,7 @@ var $qls;
 	    $this->qls = &$qls;
 		
 		$this->envTreeArray = array();
-		$query = $this->qls->app_SQL->select('*', 'env_tree', false, array('name', 'ASC'));
+	$query = $this->qls->SQL->select('*', "{$qls->config['sql_prefix_app']}env_tree", false, array('name', 'ASC'));
 		while($row = $this->qls->app_SQL->fetch_assoc($query)) {
 			$this->envTreeArray[$row['id']] = $row;
 		}

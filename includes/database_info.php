@@ -14,14 +14,12 @@ exit;
 
 define('SYSTEM_INSTALLED', false);
 $database_prefix = '';
-$database_prefix_app = '';
-$database_prefix_shared = '';
 $database_type = '';
 $database_server_name = '';
 $database_username = '';
 $database_password = '';
 $database_name = '';
-$database_port = false;
+$database_port = ;
 
 /**
  * Use persistent connections?

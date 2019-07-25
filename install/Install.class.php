@@ -249,8 +249,6 @@ var $install_error = 'There was an error with the installation! This is most lik
 
         // Check all the input data
         $database_prefix = (preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]{0,254}$/", $_POST['database_prefix']) || $_POST['database_prefix'] == '') ? $this->make_safe($_POST['database_prefix']) : false;
-		$database_prefix_app = (preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]{0,254}$/", $_POST['database_prefix_app']) || $_POST['database_prefix_app'] == '') ? $this->make_safe($_POST['database_prefix_app']) : false;
-		$database_prefix_shared = (preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]{0,254}$/", $_POST['database_prefix_shared']) || $_POST['database_prefix_shared'] == '') ? $this->make_safe($_POST['database_prefix_shared']) : false;
         $database_type = (isset($_POST['database_type'])) ? $_POST['database_type'] : false;
         $database_server_name = (isset($_POST['database_server_name'])) ? $_POST['database_server_name'] : false;
         $database_username = (isset($_POST['database_username'])) ? $_POST['database_username'] : false;
@@ -287,15 +285,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 
 		// Did they fail? If so add to the $errors variable
 		if ($database_prefix === false) {
-		    $errors[] = 'The "QLS" database table prefix you entered was not a valid format.';
-		}
-		
-		if ($database_prefix_app === false) {
-		    $errors[] = 'The "App" database table prefix you entered was not a valid format.';
-		}
-		
-		if ($database_prefix_shared === false) {
-		    $errors[] = 'The "Shared" database table prefix you entered was not a valid format.';
+		    $errors[] = 'The database table prefix you entered was not a valid format.';
 		}
 
 		if ($cookie_prefix === false) {
@@ -374,8 +364,6 @@ var $install_error = 'There was an error with the installation! This is most lik
 		if ($errors !== null) {
             // Make sure the values are saved
             $_SESSION['database_prefix'] = stripslashes($database_prefix);
-			$_SESSION['database_prefix_app'] = stripslashes($database_prefix_app);
-			$_SESSION['database_prefix_shared'] = stripslashes($database_prefix_shared);
             $_SESSION['cookie_prefix'] = stripslashes($cookie_prefix);
             $_SESSION['max_username'] = stripslashes($max_username);
             $_SESSION['min_username'] = stripslashes($min_username);
@@ -428,12 +416,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 
             // Test the connection and create necessary tables
             $this->test->test_connection();
-			$table_name_array = array(
-				array('{database_prefix_qls}', $database_prefix),
-				array('{database_prefix_app}', $database_prefix_app),
-				array('{database_prefix_shared}', $database_prefix_shared)
-			);
-            $this->test->create_system_tables($table_name_array);
+            $this->test->create_system_tables($database_prefix);
 
             // Code generation
             $c_hash[] = md5($username . $password . md5($email));
@@ -521,7 +504,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add environment tree data
 			foreach($env_tree as $env_tree_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_app}env_tree` (`name`, `parent`, `type`, `size`, `floorplan_img`) VALUES({$env_tree_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}app_env_tree` (`name`, `parent`, `type`, `size`, `floorplan_img`) VALUES({$env_tree_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -533,7 +516,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add cabinet adjacency
 			foreach($cabinet_adj as $cabinet_adj_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_app}cabinet_adj` (`left_cabinet_id`, `right_cabinet_id`, `entrance_ru`) VALUES({$cabinet_adj_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}app_cabinet_adj` (`left_cabinet_id`, `right_cabinet_id`, `entrance_ru`) VALUES({$cabinet_adj_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -553,7 +536,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add object category
 			foreach($object_category as $object_category_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_app}object_category` (`name`, `color`, `defaultOption`) VALUES({$object_category_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}app_object_category` (`name`, `color`, `defaultOption`) VALUES({$object_category_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -580,7 +563,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add object compatibility
 			foreach($object_compatibility as $object_compatibility_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_app}object_compatibility` (`template_id`,`side`,`depth`,`portLayoutX`,`portLayoutY`,`portTotal`,`encLayoutX`,`encLayoutY`,`templateType`,`partitionType`,`partitionFunction`,`portOrientation`,`portType`,`mediaType`,`mediaCategory`,`mediaCategoryType`,`direction`,`flex`,`hUnits`,`vUnits`,`portNameFormat`) VALUES({$object_compatibility_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}app_object_compatibility` (`template_id`,`side`,`depth`,`portLayoutX`,`portLayoutY`,`portTotal`,`encLayoutX`,`encLayoutY`,`templateType`,`partitionType`,`partitionFunction`,`portOrientation`,`portType`,`mediaType`,`mediaCategory`,`mediaCategoryType`,`direction`,`flex`,`hUnits`,`vUnits`,`portNameFormat`) VALUES({$object_compatibility_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -602,13 +585,13 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add object templates
 			foreach($object_templates as $object_templates_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_app}object_templates` (`templateName`, `templateCategory_id`, `templateType`, `templateRUSize`, `templateFunction`, `templateMountConfig`, `templateEncLayoutX`, `templateEncLayoutY`, `templateHUnits`, `templateVUnits`, `templatePartitionData`, `frontImage`, `rearImage`) VALUES({$object_templates_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}app_object_templates` (`templateName`, `templateCategory_id`, `templateType`, `templateRUSize`, `templateFunction`, `templateMountConfig`, `templateEncLayoutX`, `templateEncLayoutY`, `templateHUnits`, `templateVUnits`, `templatePartitionData`, `frontImage`, `rearImage`) VALUES({$object_templates_item})")) {
 					$this->test->output_error();
 				}
 			}
 			
 			// Add organization data
-			if (!$this->test->query("INSERT INTO `{$database_prefix_app}organization_data` (`name`) VALUES('Acme, Inc.')")) {
+			if (!$this->test->query("INSERT INTO `{$database_prefix}app_organization_data` (`name`) VALUES('Acme, Inc.')")) {
 				$this->test->output_error();
 			}
 			
@@ -622,7 +605,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add cable color
 			foreach($cable_color as $cable_color_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_color` (`value`, `name`, `short_name`, `defaultOption`) VALUES({$cable_color_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_cable_color` (`value`, `name`, `short_name`, `defaultOption`) VALUES({$cable_color_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -637,7 +620,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add cable connector options
 			foreach($cable_connectorOptions as $cable_connectorOptions_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_connectorOptions` (`value`, `name`, `defaultOption`, `category_type_id`) VALUES({$cable_connectorOptions_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_cable_connectorOptions` (`value`, `name`, `defaultOption`, `category_type_id`) VALUES({$cable_connectorOptions_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -651,7 +634,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add cable connector type
 			foreach($cable_connectorType as $cable_connectorType_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_connectorType` (`value`, `name`, `defaultOption`) VALUES({$cable_connectorType_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_cable_connectorType` (`value`, `name`, `defaultOption`) VALUES({$cable_connectorType_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -672,7 +655,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add cable length
 			foreach($cable_length as $cable_length_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}cable_length` (`value`, `name`, `category_type_id`) VALUES({$cable_length_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_cable_length` (`value`, `name`, `category_type_id`) VALUES({$cable_length_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -685,7 +668,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add history action type
 			foreach($history_action_type as $history_action_type_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}history_action_type` (`value`, `name`) VALUES({$history_action_type_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_history_action_type` (`value`, `name`) VALUES({$history_action_type_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -702,7 +685,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add history function
 			foreach($history_function as $history_function_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}history_function` (`value`, `name`) VALUES({$history_function_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_history_function` (`value`, `name`) VALUES({$history_function_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -717,7 +700,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add media category
 			foreach($mediaCategory as $mediaCategory_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}mediaCategory` (`value`, `name`, `category_type_id`) VALUES({$mediaCategory_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_mediaCategory` (`value`, `name`, `category_type_id`) VALUES({$mediaCategory_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -731,7 +714,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add media category type
 			foreach($mediaCategoryType as $mediaCategoryType_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}mediaCategoryType` (`value`, `name`, `unit_of_length`) VALUES({$mediaCategoryType_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_mediaCategoryType` (`value`, `name`, `unit_of_length`) VALUES({$mediaCategoryType_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -748,7 +731,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add media type
 			foreach($mediaType as $mediaType_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}mediaType` (`value`, `name`, `category_id`, `category_type_id`, `defaultOption`, `display`) VALUES({$mediaType_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_mediaType` (`value`, `name`, `category_id`, `category_type_id`, `defaultOption`, `display`) VALUES({$mediaType_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -761,7 +744,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add object port orientation
 			foreach($object_portOrientation as $object_portOrientation_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}object_portOrientation` (`value`, `name`, `defaultOption`) VALUES({$object_portOrientation_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_object_portOrientation` (`value`, `name`, `defaultOption`) VALUES({$object_portOrientation_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -775,7 +758,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			
 			// Add object port type
 			foreach($object_portType as $object_portType_item) {
-				if (!$this->test->query("INSERT INTO `{$database_prefix_shared}object_portType` (`value`, `name`, `category_type_id`, `defaultOption`) VALUES({$object_portType_item})")) {
+				if (!$this->test->query("INSERT INTO `{$database_prefix}shared_object_portType` (`value`, `name`, `category_type_id`, `defaultOption`) VALUES({$object_portType_item})")) {
 					$this->test->output_error();
 				}
 			}
@@ -824,8 +807,6 @@ var $install_error = 'There was an error with the installation! This is most lik
 
             // We don't need these anymore
             unset($_SESSION['database_prefix'],
-				$_SESSION['database_prefix_app'],
-				$_SESSION['database_prefix_shared'],
                 $_SESSION['cookie_prefix'],
                 $_SESSION['max_username'],
                 $_SESSION['min_username'],
@@ -874,8 +855,6 @@ exit;
 
 define('SYSTEM_INSTALLED', true);
 \$database_prefix = '{$database_prefix}';
-\$database_prefix_app = '{$database_prefix_app}';
-\$database_prefix_shared = '{$database_prefix_shared}';
 \$database_type = '{$database_type}';
 \$database_server_name = '{$database_server_name}';
 \$database_username = '{$database_username}';

@@ -76,22 +76,6 @@ else {
 							<input type="text" name="database_prefix" maxlength="254" value="<?php if (isset($_SESSION['database_prefix'])) { echo $_SESSION['database_prefix']; } else { echo 'qls_'; } ?>" />
 						</td>
 					</tr>
-					<tr style="display: none;">
-						<td>
-							App Table Prefix:
-						</td>
-						<td>
-							<input type="text" name="database_prefix_app" maxlength="254" value="<?php if (isset($_SESSION['database_prefix_app'])) { echo $_SESSION['database_prefix_app']; } else { echo 'app_'; } ?>" />
-						</td>
-					</tr>
-					<tr style="display: none;">
-						<td>
-							Shared Table Prefix:
-						</td>
-						<td>
-							<input type="text" name="database_prefix_shared" maxlength="254" value="<?php if (isset($_SESSION['database_prefix_shared'])) { echo $_SESSION['database_prefix_shared']; } else { echo 'shared_'; } ?>" />
-						</td>
-					</tr>
 					<tr>
 						<td>
 							Database Type:

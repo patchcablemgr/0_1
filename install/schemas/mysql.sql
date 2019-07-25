@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS `{database_prefix_qls}config`;
+DROP TABLE IF EXISTS `{database_prefix}config`;
 
-CREATE TABLE `{database_prefix_qls}config`(
+CREATE TABLE `{database_prefix}config`(
 	`id` SMALLINT(6) NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(255) DEFAULT '' NOT NULL,
 	`value` VARCHAR(255) DEFAULT '' NOT NULL,
@@ -8,9 +8,9 @@ CREATE TABLE `{database_prefix_qls}config`(
 	INDEX(`name`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}email_queue`;
+DROP TABLE IF EXISTS `{database_prefix}email_queue`;
 
-CREATE TABLE `{database_prefix_qls}email_queue` (
+CREATE TABLE `{database_prefix}email_queue` (
 	`id` int(11) NOT NULL AUTO_INCREMENT,
 	`recipient` varchar(255) NOT NULL,
 	`sender` varchar(255) NOT NULL,
@@ -20,9 +20,9 @@ CREATE TABLE `{database_prefix_qls}email_queue` (
 	PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}sessions`;
+DROP TABLE IF EXISTS `{database_prefix}sessions`;
 
-CREATE TABLE `{database_prefix_qls}sessions`(
+CREATE TABLE `{database_prefix}sessions`(
 	`id` VARCHAR(40) DEFAULT '' NOT NULL,
 	`value` VARCHAR(40) DEFAULT '' NOT NULL,
 	`time` INT(11) DEFAULT '0' NOT NULL,
@@ -30,9 +30,9 @@ CREATE TABLE `{database_prefix_qls}sessions`(
 	INDEX `sessions_idx` (`value`,`time`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}users`;
+DROP TABLE IF EXISTS `{database_prefix}users`;
 
-CREATE TABLE `{database_prefix_qls}users`(
+CREATE TABLE `{database_prefix}users`(
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
 	`username` VARCHAR(255) DEFAULT '' NOT NULL,
 	`password` VARCHAR(40) DEFAULT '' NOT NULL,
@@ -64,9 +64,9 @@ CREATE TABLE `{database_prefix_qls}users`(
 	INDEX `users_idx7` (`last_action`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}security_image`;
+DROP TABLE IF EXISTS `{database_prefix}security_image`;
 
-CREATE TABLE `{database_prefix_qls}security_image`(
+CREATE TABLE `{database_prefix}security_image`(
 	`random_id` VARCHAR(40) DEFAULT '' NOT NULL,
 	`real_text` VARCHAR(10) DEFAULT '' NOT NULL,
 	`date` INT(11) DEFAULT '0' NOT NULL,
@@ -74,9 +74,9 @@ CREATE TABLE `{database_prefix_qls}security_image`(
 	INDEX `security_image_idx` (`real_text`,`date`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}pages`;
+DROP TABLE IF EXISTS `{database_prefix}pages`;
 
-CREATE TABLE `{database_prefix_qls}pages`(
+CREATE TABLE `{database_prefix}pages`(
 	`id` SMALLINT(6) NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(255) DEFAULT '' NOT NULL,
 	`hits` INT(11) DEFAULT '0' NOT NULL,
@@ -84,9 +84,9 @@ CREATE TABLE `{database_prefix_qls}pages`(
 	INDEX `pages_idx` (`name`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}groups`;
+DROP TABLE IF EXISTS `{database_prefix}groups`;
 
-CREATE TABLE `{database_prefix_qls}groups`(
+CREATE TABLE `{database_prefix}groups`(
 	`id` SMALLINT(6) NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(255) DEFAULT '' NOT NULL,
 	`mask_id` SMALLINT(6) DEFAULT '0' NOT NULL,
@@ -99,9 +99,9 @@ CREATE TABLE `{database_prefix_qls}groups`(
 	INDEX `groups_idx3` (`expiration_date`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}masks`;
+DROP TABLE IF EXISTS `{database_prefix}masks`;
 
-CREATE TABLE `{database_prefix_qls}masks`(
+CREATE TABLE `{database_prefix}masks`(
 	`id` SMALLINT(6) NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(255) DEFAULT '' NOT NULL,
 	`auth_admin` TINYINT(1) DEFAULT '0' NOT NULL,
@@ -134,9 +134,9 @@ CREATE TABLE `{database_prefix_qls}masks`(
 	INDEX `masks_idx` (`name`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}invitations`;
+DROP TABLE IF EXISTS `{database_prefix}invitations`;
 
-CREATE TABLE `{database_prefix_qls}invitations`(
+CREATE TABLE `{database_prefix}invitations`(
 	`id` MEDIUMINT(8) NOT NULL AUTO_INCREMENT,
 	`date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`email` varchar(255) NOT NULL,
@@ -149,9 +149,9 @@ CREATE TABLE `{database_prefix_qls}invitations`(
 	INDEX `invitations_idx` (`code`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_qls}password_requests`;
+DROP TABLE IF EXISTS `{database_prefix}password_requests`;
 
-CREATE TABLE `{database_prefix_qls}password_requests`(
+CREATE TABLE `{database_prefix}password_requests`(
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
 	`user_id` INT(11) DEFAULT '0' NOT NULL,
 	`code` VARCHAR(40) DEFAULT '' NOT NULL,
@@ -162,9 +162,9 @@ CREATE TABLE `{database_prefix_qls}password_requests`(
 	INDEX(`date`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}env_tree`;
+DROP TABLE IF EXISTS `{database_prefix}app_env_tree`;
 
-CREATE TABLE `{database_prefix_app}env_tree` (
+CREATE TABLE `{database_prefix}app_env_tree` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(20) NOT NULL DEFAULT 'New Node',
   `parent` varchar(255) NOT NULL,
@@ -174,9 +174,9 @@ CREATE TABLE `{database_prefix_app}env_tree` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}cabinet_adj`;
+DROP TABLE IF EXISTS `{database_prefix}app_cabinet_adj`;
 
-CREATE TABLE `{database_prefix_app}cabinet_adj` (
+CREATE TABLE `{database_prefix}app_cabinet_adj` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `left_cabinet_id` int(11) DEFAULT NULL,
   `right_cabinet_id` int(11) DEFAULT NULL,
@@ -184,9 +184,9 @@ CREATE TABLE `{database_prefix_app}cabinet_adj` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}cable_path`;
+DROP TABLE IF EXISTS `{database_prefix}app_cable_path`;
 
-CREATE TABLE `{database_prefix_app}cable_path` (
+CREATE TABLE `{database_prefix}app_cable_path` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `cabinet_a_id` int(11) NOT NULL,
   `cabinet_b_id` int(11) NOT NULL DEFAULT '0',
@@ -196,9 +196,9 @@ CREATE TABLE `{database_prefix_app}cable_path` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}floorplan_object`;
+DROP TABLE IF EXISTS `{database_prefix}app_floorplan_object`;
 
-CREATE TABLE `{database_prefix_app}floorplan_object` (
+CREATE TABLE `{database_prefix}app_floorplan_object` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `env_tree_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -208,9 +208,9 @@ CREATE TABLE `{database_prefix_app}floorplan_object` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}floorplan_object_peer`;
+DROP TABLE IF EXISTS `{database_prefix}app_floorplan_object_peer`;
 
-CREATE TABLE `{database_prefix_app}floorplan_object_peer` (
+CREATE TABLE `{database_prefix}app_floorplan_object_peer` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `object_id` int(11) NOT NULL,
   `peer_id` int(11) NOT NULL,
@@ -220,9 +220,9 @@ CREATE TABLE `{database_prefix_app}floorplan_object_peer` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}inventory`;
+DROP TABLE IF EXISTS `{database_prefix}app_inventory`;
 
-CREATE TABLE `{database_prefix_app}inventory` (
+CREATE TABLE `{database_prefix}app_inventory` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `a_id` int(11) NOT NULL DEFAULT '0',
   `a_code39` varchar(255) NOT NULL DEFAULT '0',
@@ -249,9 +249,9 @@ CREATE TABLE `{database_prefix_app}inventory` (
   INDEX(`b_id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}object`;
+DROP TABLE IF EXISTS `{database_prefix}app_object`;
 
-CREATE TABLE `{database_prefix_app}object` (
+CREATE TABLE `{database_prefix}app_object` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `env_tree_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL DEFAULT 'New_Object',
@@ -269,9 +269,9 @@ CREATE TABLE `{database_prefix_app}object` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}object_category`;
+DROP TABLE IF EXISTS `{database_prefix}app_object_category`;
 
-CREATE TABLE `{database_prefix_app}object_category` (
+CREATE TABLE `{database_prefix}app_object_category` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `color` varchar(255) NOT NULL,
@@ -279,9 +279,9 @@ CREATE TABLE `{database_prefix_app}object_category` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}object_compatibility`;
+DROP TABLE IF EXISTS `{database_prefix}app_object_compatibility`;
 
-CREATE TABLE `{database_prefix_app}object_compatibility` (
+CREATE TABLE `{database_prefix}app_object_compatibility` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `template_id` int(11) NOT NULL,
   `side` tinyint(4) DEFAULT '0',
@@ -307,9 +307,9 @@ CREATE TABLE `{database_prefix_app}object_compatibility` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}object_peer`;
+DROP TABLE IF EXISTS `{database_prefix}app_object_peer`;
 
-CREATE TABLE `{database_prefix_app}object_peer` (
+CREATE TABLE `{database_prefix}app_object_peer` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `a_id` int(11) DEFAULT NULL,
   `a_face` int(11) DEFAULT NULL,
@@ -325,9 +325,9 @@ CREATE TABLE `{database_prefix_app}object_peer` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}object_templates`;
+DROP TABLE IF EXISTS `{database_prefix}app_object_templates`;
 
-CREATE TABLE `{database_prefix_app}object_templates` (
+CREATE TABLE `{database_prefix}app_object_templates` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `templateName` varchar(255) NOT NULL,
   `templateCategory_id` int(11) DEFAULT NULL,
@@ -345,17 +345,17 @@ CREATE TABLE `{database_prefix_app}object_templates` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}organization_data`;
+DROP TABLE IF EXISTS `{database_prefix}app_organization_data`;
 
-CREATE TABLE `{database_prefix_app}organization_data` (
+CREATE TABLE `{database_prefix}app_organization_data` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_app}populated_port`;
+DROP TABLE IF EXISTS `{database_prefix}app_populated_port`;
 
-CREATE TABLE `{database_prefix_app}populated_port` (
+CREATE TABLE `{database_prefix}app_populated_port` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `object_id` int(11) NOT NULL,
   `object_face` int(11) NOT NULL,
@@ -364,9 +364,9 @@ CREATE TABLE `{database_prefix_app}populated_port` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}cable_color`;
+DROP TABLE IF EXISTS `{database_prefix}shared_cable_color`;
 
-CREATE TABLE `{database_prefix_shared}cable_color` (
+CREATE TABLE `{database_prefix}shared_cable_color` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -375,9 +375,9 @@ CREATE TABLE `{database_prefix_shared}cable_color` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}cable_connectorOptions`;
+DROP TABLE IF EXISTS `{database_prefix}shared_cable_connectorOptions`;
 
-CREATE TABLE `{database_prefix_shared}cable_connectorOptions` (
+CREATE TABLE `{database_prefix}shared_cable_connectorOptions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -386,9 +386,9 @@ CREATE TABLE `{database_prefix_shared}cable_connectorOptions` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}cable_connectorType`;
+DROP TABLE IF EXISTS `{database_prefix}shared_cable_connectorType`;
 
-CREATE TABLE `{database_prefix_shared}cable_connectorType` (
+CREATE TABLE `{database_prefix}shared_cable_connectorType` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -396,9 +396,9 @@ CREATE TABLE `{database_prefix_shared}cable_connectorType` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}cable_length`;
+DROP TABLE IF EXISTS `{database_prefix}shared_cable_length`;
 
-CREATE TABLE `{database_prefix_shared}cable_length` (
+CREATE TABLE `{database_prefix}shared_cable_length` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -406,27 +406,27 @@ CREATE TABLE `{database_prefix_shared}cable_length` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}history_action_type`;
+DROP TABLE IF EXISTS `{database_prefix}shared_history_action_type`;
 
-CREATE TABLE `{database_prefix_shared}history_action_type` (
+CREATE TABLE `{database_prefix}shared_history_action_type` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}history_function`;
+DROP TABLE IF EXISTS `{database_prefix}shared_history_function`;
 
-CREATE TABLE `{database_prefix_shared}history_function` (
+CREATE TABLE `{database_prefix}shared_history_function` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}mediaCategory`;
+DROP TABLE IF EXISTS `{database_prefix}shared_mediaCategory`;
 
-CREATE TABLE `{database_prefix_shared}mediaCategory` (
+CREATE TABLE `{database_prefix}shared_mediaCategory` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -434,9 +434,9 @@ CREATE TABLE `{database_prefix_shared}mediaCategory` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}mediaCategoryType`;
+DROP TABLE IF EXISTS `{database_prefix}shared_mediaCategoryType`;
 
-CREATE TABLE `{database_prefix_shared}mediaCategoryType` (
+CREATE TABLE `{database_prefix}shared_mediaCategoryType` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -444,9 +444,9 @@ CREATE TABLE `{database_prefix_shared}mediaCategoryType` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}mediaType`;
+DROP TABLE IF EXISTS `{database_prefix}shared_mediaType`;
 
-CREATE TABLE `{database_prefix_shared}mediaType` (
+CREATE TABLE `{database_prefix}shared_mediaType` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -457,9 +457,9 @@ CREATE TABLE `{database_prefix_shared}mediaType` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}object_portOrientation`;
+DROP TABLE IF EXISTS `{database_prefix}shared_object_portOrientation`;
 
-CREATE TABLE `{database_prefix_shared}object_portOrientation` (
+CREATE TABLE `{database_prefix}shared_object_portOrientation` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -467,9 +467,9 @@ CREATE TABLE `{database_prefix_shared}object_portOrientation` (
   PRIMARY KEY(`id`)
 );
 
-DROP TABLE IF EXISTS `{database_prefix_shared}object_portType`;
+DROP TABLE IF EXISTS `{database_prefix}shared_object_portType`;
 
-CREATE TABLE `{database_prefix_shared}object_portType` (
+CREATE TABLE `{database_prefix}shared_object_portType` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
