@@ -238,7 +238,8 @@ require_once './includes/templateFunctions.php';
 							<div id="templateCatalogAvailableContainer">
 								<h6>Name Filter:</h6>
 								<select id="templateCatalogFilter" multiple data-role="tagsinput"></select>
-								<?php include_once('./includes/content-build-templateCatalogObjects.php'); ?>
+								<div id="containerTemplateCatalog"></div>
+								<?php //include_once('./includes/content-build-templateCatalogObjects.php'); ?>
 							</div>
 							<p class="m-t-10">
 								<mark>Don't see what you're looking for?</mark><br>

@@ -17,13 +17,13 @@
 		
 		$('#autocomplete').autocomplete({
 			minLength: 2,
-			source: 'https://otterm8.com/app/backend/process_search.php',
+			source: '/backend/process_search.php',
 			open: function(){
 				$(this).autocomplete('widget').css('z-index', 10000);
 				return false;
 			},
 			select: function(event, ui){
-				window.location.href = 'https://otterm8.com/app/backend/process_search.php?select='+ui.item.value;
+				window.location.href = '/backend/process_search.php?select='+ui.item.value;
 			}
 		});
 		

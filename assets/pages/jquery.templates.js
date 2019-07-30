@@ -1079,19 +1079,8 @@ function setPortNameInput(){
 	});
 }
 
-$( document ).ready(function() {
-	$('#templateFilter').on('itemAdded', function(event){
-		var containerElement = $('#availableObjects');
-		var inputElement = $('#templateFilter');
-		var categoryContainers = $(containerElement).find('.categoryContainerEntire');
-		filterTemplates(containerElement, inputElement, categoryContainers);
-	}).on('itemRemoved', function(event){
-		var containerElement = $('#availableObjects');
-		var inputElement = $('#templateFilter');
-		var categoryContainers = $(containerElement).find('.categoryContainerEntire');
-		filterTemplates(containerElement, inputElement, categoryContainers);
-	});
-	
+function initializeTemplateCatalog(){
+	// Make catalog filterable
 	$('#templateCatalogFilter').on('itemAdded', function(event){
 		var containerElement = $('#templateCatalogAvailableContainer');
 		var inputElement = $('#templateCatalogFilter');
@@ -1104,22 +1093,7 @@ $( document ).ready(function() {
 		filterTemplates(containerElement, inputElement, categoryContainers);
 	});
 	
-	//X-editable buttons style
-	$.fn.editableform.buttons = 
-	'<button type="submit" class="btn btn-sm btn-primary editable-submit waves-effect waves-light"><i class="zmdi zmdi-check"></i></button>' +
-	'<button type="button" class="btn btn-sm editable-cancel btn-secondary waves-effect"><i class="zmdi zmdi-close"></i></button>';
-	initializeEditable();
-	
-	var defaultCategoryColor = '#d3d3d3';
-	makeRackObjectsClickable();
-	$(document).data('obj', $('#previewObj0'));
-	setObjectSize();
-	for(x=0; x<2; x++) {
-		buildObj(x, 10, 2, 'column');
-	}
-	setCategory();
-	toggleTemplateTypeDependencies(true);
-	
+	// Make catalog titles expandable
 	$('.templateCatalogCategoryTitle').on('click', function(){
 		var categoryName = $(this).attr('data-categoryName');
 		if($('.templateCatalogCategory'+categoryName+'Container').is(':visible')) {
@@ -1133,6 +1107,7 @@ $( document ).ready(function() {
 		}
 	});
 	
+	// Retreive template details when clicked
 	$('#templateCatalogAvailableContainer').find('.selectable').click(function(event){
 		event.stopPropagation();
 		if($(this).hasClass('stockObj')) {
@@ -1159,9 +1134,7 @@ $( document ).ready(function() {
 		//Collect object data
 		var data = {
 			objID: objID,
-			page: 'editor',
 			objFace: objFace,
-			//cabinetFace: cabinetFace,
 			partitionDepth: partitionDepth
 			};
 		data = JSON.stringify(data);
@@ -1170,9 +1143,7 @@ $( document ).ready(function() {
 		$.post("backend/retrieve_templateCatalogObject_details.php", {data:data}, function(response){
 			var alertMsg = '';
 			var responseJSON = JSON.parse(response);
-			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
-			} else if ($(responseJSON.error).size() > 0){
+			if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
 				var response = responseJSON.success;
@@ -1198,6 +1169,7 @@ $( document ).ready(function() {
 		});
 	});
 	
+	// Import selected template
 	$('#buttonTemplateCatalogImport').on('click', function(){
 		var templateID = $(document).data('templateCatalogID');
 		
@@ -1209,9 +1181,7 @@ $( document ).ready(function() {
 		
 		$.post("backend/process_template-import.php", {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
-			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
-			} else if ($(responseJSON.error).size() > 0){
+			if ($(responseJSON.error).size() > 0){
 				displayErrorElement(responseJSON.error, $('#alertMsgCatalog'));
 			} else {
 				var response = responseJSON.success;
@@ -1221,6 +1191,40 @@ $( document ).ready(function() {
 			}
 		});
 	});
+}
+
+$( document ).ready(function() {
+	$('#containerTemplateCatalog').load('https://otterm8.com/public/template-catalog.php', function(){
+		initializeTemplateCatalog();
+	});
+	
+	$('#templateFilter').on('itemAdded', function(event){
+		var containerElement = $('#availableObjects');
+		var inputElement = $('#templateFilter');
+		var categoryContainers = $(containerElement).find('.categoryContainerEntire');
+		filterTemplates(containerElement, inputElement, categoryContainers);
+	}).on('itemRemoved', function(event){
+		var containerElement = $('#availableObjects');
+		var inputElement = $('#templateFilter');
+		var categoryContainers = $(containerElement).find('.categoryContainerEntire');
+		filterTemplates(containerElement, inputElement, categoryContainers);
+	});
+	
+	//X-editable buttons style
+	$.fn.editableform.buttons = 
+	'<button type="submit" class="btn btn-sm btn-primary editable-submit waves-effect waves-light"><i class="zmdi zmdi-check"></i></button>' +
+	'<button type="button" class="btn btn-sm editable-cancel btn-secondary waves-effect"><i class="zmdi zmdi-close"></i></button>';
+	initializeEditable();
+	
+	var defaultCategoryColor = '#d3d3d3';
+	makeRackObjectsClickable();
+	$(document).data('obj', $('#previewObj0'));
+	setObjectSize();
+	for(x=0; x<2; x++) {
+		buildObj(x, 10, 2, 'column');
+	}
+	setCategory();
+	toggleTemplateTypeDependencies(true);
 	
 	$('#objDelete').click(function(){
 		var templateID = $('#availableContainer').find('.rackObjSelected').closest('[data-templateid]').attr('data-templateid');
