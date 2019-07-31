@@ -1,0 +1,6 @@
+Name,Cabinet,**Template,RU,"Cabinet Face","*Original Object"
+New_Object_GY32,Location.Sub-Location.Pod.Cab1,1RU_Cable_Mgmt,22,Front,Location.Sub-Location.Pod.Cab1.New_Object_GY32
+PanelA1,Location.Sub-Location.Pod.Cab1,24P_RJ45_Cat5E,34,Front,Location.Sub-Location.Pod.Cab1.PanelA1
+New_Object_9H1Q,Location.Sub-Location.Pod.Cab2,C3850_48p,23,Front,Location.Sub-Location.Pod.Cab2.New_Object_9H1Q
+PanelA,Location.Sub-Location.Pod.Cab2,48p_RJ45_Cat5e,41,Front,Location.Sub-Location.Pod.Cab2.PanelA
+PanelA,Location.Sub-Location.Pod.Cab3,24P_RJ45_Cat5E,35,Front,Location.Sub-Location.Pod.Cab3.PanelA

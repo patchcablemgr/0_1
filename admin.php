@@ -3,47 +3,12 @@ define('QUADODO_IN_SYSTEM', true);
 require_once './includes/header.php';
 require_once './includes/redirectToLogin.php';
 $qls->Security->check_auth_page('administrator.php');
-\Stripe\Stripe::setApiKey(STRIPE_SK);
-
-// Collect CC info
-if($qls->sub_info['cust_id']) {
-	$custID = $qls->sub_info['cust_id'];
-	$subLevel = $qls->sub_info['sub_level'];
-	$customer = \Stripe\Customer::retrieve($custID);
-	$subID = $customer['subscriptions']['data'][0]['id'];
-	$subscription = \Stripe\Subscription::retrieve($subID);
-	$plan = $subscription->plan->id;
-	$accountBalance = $customer->account_balance;
-	$accountBalance = $accountBalance/100;
-	setlocale(LC_MONETARY, 'en_US.UTF-8');
-	$accountBalance = money_format('%.2n', $accountBalance);
-	
-	$last4 = '**** '.$customer['sources']['data'][0]['last4'];
-	$cardExp = $customer['sources']['data'][0]['exp_month'].'/'.$customer['sources']['data'][0]['exp_year'];
-	
-	$epoch = $customer['subscriptions']['data'][0]['current_period_end'];
-	$dt = new DateTime("@$epoch", new DateTimeZone('UTC'));
-	$dt->setTimezone(new DateTimeZone($qls->user_info['timezone']));
-	$subExp = $dt->format('Y-m-d');
-	$subButtonCardInfoText = 'Update';
-	$selectPlanEnabled = true;
-} else {
-	$last4 = 'N/A';
-	$cardExp = 'N/A';
-	$subStatus = 'N/A';
-	$subExp = 'N/A';
-	$accountBalance = 'N/A';
-	$subButtonCardInfoText = 'Add Card';
-	$selectPlanEnabled = false;
-}
 ?>
 
 <?php require 'includes/header_start.php'; ?>
 
 <!-- X-editable css -->
 <link type="text/css" href="assets/plugins/x-editable/css/bootstrap-editable.css" rel="stylesheet">
-
-<script src="https://checkout.stripe.com/checkout.js"></script>
 
 <?php require 'includes/header_end.php'; ?>
 
@@ -69,30 +34,6 @@ if($qls->sub_info['cust_id']) {
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
-<div id="updatePlanModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="updatePlanModal" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div title="Close">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-						<i class="zmdi zmdi-close"></i>
-					</button>
-				</div>
-                <h4 class="modal-title" id="cancelSubModalLabel">Update Plan</h4>
-            </div>
-            <div class="modal-body">
-				<p>Updating your plan from "<strong id="confirmCurrentPlan"></strong>" to "<strong id="confirmNewPlan"></strong>" will charge <strong id="confirmAmount"></strong> to the account.</p>
-                <p>If the account balance indicates a credit (negative balance), the credit will be applied to the charge before the payment card.</p>
-				<p>Proceed with plan update?</p>
-            </div>
-			<div class="modal-footer">
-                <button id="buttonUpdateNo" type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">No</button>
-                <button id="buttonUpdateYes" type="button" class="btn btn-danger waves-effect waves-light">Yes</button>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
 <!-- Page-Title -->
 <div class="row">
     <div class="col-sm-12">
@@ -113,56 +54,36 @@ if($qls->sub_info['cust_id']) {
 <div class="row">
 	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-3">
 		<div class="card-box">
-			<h4 class="header-title m-t-0 m-b-30">Payment Info</h4>
-			<table class="table">
-				<tr>
-					<th>Last 4:</th>
-					<td id="paymentInfoLast4"><?php echo $last4; ?></td>
-				</tr>
-				<tr>
-					<th>Expiration:</th>
-					<td id="paymentInfoExpiration"><?php echo $cardExp; ?></td>
-				</tr>
-			</table>
-			<button id="buttonCardInfo" type="button" class="btn btn-primary w-md waves-effect waves-light"><?php echo $subButtonCardInfoText; ?></button>
-		</div>
-	</div>
-	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-3">
-		<div class="card-box">
-			<h4 class="header-title m-t-0 m-b-30">Subscription Info</h4>
-			<table class="table">
-				<tr>
-					<th>Plan:</th>
-					<td>
-						<select id="selectPlan" class="form-control" <?php echo $selectPlanEnabled ? '' : 'disabled';?>>
-							<option value="free" <?php echo $plan == STRIPE_FREE_PLANID ? 'selected' : '';?>>Free</option>
-							<option value="monthly" <?php echo $plan == STRIPE_MONTHLY_PLANID ? 'selected' : '';?>>Monthly - <?php echo PRICE_STRING_MONTHLY; ?></option>
-							<option value="yearly" <?php echo $plan == STRIPE_YEARLY_PLANID ? 'selected' : '';?>>Yearly - <?php echo PRICE_STRING_YEARLY; ?></option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<th>Account Balance:</th>
-					<td id="accountBalance"><?php echo $accountBalance; ?></td>
-				</tr>
-				<tr>
-					<th>Renews Before:</th>
-					<td id="subscriptionRenewal"><?php echo $subExp; ?></td>
-				</tr>
-			</table>
-		</div>
-	</div>
-	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-3">
-		<div class="card-box">
 			<h4 class="header-title m-t-0 m-b-30">Invite User</h4>
 			<form>
 				<fieldset class="form-group">
 					<label for="invitationEmail">Email address</label>
-					<input id="invitationEmail" type="email" class="form-control" placeholder="Enter email">
-					<small class="text-muted">Invite a user to your team.
-					</small>
+					<input id="invitationEmail" type="email" class="form-control" placeholder="first.last@example.com">
 				</fieldset>
 				<button id="invitationSubmit" type="submit" class="btn btn-primary">Submit</button>
+			</form>
+		</div>
+	</div>
+	
+	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-3">
+		<div class="card-box">
+			<h4 class="header-title m-t-0 m-b-30">SMTP Settings</h4>
+			<form>
+				<fieldset class="form-group">
+					<label for="smtpServer">Server</label>
+					<input id="smtpServer" type="text" class="form-control" placeholder="smtp.example.com">
+					<label for="smtpServer">Port</label>
+					<input id="smtpServer" type="text" class="form-control" placeholder="587">
+					<label for="smtpUsername">Username</label>
+					<input id="smtpUsername" type="text" class="form-control" placeholder="smtp.user@example.com">
+					<label for="smtpPassword">Password</label>
+					<input id="smtpPassword" type="password" class="form-control" placeholder="">
+					<label for="smtpFromEmail">From Email</label>
+					<input id="smtpFromEmail" type="text" class="form-control" placeholder="no-reply@example.com">
+					<label for="smtpFromName">From Name</label>
+					<input id="smtpFromName" type="text" class="form-control" placeholder="No Reply">
+				</fieldset>
+				<button id="smtpSubmit" type="submit" class="btn btn-primary">Submit</button>
 			</form>
 		</div>
 	</div>
@@ -198,7 +119,7 @@ if($qls->sub_info['cust_id']) {
 							$groupArray[$groupRow['id']] = $groupRow;
 						}
 						
-						$query = $qls->SQL->select('*', 'users', array('org_id' => array('=', $qls->user_info['org_id'])));
+						$query = $qls->SQL->select('*', 'users');
 						while($row = $qls->SQL->fetch_assoc($query)) {
 							echo '<tr>';
 							echo '<td>'.$row['username'].'</td>';
@@ -224,7 +145,7 @@ if($qls->sub_info['cust_id']) {
 							echo '</tr>';
 						}
 						
-						$query = $qls->SQL->select('*', 'invitations', array('org_id' => array('=', $qls->user_info['org_id']), 'AND', 'used' => array('=', 0)));
+						$query = $qls->SQL->select('*', 'invitations', array('used' => array('=', 0)));
 						while($row = $qls->SQL->fetch_assoc($query)) {
 							echo '<tr>';
 							echo '<td>'.$row['email'].'</td>';

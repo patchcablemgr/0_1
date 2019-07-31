@@ -1140,7 +1140,7 @@ function initializeTemplateCatalog(){
 		data = JSON.stringify(data);
 		
 		//Retrieve object details
-		$.post("backend/retrieve_templateCatalogObject_details.php", {data:data}, function(response){
+		$.post("https://otterm8.com/public/template-catalog-details.php", {data:data}, function(response){
 			var alertMsg = '';
 			var responseJSON = JSON.parse(response);
 			if ($(responseJSON.error).size() > 0){

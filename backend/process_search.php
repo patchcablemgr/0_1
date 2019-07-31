@@ -55,13 +55,13 @@ if($_SERVER['REQUEST_METHOD'] == 'GET'){
 		
 		if($appFunction == 'explore') {
 			$parentID = $data[2];
-			header('Location: https://otterm8.com/app/explore.php?objID='.$subjectID.'&parentID='.$parentID);
+			header('Location: /explore.php?objID='.$subjectID.'&parentID='.$parentID);
 			exit();
 		} else if($appFunction == 'template') {
-			header('Location: https://otterm8.com/app/templates.php?templateID='.$subjectID);
+			header('Location: /templates.php?templateID='.$subjectID);
 			exit();
 		} else if($appFunction == 'environment') {
-			header('Location: https://otterm8.com/app/environment.php?nodeID='.$subjectID);
+			header('Location: /environment.php?nodeID='.$subjectID);
 			exit();
 		}
 		

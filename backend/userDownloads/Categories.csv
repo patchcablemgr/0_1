@@ -1,0 +1,11 @@
+Name,Color,Default,"*Original Category"
+Cable_Mgmt,#d3d3d3,,Cable_Mgmt
+Enclosure,#95d681,,Enclosure
+Linecard,#81d6a1,,Linecard
+MM_Fiber_Insert,#81d6ce,,MM_Fiber_Insert
+Module,#e59881,,Module
+Patch_Panel,#a9a9a9,,Patch_Panel
+Router,#d6819f,,Router
+SM_Fiber_Insert,#d6d678,,SM_Fiber_Insert
+Server,#d68d8d,,Server
+Switch,#d581d6,X,Switch

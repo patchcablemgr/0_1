@@ -48,46 +48,6 @@ $qls->Security->check_auth_page('user.php');
 		</div>
 	</div>
 </div>
-<div class="row">
-	<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
-		<div class="card-box table-responsive">
-			<h4 class="m-t-0 header-title"><b>Invitations</b></h4>
-			<table class="table table-sm">
-                <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>From</th>
-                    <th>Org Name</th>
-                    <th>Accept/Decline</th>
-                </tr>
-                </thead>
-                <tbody>
-				<?php
-					$query = $qls->SQL->select('*', 'invitations', array('to_id' => array('=', $qls->user_info['id']), 'AND', 'used' => array('=', 0)));
-					while($row = $qls->SQL->fetch_assoc($query)) {
-				?>
-                <tr data-invitationcode="<?php echo $row['code']; ?>">
-                    <td><?php echo $row['date']; ?></td>
-                    <td><?php echo $qls->User->id_to_username($row['from_id']); ?></td>
-                    <td><?php echo $row['org_name']; ?></td>
-                    <td>
-						<button type="button" class="buttonAcceptInvitation btn btn-sm btn-success waves-effect waves-light"><i class="fa fa-check"></i></button>
-						<button type="button" class="buttonDeclineInvitation btn btn-sm btn-danger waves-effect waves-light"><i class="fa fa-times"></i></button>
-					</td>
-                </tr>
-				<?php } ?>
-				</tbody>
-			</table>
-			<?php
-				echo $qls->SQL->num_rows($query) ? '' : 'No invitations.';
-				if($qls->user_info['original_org_id'] != $qls->user_info['org_id']) { ?>
-			<div class="m-t-20">
-				<button id="buttonRevertInvitation" type="button" class="btn btn-sm btn-info waves-effect waves-light" title="Revert back to original organization">Revert</button>
-			</div>
-			<?php } ?>
-		</div>
-	</div>
-</div>
 
 <?php require 'includes/footer_start.php' ?>
 

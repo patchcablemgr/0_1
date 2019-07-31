@@ -39,7 +39,7 @@
                     </li>
 					
 					<li class="nav-item dropdown notification-list">
-                        <a class="nav-link dropdown-toggle arrow-none waves-light waves-effect" title="User Guide" href="/app/userGuide/">
+                        <a class="nav-link dropdown-toggle arrow-none waves-light waves-effect" title="User Guide" href="/userGuide/">
                             <i class="zmdi zmdi-help-outline noti-icon"></i>
                         </a>
 					</li>

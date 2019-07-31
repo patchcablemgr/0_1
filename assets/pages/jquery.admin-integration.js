@@ -135,7 +135,7 @@ $( document ).ready(function() {
     });
 
 	$('#buttonDataExport').on('click', function(){
-		window.open('/app/backend/data-export.php');
+		window.open('/backend/data-export.php');
 	});
 
 });
