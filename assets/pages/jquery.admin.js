@@ -3,6 +3,23 @@
  * This page allows administrators to manage users
  */
  
+ function toggleSMTPFields(){
+	var mailMethod = $('input[name="mailMethod"]:checked').val();
+	if(mailMethod == 'smtp') {
+		$('#fieldsSMTP').show();
+	} else {
+		$('#fieldsSMTP').hide();
+	}
+ }
+ 
+ function toggleSMTPAuthFields() {
+	if($('#smtpAuthentication').is(':checked')) {
+		$('#fieldsSMTPAuth').show();
+	} else {
+		$('#fieldsSMTPAuth').hide();
+	}
+ }
+ 
 $( document ).ready(function() {
 	
 	//modify buttons style
@@ -10,6 +27,53 @@ $( document ).ready(function() {
     '<button type="submit" class="btn btn-primary editable-submit waves-effect waves-light"><i class="zmdi zmdi-check"></i></button>' +
     '<button type="button" class="btn editable-cancel btn-secondary waves-effect"><i class="zmdi zmdi-close"></i></button>';
 
+	toggleSMTPFields();
+	toggleSMTPAuthFields();
+	
+	$('.mailMethod').on('change', function(){
+		toggleSMTPFields();
+	});
+	
+	$('#smtpAuthentication').on('change', function(){
+		toggleSMTPAuthFields();
+	});
+	
+	$('#smtpSubmit').on('click', function(event){
+		event.preventDefault();
+		
+		var mailMethod = $('input[name="mailMethod"]:checked').val();
+		var data = {};
+		
+		data['mailMethod'] = mailMethod;
+		data['fromEmail'] = $('#smtpFromEmail').val();
+		data['fromName'] = $('#smtpFromName').val();
+		
+		if(mailMethod == 'smtp') {
+			data['smtpServer'] = $('#smtpServer').val();
+			data['smtpPort'] = $('#smtpPort').val();
+			if($('#smtpAuthentication').is(':checked')) {
+				data['smtpAuth'] = 'yes';
+				data['smtpUsername'] = $('#smtpUsername').val();
+				data['smtpPassword'] = $('#smtpPassword').val();
+			} else {
+				data['smtpAuth'] = 'no';
+			}
+		}
+		
+		data = JSON.stringify(data);
+		
+		// Process mail settings
+		$.post("backend/process_mail_settings.php", {data:data}, function(response){
+			var responseJSON = JSON.parse(response);
+			if (responseJSON.active == 'inactive'){
+				window.location.replace("/");
+			} else if ($(responseJSON.error).size() > 0){
+				displayError(responseJSON.error);
+			} else {
+				alert(responseJSON.success);
+			}
+		});
+	});
 	
 	$('#invitationSubmit').on('click', function(event){
 		event.preventDefault();
@@ -26,7 +90,7 @@ $( document ).ready(function() {
 		$.post("backend/process_invitation.php", {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {

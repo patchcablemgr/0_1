@@ -68,20 +68,35 @@ $qls->Security->check_auth_page('administrator.php');
 	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-3">
 		<div class="card-box">
 			<h4 class="header-title m-t-0 m-b-30">SMTP Settings</h4>
+			<div class="radio radio-inline">
+				<input class="mailMethod" type="radio" name="mailMethod" id="mailMethodSendmail" value="sendmail" <?php echo $qls->config['mail_method'] == 'sendmail' ? 'checked' : ''; ?>>
+				<label for="mailMethodSendmail">Sendmail</label>
+			</div>
+			<div class="radio radio-inline">
+				<input class="mailMethod" type="radio" name="mailMethod" id="mailMethodSMTP" value="smtp" <?php echo $qls->config['mail_method'] == 'smtp' ? 'checked' : ''; ?>>
+				<label for="mailMethodSMTP">SMTP</label>
+			</div>
 			<form>
 				<fieldset class="form-group">
-					<label for="smtpServer">Server</label>
-					<input id="smtpServer" type="text" class="form-control" placeholder="smtp.example.com">
-					<label for="smtpServer">Port</label>
-					<input id="smtpServer" type="text" class="form-control" placeholder="587">
-					<label for="smtpUsername">Username</label>
-					<input id="smtpUsername" type="text" class="form-control" placeholder="smtp.user@example.com">
-					<label for="smtpPassword">Password</label>
-					<input id="smtpPassword" type="password" class="form-control" placeholder="">
+					
 					<label for="smtpFromEmail">From Email</label>
-					<input id="smtpFromEmail" type="text" class="form-control" placeholder="no-reply@example.com">
+					<input id="smtpFromEmail" type="text" class="form-control" value="<?php echo $qls->config['from_email']; ?>" placeholder="no-reply@example.com">
 					<label for="smtpFromName">From Name</label>
-					<input id="smtpFromName" type="text" class="form-control" placeholder="No Reply">
+					<input id="smtpFromName" type="text" class="form-control" value="<?php echo $qls->config['from_name']; ?>" placeholder="No Reply">
+					<div id="fieldsSMTP">
+						<label for="smtpServer">Server</label>
+						<input id="smtpServer" type="text" class="form-control" value="<?php echo $qls->config['smtp_server']; ?>" placeholder="smtp.example.com">
+						<label for="smtpPort">Port</label>
+						<input id="smtpPort" type="text" class="form-control" value="<?php echo $qls->config['smtp_port']; ?>" placeholder="25">
+						<input id="smtpAuthentication" type="checkbox" name="smtpAuthentication" <?php echo $qls->config['smtp_auth'] == 'yes' ? 'checked' : ''; ?>>
+						<label for="smtpAuthentication">SMTP Authentication</label>
+						<div id="fieldsSMTPAuth">
+							<label for="smtpUsername">Username</label>
+							<input id="smtpUsername" type="text" class="form-control" value="<?php echo $qls->config['smtp_username']; ?>" placeholder="smtp.user@example.com">
+							<label for="smtpPassword">Password</label>
+							<input id="smtpPassword" type="password" class="form-control" placeholder="">
+						</div>
+					</div>
 				</fieldset>
 				<button id="smtpSubmit" type="submit" class="btn btn-primary">Submit</button>
 			</form>

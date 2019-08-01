@@ -1179,7 +1179,7 @@ function initializeTemplateCatalog(){
 			};
 		data = JSON.stringify(data);
 		
-		$.post("backend/process_template-import.php", {data:data}, function(response){
+		$.post("https://otterm8.com/public/template-import.php", {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if ($(responseJSON.error).size() > 0){
 				displayErrorElement(responseJSON.error, $('#alertMsgCatalog'));

@@ -787,6 +787,14 @@ var $install_error = 'There was an error with the installation! This is most lik
             $sql[] = "'redirect_type','{$redirect_type}'";
             $sql[] = "'online_users_format','{$online_users_format}'";
             $sql[] = "'online_users_separator','{$online_users_separator}'";
+			$sql[] = "'mail_method',''";
+			$sql[] = "'from_email',''";
+			$sql[] = "'from_name',''";
+			$sql[] = "'smtp_server',''";
+			$sql[] = "'smtp_port',''";
+			$sql[] = "'smtp_auth',''";
+			$sql[] = "'smtp_username',''";
+			$sql[] = "'smtp_password',''";
             $sql_count = count($sql);
 
             // Insert the config data

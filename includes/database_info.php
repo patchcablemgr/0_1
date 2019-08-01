@@ -14,7 +14,7 @@ exit;
 
 define('SYSTEM_INSTALLED', false);
 $database_prefix = '';
-$database_type = 'MySQLi';
+$database_type = '';
 $database_server_name = '';
 $database_username = '';
 $database_password = '';
