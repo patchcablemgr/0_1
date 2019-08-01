@@ -13,10 +13,29 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	}
 	
 	$data = json_decode($_POST['data'], true);
+	$dataJSON = $_POST['data'];
 	validate($data, $validate);
 	
 	if (!count($validate->returnData['error'])){
 		$templateID = $data['templateID'];
+		
+		// POST Request
+		$POSTData = array('data' => $dataJSON);
+
+		$ch = curl_init('https://otterm8.com/public/template-import.php');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $POSTData);
+		 
+		// Submit the POST request
+		$result = curl_exec($ch);
+		
+		error_log($result);
+		 
+		// Close cURL session handle
+		curl_close($ch);
+		return;
 		
 		$query = $qls->SQL->select('*', 'app_object_category', array('defaultOption' => array('=', 1)));
 		$defaultCategory = $qls->SQL->fetch_assoc($query);

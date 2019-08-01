@@ -1179,14 +1179,14 @@ function initializeTemplateCatalog(){
 			};
 		data = JSON.stringify(data);
 		
-		$.post("https://otterm8.com/public/template-import.php", {data:data}, function(response){
-			var responseJSON = JSON.parse(response);
-			if ($(responseJSON.error).size() > 0){
-				displayErrorElement(responseJSON.error, $('#alertMsgCatalog'));
+		$.post("backend/process_template-import.php", {data:data}, function(responseJSON){
+			var response = JSON.parse(responseJSON);
+			if (response.active == 'inactive'){
+				window.location.replace("/");
+			} else if ($(response.error).size() > 0){
+				displayErrorElement(response.error, $('#alertMsgCatalog'));
 			} else {
-				var response = responseJSON.success;
-				displaySuccessElement(response, $('#alertMsgCatalog'));
-				
+				displaySuccessElement(response.success, $('#alertMsgCatalog'));
 				reloadTemplates();
 			}
 		});

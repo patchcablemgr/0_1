@@ -223,7 +223,7 @@ CREATE TABLE `{database_prefix}app_floorplan_object_peer` (
 DROP TABLE IF EXISTS `{database_prefix}app_history`;
 
 CREATE TABLE `{database_prefix}app_history` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL,
   `date` int(11) NOT NULL,
   `function` varchar(255) NOT NULL,
   `action_type` int(11) NOT NULL,
