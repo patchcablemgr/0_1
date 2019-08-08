@@ -32,14 +32,14 @@
 		$length = calculateCableLength($mediaTypeTable, $mediaCategoryTypeTable, $row);
 		
 		echo '<tr>';
-			echo '<td data-connectorID="'.$row['a_code39'].'"><a href="/app/scan.php?connectorCode='.$row['a_code39'].'">'.$row['a_code39'].'</a><button class="displayBarcode pull-right btn btn-sm waves-effect waves-light btn-primary"><i class="fa fa-barcode"></i></button></td>';
+			echo '<td data-connectorID="'.$row['a_code39'].'"><a class="linkScan" href="#">'.$row['a_code39'].'</a><button class="displayBarcode pull-right btn btn-sm waves-effect waves-light btn-primary"><i class="fa fa-barcode"></i></button></td>';
 			echo '<td>'.$connectorTable[$row['a_connector']]['name'].'</td>';
 			if($row['a_object_id'] == 0) {
 				echo '<td>'.$pillNo.'</td>';
 			} else {
 				echo '<td>'.$pillYes.'</td>';
 			}
-			echo '<td data-connectorID="'.$row['b_code39'].'"><a href="/app/scan.php?connectorCode='.$row['b_code39'].'">'.$row['b_code39'].'</a><button class="displayBarcode pull-right btn btn-sm waves-effect waves-light btn-primary"><i class="fa fa-barcode"></i></button></td>';
+			echo '<td data-connectorID="'.$row['b_code39'].'"><a class="linkScan" href="#">'.$row['b_code39'].'</a><button class="displayBarcode pull-right btn btn-sm waves-effect waves-light btn-primary"><i class="fa fa-barcode"></i></button></td>';
 			echo '<td>'.$connectorTable[$row['b_connector']]['name'].'</td>';
 			if($row['b_object_id'] == 0) {
 				echo '<td>'.$pillNo.'</td>';

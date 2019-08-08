@@ -126,54 +126,8 @@ $qls->Security->check_auth_page('administrator.php');
 						<th></th>
 					</tr>
 					</thead>
-					<tbody>
-					<?php
-						$groupArray = array();
-						$query = $qls->SQL->select('*', 'groups');
-						while($groupRow = $qls->SQL->fetch_assoc($query)) {
-							$groupArray[$groupRow['id']] = $groupRow;
-						}
-						
-						$query = $qls->SQL->select('*', 'users');
-						while($row = $qls->SQL->fetch_assoc($query)) {
-							echo '<tr>';
-							echo '<td>'.$row['username'].'</td>';
-							echo '<td>Active</td>';
-							if($row['mfa']) {
-								echo '<td>Yes</td>';
-							} else {
-								echo '<td>No</td>';
-							}
-							if($row['id'] == $qls->user_info['id']) {
-								echo '<td>'.$groupArray[$row['group_id']]['name'].'</td>';
-							} else {
-								echo '<td><a class="editableUserRole" href="#" data-type="select" data-pk="'.$row['id'].'" data-value="'.$row['group_id'].'" data-userType="active"></a></td>';
-							}
-							
-							echo '<td>';
-							if($row['id'] != $qls->user_info['id']) {
-								echo '<button class="buttonRemoveUser btn btn-sm waves-effect waves-light btn-danger" data-userType="active" data-userID="'.$row['id'].'" type="button" title="Remove user">';
-								echo '<i class="fa fa-remove"></i>';
-								echo '</button>';
-							}
-							echo '</td>';
-							echo '</tr>';
-						}
-						
-						$query = $qls->SQL->select('*', 'invitations', array('used' => array('=', 0)));
-						while($row = $qls->SQL->fetch_assoc($query)) {
-							echo '<tr>';
-							echo '<td>'.$row['email'].'</td>';
-							echo '<td>Pending</td>';
-							echo '<td><a class="editableUserRole" href="#" data-type="select" data-pk="'.$row['id'].'" data-value="'.$row['group_id'].'" data-userType="invitation"></a></td>';
-							echo '<td>';
-								echo '<button class="buttonRemoveUser btn btn-sm waves-effect waves-light btn-danger" data-userType="invitation" data-userID="'.$row['id'].'" type="button" title="Remove user">';
-								echo '<i class="fa fa-remove"></i>';
-								echo '</button>';
-							echo '</td>';
-							echo '</tr>';
-						}
-					?>
+					<tbody id="tableInvitations">
+					
 					</tbody>
 				</table>
 			</div>

@@ -673,11 +673,10 @@ function initialize_session($user_info, $auth_token_salt) {
 	 * @param string $email    - The user's email address
 	 * @return void
 	 */
-	function insert_registration_data($username, $password, $email, $org_id, $code, $regType, $invitation=false) {
+	function insert_registration_data($username, $password, $email, $code, $invitation=false) {
 
 		// Check the invitation code
         if ($code !== false) {
-			$org_id = $invitation['org_id'];
 			$groupID = $invitation['group_id'];
 		} else {
 			$groupID = (int)3;
@@ -699,11 +698,7 @@ function initialize_session($user_info, $auth_token_salt) {
             'last_try',
             'email',
 			'group_id',
-            'activation_time',
-			'org_id',
-			'original_org_id',
-			'original_group_id',
-			'reg_type'
+            'activation_time'
         );
 
         // All the values that go with the columns
@@ -719,11 +714,7 @@ function initialize_session($user_info, $auth_token_salt) {
             0,
             $email,
 			$groupID,
-            0,
-			$org_id,
-			$org_id,
-			$groupID,
-			$regType
+            0
         );
 
 		// Is activation required?
@@ -771,30 +762,18 @@ function initialize_session($user_info, $auth_token_salt) {
          */
         //$username = (isset($_POST['username']) && $this->validate_username($_POST['username'])) ? $this->qls->Security->make_safe($_POST['username']) : false;
 		$code = (isset($_POST['code']) && strlen($_POST['code']) == 40 && preg_match('/^[a-fA-F0-9]{40}$/', $_POST['code'])) ? $this->qls->Security->make_safe($_POST['code']) : false;
-		$subCode = (isset($_POST['subCode']) && strlen($_POST['subCode']) == 40 && preg_match('/^[a-fA-F0-9]{40}$/', $_POST['subCode'])) ? $this->qls->Security->make_safe($_POST['subCode']) : false;
 		
 		if ($code !== false) {
 			$query = $this->qls->SQL->select('*', 'invitations', array('code' => array('=', $code), 'AND', 'used' => array('=', 0)));
 			if($this->qls->SQL->num_rows($query)) {
 				$invitation = $this->qls->SQL->fetch_assoc($query);
-				$regType = 110;
 			} else {
 				$this->register_error = REGISTER_NO_INVITATION;
 				return false;
 			}
-		} else if ($subCode !== false) {
-			$query = $this->qls->SQL->select('*', 'subscriptions', array('code' => array('=', $subCode), 'AND', 'used' => array('=', 0)));
-			if($this->qls->SQL->num_rows($query)) {
-				$subscription = $this->qls->SQL->fetch_assoc($query);
-				$regType = 111;
-			} else {
-				$this->register_error = REGISTER_NO_SUBSCRIPTION;
-				return false;
-			}
 		} else {
-			$regType = 112;
-			//$this->register_error = REGISTER_INVALID;
-			//return false;
+			$this->register_error = REGISTER_INVALID;
+			return false;
 		}
 		
         $email = (isset($_POST['email']) && strlen($_POST['email']) > 6 && strlen($_POST['email']) < 256 && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) ? $this->qls->Security->make_safe($_POST['email']) : false;
@@ -802,7 +781,6 @@ function initialize_session($user_info, $auth_token_salt) {
 		$confirm_email = $email;
 		$password = (isset($_POST['password']) && $this->validate_password($_POST['password'])) ? $this->qls->Security->make_safe($_POST['password']) : false;
 		$confirm_password = (isset($_POST['password_c']) && $this->qls->Security->make_safe($_POST['password_c']) == $password) ? true : false;
-		$org_id = md5(time().$_SERVER['REMOTE_ADDR']);
 
 		if ($this->qls->config['security_image'] == 'yes') {
             // The random id of the image
@@ -854,41 +832,9 @@ function initialize_session($user_info, $auth_token_salt) {
 		    return false;
 		}
 
-        $this->insert_registration_data($username, $password, $email, $org_id, $code, $regType, $invitation);
+        $this->insert_registration_data($username, $password, $email, $code, $invitation);
 		
-		// If this account is not being created using an invitation,
-		// then create new organization database.
-		if ($code !== false) {
-            $this->qls->SQL->update('invitations', array('used' => 1), array('code' => array( '=', $code)));
-		} else if ($subCode !== false) {
-			$this->qls->SQL->create_db($org_id);
-			$this->qls->app_SQL = new SQL($this->qls, 'app_', $org_id);
-			$this->qls->SQL->create_app_table();
-			$this->qls->SQL->update('app_organization_data', array('created' => time()), array('created' => array('=', 0)));
-            $this->qls->SQL->update('subscriptions', array('used' => 1, 'org_id' => $org_id), array('code' => array( '=', $subCode)));
-		} else {
-			$this->qls->SQL->create_db($org_id);
-			$this->qls->app_SQL = new SQL($this->qls, 'app_', $org_id);
-			$this->qls->SQL->create_app_table();
-			$this->qls->SQL->update('app_organization_data', array('created' => time()), array('created' => array('=', 0)));
-			$columns = array(
-				'sub_level',
-				'date',
-				'code',
-				'used',
-				'org_id',
-				'email'
-			);
-			$values = array(
-				1,
-				time(),
-				0,
-				1,
-				$org_id,
-				$email
-			);
-            $this->qls->SQL->insert('subscriptions', $columns, $values);
-		}
+		$this->qls->SQL->update('invitations', array('used' => 1), array('code' => array( '=', $code)));
 		
         return true;
 	}

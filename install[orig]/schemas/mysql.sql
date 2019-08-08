@@ -13,7 +13,6 @@ DROP TABLE IF EXISTS `{database_prefix}email_queue`;
 CREATE TABLE `{database_prefix}email_queue` (
 	`id` int(11) NOT NULL AUTO_INCREMENT,
 	`recipient` varchar(255) NOT NULL,
-	`sender` varchar(255) NOT NULL,
 	`subject` varchar(255) NOT NULL,
 	`message` text NOT NULL,
 	`sent` tinyint(1) NOT NULL DEFAULT '0',
@@ -223,7 +222,7 @@ CREATE TABLE `{database_prefix}app_floorplan_object_peer` (
 DROP TABLE IF EXISTS `{database_prefix}app_history`;
 
 CREATE TABLE `{database_prefix}app_history` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `date` int(11) NOT NULL,
   `function` varchar(255) NOT NULL,
   `action_type` int(11) NOT NULL,

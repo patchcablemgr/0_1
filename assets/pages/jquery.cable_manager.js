@@ -7,6 +7,12 @@ $( document ).ready(function() {
 	$('#inventoryTable').DataTable();
 	$('#availableCableEndIDTable').DataTable({'ordering': false, 'searching': false});
 	
+	$('.linkScan').on('click', function(e){
+		e.preventDefault();
+		var code39 = $(this).parent().attr('data-connectorID');
+		$(location).attr('href', '/scan.php?connectorCode='+code39);
+	});
+	
 	$('.displayBarcode').on('click', function(){
 		var tableCell = $(this).parent();
 		var connectorID = $(tableCell).attr('data-connectorID');
@@ -35,7 +41,7 @@ $( document ).ready(function() {
 		$.post("backend/process_cable-editable.php", {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {

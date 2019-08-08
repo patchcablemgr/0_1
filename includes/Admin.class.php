@@ -204,47 +204,11 @@ var $permissions = array(
 				$user_id = $this->qls->Security->make_safe($user_id);
 			}
 
-            $result = $this->qls->SQL->select(array('id', 'org_id'),
-                'users',
-                array('id' =>
-                    array(
-                        '=',
-                        $user_id
-                    )
-                )
-            );
-            $row = $this->qls->SQL->fetch_array($result);
-			if ($row[0] != '') {
-				$org_id = $row[1];
+            $query = $this->qls->SQL->select('*', 'users', array('id' => array('=', $user_id)));
+			if ($this->qls->SQL->num_rows($query)) {
 				// Can't delete themselves or the 1st user
 				if ($user_id != $this->qls->user_info['id'] && $user_id != 1) {
-                    $this->qls->SQL->delete('users',
-                        array('id' =>
-                            array(
-                                '=',
-                                $user_id
-                            )
-                        )
-                    );
-					$result = $this->qls->SQL->select('id',
-						'users',
-						array('org_id' =>
-							array(
-								'=',
-								$org_id
-							),
-							'OR',
-							'original_org_id' =>
-							array(
-								'=',
-								$org_id
-							)
-						)
-					);
-					$org_id_count = $this->qls->SQL->num_rows($result);
-					if (!$org_id_count > 0){
-						$this->qls->SQL->drop_db($org_id);
-					}
+                    $this->qls->SQL->delete('users', array('id' => array('=', $user_id)));
                     return true;
 				} else {
 				    $this->remove_user_error = ADMIN_CANT_REMOVE_SELF;

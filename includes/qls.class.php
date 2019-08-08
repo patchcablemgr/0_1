@@ -43,22 +43,10 @@ class qls {
         // Get current language constants
         require_once($current_language . '.lang.php');
 		require_once 'definitions.php';
-		
 		require_once 'vendor/autoload.php';
 		$this->gAuth = new \Google\Authenticator\GoogleAuthenticator();
 		$this->PHPmailer = new \PHPMailer\PHPMailer\PHPMailer;
 		
-		$this->PHPmailer->isSMTP();
-		$this->PHPmailer->SMTPDebug = SMTP_DEBUG_LEVEL;
-		$this->PHPmailer->Host = SMTP_HOST;
-		$this->PHPmailer->Port = SMTP_PORT;
-		$this->PHPmailer->SMTPAuth = true;
-		$this->PHPmailer->Username = SMTP_USERNAME;
-		$this->PHPmailer->Password = SMTP_PASSWORD;
-		$this->PHPmailer->SMTPSecure = 'tls';
-		$this->PHPmailer->setFrom(SMTP_EMAIL, SMTP_NAME);
-		$this->PHPmailer->addReplyTo(SMTP_EMAIL, SMTP_NAME);
-
         require_once('Security.class.php');
         $this->Security = new Security($this);
 
@@ -71,6 +59,26 @@ class qls {
 		while ($row = $this->SQL->fetch_array($result)) {
 		    $this->config[$row['name']] = $row['value'];
 		}
+		
+		$this->PHPmailer->setFrom($this->config['from_email'], $this->config['from_name']);
+		$this->PHPmailer->addReplyTo($this->config['from_email'], $this->config['from_name']);
+		if($this->config['mail_method'] == 'smtp') {
+			$this->PHPmailer->isSMTP();
+			$this->PHPmailer->Host = $this->config['smtp_server'];
+			$this->PHPmailer->Port = $this->config['smtp_port'];
+			$this->PHPmailer->SMTPSecure = 'tls';
+			if($this->config['smtp_auth'] == 'yes') {
+				$this->PHPmailer->SMTPAuth = true;
+				$this->PHPmailer->Username = $this->config['smtp_username'];
+				$this->PHPmailer->Password = $this->config['smtp_password'];
+			} else {
+				$this->PHPmailer->SMTPAuth = false;
+			}
+		} else {
+			$this->PHPmailer->isSendmail();
+		}
+			
+			
 
         $this->Security->remove_old_tries();
 

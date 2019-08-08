@@ -1,8 +1,3 @@
-<?php
-define('QUADODO_IN_SYSTEM', true);
-require_once './includes/header.php';
-?>
-
 <!DOCTYPE html>
 <!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
 <!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
@@ -12,15 +7,6 @@ require_once './includes/header.php';
 <!--<![endif]-->
 
 <head>
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115446168-1"></script>
-	<script>
-	  window.dataLayer = window.dataLayer || [];
-	  function gtag(){dataLayer.push(arguments);}
-	  gtag('js', new Date());
-
-	  gtag('config', 'UA-115446168-1');
-	</script>
 	
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -84,13 +70,7 @@ require_once './includes/header.php';
                 <div class="col-md-3">
                     <nav class="docs-sidebar" data-spy="affix" data-offset-top="300" data-offset-bottom="200" role="navigation">
                         <ul class="nav">
-							<?php
-								if($qls->user_info['username'] != '') {
-									echo '<li><a href="/app/">Dashboard</a></li>';
-								} else {
-									echo '<li><a href="/">Home</a></li>';
-								}
-							?>
+							<li><a href="/">Home</a></li>
                             <li><a href="#gettingStarted">Getting Started</a></li>
 							<li><a href="#dashboard">Dashboard</a></li>
 							<li><a href="#build">Build</a>
@@ -194,7 +174,7 @@ require_once './includes/header.php';
                         <div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/dashboard.png">
+									<img src="images/dashboard.png">
 									Dashboard <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>
@@ -225,7 +205,7 @@ require_once './includes/header.php';
                         <div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/build.png">
+									<img src="images/build.png">
 									Build <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>
@@ -235,7 +215,7 @@ require_once './includes/header.php';
 
                         <div class="row">
                             <div class="col-md-12">
-								<p>The Build menu group contains pages where your environment is modeled by creating object templates and installing them into cabinets.</p>
+								<p>The Build menu group contains pages where your environment is modeled by creating object templates and racking those templates into cabinets.</p>
                                 <h4 id="templates">Templates - <a href="#top">#back to top</a></h4>
                                 <p>Use the Template page to create and edit custom templates which represent objects in your environment.  The template page is separated into 3 columns:</p>
 								<ol>
@@ -336,7 +316,7 @@ require_once './includes/header.php';
                         <div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/explore.png">
+									<img src="images/explore.png">
 									Explore <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>
@@ -392,7 +372,7 @@ require_once './includes/header.php';
 						<div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/purchasing.png">
+									<img src="images/purchasing.png">
 									Purchasing <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>
@@ -450,7 +430,7 @@ require_once './includes/header.php';
 						<div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/scan.png">
+									<img src="images/scan.png">
 									Scan <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>
@@ -481,7 +461,7 @@ require_once './includes/header.php';
 						<div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/cable-inventory.png">
+									<img src="images/cable-inventory.png">
 									Cable Inventory <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>
@@ -510,7 +490,7 @@ require_once './includes/header.php';
 						<div class="row">
                             <div class="col-md-12 left-align">
                                 <h2 class="dark-text">
-									<img src="/app/userGuide/images/admin.png">
+									<img src="images/admin.png">
 									Admin <a href="#top">#back to top</a><hr>
 								</h2>
                             </div>

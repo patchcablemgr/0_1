@@ -25,23 +25,16 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$groupID = $data['groupID'];
 			
 			if($data['userType'] == 'active') {
-				$qls->SQL->update('users', array('group_id' => $groupID), array('id' => array('=', $userID), 'AND', 'org_id' => array('=', $qls->user_info['org_id'])));
+				$qls->SQL->update('users', array('group_id' => $groupID), array('id' => array('=', $userID)));
 			} else if($data['userType'] == 'invitation') {
-				$qls->SQL->update('invitations', array('group_id' => $groupID), array('id' => array('=', $userID), 'AND', 'org_id' => array('=', $qls->user_info['org_id'])));
+				$qls->SQL->update('invitations', array('group_id' => $groupID), array('id' => array('=', $userID)));
 			}
 		} else if($data['action'] == 'delete') {
 			if($data['userType'] == 'active') {
-				$query = $qls->SQL->select('*', 'users', array('id' => array('=', $userID)));
-				if($userID != $qls->user_info['id']) {			
+				if($userID != $qls->user_info['id']) {
+					$query = $qls->SQL->select('*', 'users', array('id' => array('=', $userID)));
 					if($qls->SQL->num_rows($query)) {
-						$user = $qls->SQL->fetch_assoc($query);
-						if($user['original_org_id'] != $user['org_id']) {
-							$originalOrgID = $user['original_org_id'];
-							$originalGroupID = $user['original_group_id'];
-							$qls->SQL->update('users', array('org_id' => $originalOrgID, 'group_id' => $originalGroupID), array('id' => array('=', $userID), 'AND', 'org_id' => array('=', $qls->user_info['org_id'])));
-						} else {
-							$qls->Admin->remove_user($userID);
-						}
+						$qls->Admin->remove_user($userID);
 					} else {
 						$errMsg = 'User ID does not exist.';
 						array_push($validate->returnData['error'], $errMsg);
@@ -51,7 +44,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					array_push($validate->returnData['error'], $errMsg);
 				}
 			} else if($data['userType'] == 'invitation') {
-				$qls->SQL->delete('invitations', array('id' => array('=', $userID), 'AND', 'org_id' => array('=', $qls->user_info['org_id']), 'AND', 'used' => array('=', 0)));
+				$qls->SQL->delete('invitations', array('id' => array('=', $userID), 'AND', 'used' => array('=', 0)));
 			}
 		}
 	}
@@ -59,9 +52,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 }
 
 function validate($data, &$validate, &$qls){
-	$error = [];
-	
-	return $error;
+	return;
 }
 
 ?>

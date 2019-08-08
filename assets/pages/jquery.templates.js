@@ -851,7 +851,7 @@ function initializeImageUpload(templateID, templateFace){
 
 function reloadTemplates(){
 	$('#templateContainer').children().remove();
-	$('#templateContainer').load('https://otterm8.com/app/backend/retrieve_build-objects.php', function(){
+	$('#templateContainer').load('/backend/retrieve_build-objects.php', function(){
 		makeRackObjectsClickable();
 	});
 }

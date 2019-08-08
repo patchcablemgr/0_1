@@ -17,16 +17,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 	validate($data, $validate, $qls);
 	
 	if (!count($validate->returnData['error'])){
-		$configArray = array(
-			'mail_method' => '',
-			'smtp_auth' => '',
-			'from_email' => '',
-			'from_name' => '',
-			'smtp_username' => '',
-			'smtp_password' => '',
-			'smtp_port' => '',
-			'smtp_server' => ''
-		);
 		$mailMethod = $data['mailMethod'];
 		$fromEmail = $data['fromEmail'];
 		$fromName = $data['fromName'];
@@ -39,6 +29,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$smtpPassword = $data['smtpPassword'];
 			}
 		}
+		
+		$configArray = array(
+			'mail_method' => isset($mailMethod)? $mailMethod : '',
+			'smtp_auth' => isset($smtpAuth)? $smtpAuth : '',
+			'from_email' => isset($fromEmail)? $fromEmail : '',
+			'from_name' => isset($fromName)? $fromName : '',
+			'smtp_username' => isset($smtpUsername)? $smtpUsername : '',
+			'smtp_password' => isset($smtpPassword)? $smtpPassword : '',
+			'smtp_port' => isset($smtpPort)? $smtpPort : '',
+			'smtp_server' => isset($smtpServer)? $smtpServer : ''
+		);
+		
+		foreach($configArray as $name => $value) {
+			$qls->SQL->update('config', array('value' => $value), array('name' => array('=', $name)));
+		}
+		
+		$validate->returnData['success'] = 'Email settings updated.';
 	}
 	echo json_encode($validate->returnData);
 }

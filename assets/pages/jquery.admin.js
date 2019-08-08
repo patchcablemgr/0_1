@@ -20,13 +20,83 @@
 	}
  }
  
+ function loadUserTable() {
+	 $('#tableInvitations').empty();
+	 
+	// Retrieve user table
+	$.post("backend/retrieve_user-table.php", function(response){
+		var responseJSON = JSON.parse(response);
+		if (responseJSON.active == 'inactive'){
+			window.location.replace("/");
+		} else if ($(responseJSON.error).size() > 0){
+			displayError(responseJSON.error);
+		} else {
+			
+			// Create user table
+			$('#tableInvitations').html(responseJSON.success);
+			
+			// Remove user button action
+			$('.buttonRemoveUser').on('click', function(){
+				var userTableRow = $(this).parents('tr');
+				var userID = $(this).attr('data-userID');
+				var userType = $(this).attr('data-userType');
+				//Collect object data
+				var data = {
+					userID: userID,
+					userType: userType,
+					action: 'delete'
+				};
+				data = JSON.stringify(data);
+				
+				// Process remove user
+				$.post('backend/process_admin_edit-user.php', {data:data}, function(response){
+					var responseJSON = JSON.parse(response);
+					if (responseJSON.active == 'inactive'){
+						window.location.replace('/');
+					} else if ($(responseJSON.error).size() > 0){
+						displayError(responseJSON.error);
+					} else {
+						loadUserTable();
+					}
+				});
+			});
+
+			// User roles
+			var roleData = [
+				{'value':3,'text':'Administrator'},
+				{'value':4,'text':'Operator'},
+				{'value':5,'text':'User'}
+			];
+
+			// Make user role editable
+			$('.editableUserRole').editable({
+				showbuttons: false,
+				mode: 'inline',
+				source: roleData,
+				params: function(params){
+					var data = {
+						action: 'role',
+						userID: params.pk,
+						groupID: params.value,
+						userType: $(this).attr('data-userType'),
+						action: 'role'
+					};
+					params.data = JSON.stringify(data);
+					return params;
+				},
+				url: 'backend/process_admin_edit-user.php'
+			});
+		}
+	});
+ }
+ 
 $( document ).ready(function() {
-	
 	//modify buttons style
     $.fn.editableform.buttons = 
     '<button type="submit" class="btn btn-primary editable-submit waves-effect waves-light"><i class="zmdi zmdi-check"></i></button>' +
     '<button type="button" class="btn editable-cancel btn-secondary waves-effect"><i class="zmdi zmdi-close"></i></button>';
 
+	loadUserTable();
 	toggleSMTPFields();
 	toggleSMTPAuthFields();
 	
@@ -70,13 +140,15 @@ $( document ).ready(function() {
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
-				alert(responseJSON.success);
+				displaySuccess(responseJSON.success);
 			}
 		});
 	});
 	
 	$('#invitationSubmit').on('click', function(event){
 		event.preventDefault();
+		var invitationButton = $(this);
+		$(invitationButton).html('<i class="fa fa-spin fa-spinner"></i>Sending');
 		var email = $('#invitationEmail').val();
 
 		//Collect object data
@@ -93,8 +165,11 @@ $( document ).ready(function() {
 				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
+				$(invitationButton).html('Submit');
 			} else {
-				alert(responseJSON.success);
+				$(invitationButton).html('Submit');
+				displaySuccess(responseJSON.success);
+				loadUserTable();
 			}
 		});
 	});
@@ -127,51 +202,4 @@ $( document ).ready(function() {
 		}
 	});
 
-	$('.buttonRemoveUser').on('click', function(){
-		var userID = $(this).attr('data-userID');
-		var userType = $(this).attr('data-userType');
-		//Collect object data
-		var data = {
-			userID: userID,
-			userType: userType,
-			action: 'delete'
-		};
-		data = JSON.stringify(data);
-		
-		//Retrieve object details
-		$.post('backend/process_admin_edit-user.php', {data:data}, function(response){
-			var responseJSON = JSON.parse(response);
-			if (responseJSON.active == 'inactive'){
-				window.location.replace('/app/login.php');
-			} else if ($(responseJSON.error).size() > 0){
-				displayError(responseJSON.error);
-			} else {
-				$(this).closest('tr').remove();
-			}
-		});
-	});
-
-	var roleData = [
-		{'value':3,'text':'Administrator'},
-		{'value':4,'text':'Operator'},
-		{'value':5,'text':'User'}
-	];
-
-	$('.editableUserRole').editable({
-		showbuttons: false,
-		mode: 'inline',
-		source: roleData,
-		params: function(params){
-			var data = {
-				action: 'role',
-				userID: params.pk,
-				groupID: params.value,
-				userType: $(this).attr('data-userType'),
-				action: 'role'
-			};
-			params.data = JSON.stringify(data);
-			return params;
-		},
-		url: 'backend/process_admin_edit-user.php'
-	});
 });

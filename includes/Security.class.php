@@ -344,12 +344,23 @@ var $qls;
 	function check_auth_registration() {
 		if ($this->qls->config['auth_registration'] == 0) {
             // See if the code is set
-            $code = (isset($_GET['code']) && strlen($_GET['code']) == 40 && preg_match('/^[a-fA-F0-9]{40}$/', $_GET['code'])) ? $this->make_safe($_GET['code']) : false;
-            $result = $this->qls->SQL->query("SELECT `used` FROM `{$this->qls->config['sql_prefix']}invitations` WHERE `code`='{$code}'");
-            $row = $this->qls->SQL->fetch_array($result);
+			if(isset($_GET['code'])) {
+				$code = $_GET['code'];
+			} else if(isset($_POST['code'])) {
+				$code = $_POST['code'];
+			} else {
+				$code = false;
+			}
+            $code = (isset($code) && strlen($code) == 40 && preg_match('/^[a-fA-F0-9]{40}$/', $code)) ? $this->make_safe($code) : false;
+			if($code) {
+				$result = $this->qls->SQL->query("SELECT `used` FROM `{$this->qls->config['sql_prefix']}invitations` WHERE `code`='{$code}'");
+				$row = $this->qls->SQL->fetch_array($result);
 
-			if ($row['used'] == 1 || $row['used'] == '') {
-			    die(REGISTER_CODE_INVALID);
+				if ($row['used'] == 1 || $row['used'] == '') {
+					die(REGISTER_CODE_INVALID);
+				}
+			} else {
+				die(REGISTER_CODE_INVALID);
 			}
 		}
 	}

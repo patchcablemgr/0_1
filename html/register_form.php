@@ -4,12 +4,11 @@
 //$qls->Security->check_auth_registration();
 
 $code = isset($_GET['code']) ? $_GET['code'] : '';
-$subCode = isset($_GET['subCode']) ? $_GET['subCode'] : '';
 
-$query = $qls->SQL->select('*', 'subscriptions', array('code' => array('=', $subCode)));
+$query = $qls->SQL->select('*', 'invitations', array('code' => array('=', $code)));
 if($qls->SQL->num_rows($query)) {
-	$subscription = $qls->SQL->fetch_assoc($query);
-	$email = $subscription['email'];
+	$invitation = $qls->SQL->fetch_assoc($query);
+	$email = $invitation['email'];
 } else {
 	$email = '';
 }
@@ -35,7 +34,6 @@ if($qls->SQL->num_rows($query)) {
                     </div>
                     <form class="m-t-20" action="register.php" method="post">
 						<input type="hidden" name="code" value="<?php echo $code; ?>" />
-						<input type="hidden" name="subCode" value="<?php echo $subCode; ?>" />
 						<input type="hidden" name="process" value="true" />
 						<input type="hidden" name="random_id" value="<?php echo $random_id; ?>" />
                         <div class="form-group row">
