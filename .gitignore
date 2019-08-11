@@ -2,4 +2,3 @@ includes/composer.phar
 includes/composer.lock
 includes/vendor
 includes/database_info.php
-install?*

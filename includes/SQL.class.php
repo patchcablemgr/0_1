@@ -57,12 +57,14 @@ var $qls;
 		    die(SYSTEM_NOT_INSTALLED);
 		}
 
+		/*
         $files = array('Install.class.php', 'install.php');
         $file_location = str_replace('/includes', '/install/', dirname(__FILE__));
 
 		if (file_exists($file_location . $files[0]) || file_exists($file_location . $files[1])) {
 		    die(REMOVE_INSTALL_FILES);
 		}
+		*/
 		/**
 		 * End of security functions
 		 */
