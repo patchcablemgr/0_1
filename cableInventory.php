@@ -30,7 +30,7 @@ $qls->Security->check_auth_page('administrator.php');
 					<div class="card-box">
 						<h4 class="header-title m-t-0">Initialized Cables</h4>
 						<p class="text-muted m-b-30 font-13">
-                            Cables that have been initialized or purchased through Otterm8.
+                            Cables that have been initialized or purchased through PatchCableMgr.
                         </p>
 						<div class="table-responsive">
 							<?php require_once './includes/content-cable_inventory.php';?>
@@ -39,7 +39,7 @@ $qls->Security->check_auth_page('administrator.php');
 					<div class="card-box">
 						<h4 class="header-title m-t-0">Uninitialized Cable End IDs</h4>
 						<p class="text-muted m-b-30 font-13">
-                            Cable end IDs that are available to be applied to any patch cable and scanned into your Otterm8 inventory.
+                            Cable end IDs that are available to be applied to any patch cable and scanned into your PatchCableMgr inventory.
                         </p>
 						
 						<div class="table-responsive">

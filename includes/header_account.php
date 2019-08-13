@@ -10,7 +10,7 @@
     <link rel="shortcut icon" href="assets/images/favicon.ico">
 
     <!-- App title -->
-    <title>Uplon - Responsive Admin Dashboard Template</title>
+    <title>PatchCableMgr - Responsive Admin Dashboard Template</title>
 
     <!-- App CSS -->
     <link href="assets/css/style.css" rel="stylesheet" type="text/css"/>

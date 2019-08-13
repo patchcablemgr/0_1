@@ -16,25 +16,13 @@ exit;
                 <div class="text-xs-center m-t-20">
                     <a href="/" class="logo">
                         <i class="zmdi zmdi-group-work icon-c-logo"></i>
-                        <span>Otterm8</span>
+                        <span>PatchCableMgr</span>
                     </a>
                 </div>
                 <div class="m-t-10 p-20">
                     <div class="row">
                         <div class="col-xs-12 text-xs-center">
                             <h6 class="text-muted text-uppercase m-b-0 m-t-0">Sign In</h6>
-							<?php
-							if(isset($_GET['d'])) {
-							?>
-							<br>
-							<p style="text-align:left;" class="m-b-0">
-								<strong>Username:</strong>&nbsp;&nbsp;demo@otterm8.com
-								<br>
-								<strong>Password:</strong>&nbsp;&nbsp;demo
-							</p>
-							<?php
-							}
-							?>
                         </div>
                     </div>
                     <form class="m-t-20" action="login_process.php" method="post">

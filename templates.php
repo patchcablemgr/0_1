@@ -243,7 +243,7 @@ require_once './includes/templateFunctions.php';
 							</div>
 							<p class="m-t-10">
 								<mark>Don't see what you're looking for?</mark><br>
-								Email <ins>support@otterm8.com</ins> with a link or description<br>
+								Email <ins>support@patchcablemgr.com</ins> with a link or description<br>
 								of the item and we'll add it to the catalog.
 							</p>
 						</div>

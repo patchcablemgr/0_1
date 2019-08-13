@@ -25,7 +25,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		if($mfaState) {
 			$username = $qls->user_info['username'];
 			$secret = $qls->gAuth->generateSecret();
-			$QRCodeURL = '<img src="'.$qls->gAuth->getURL($username, 'otterm8.com', $secret).'" />';
+			if (substr($qls->config['cookie_domain'], 0, 1) == '.') {
+				$domain = substr($qls->config['cookie_domain'], 1);
+			} else {
+				$domain = $qls->config['cookie_domain'];
+			}
+			$QRCodeURL = '<img src="'.$qls->gAuth->getURL($username, $domain, $secret).'" />';
 
 			$qls->SQL->update('users', array('mfa' => 1, 'mfa_secret' => $secret), array('id' => array('=', $userID)));
 			

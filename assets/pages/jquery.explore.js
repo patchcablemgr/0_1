@@ -122,7 +122,7 @@ function makeRackObjectsClickable(){
 			var alertMsg = '';
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -209,7 +209,7 @@ function makeFloorplanObjectsClickable(){
 		$.post("backend/retrieve_floorplan_object_details.php", {data:data}, function(responseJSON){
 			var response = JSON.parse(responseJSON);
 			if (response.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(response.error).size() > 0){
 				displayError(response.error);
 			} else {
@@ -607,7 +607,7 @@ $( document ).ready(function() {
 		$.post('backend/process_cable.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayErrorElement(responseJSON.error, $('#alertMsgObjTree'));
 			} else {
@@ -649,7 +649,7 @@ $( document ).ready(function() {
 		$.post('backend/process_cable.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -870,7 +870,7 @@ $( document ).ready(function() {
 					var wapObject = '<i class="floorplanObject selectable fa fa-wifi fa-2x" data-type="wap"></i>';
 					var deviceObject = '<i class="floorplanObject selectable fa fa-laptop fa-2x" data-type="device"></i>';
 					
-					var floorplanImgPath = 'https://otterm8.com/images/floorplanImages/'+response.success.floorplanImg;
+					var floorplanImgPath = '/images/floorplanImages/'+response.success.floorplanImg;
 					$('#imgFloorplan').attr('src', floorplanImgPath);
 					
 					$.each(response.success.floorplanObjectData, function(index, item){

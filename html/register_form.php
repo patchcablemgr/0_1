@@ -23,7 +23,7 @@ if($qls->SQL->num_rows($query)) {
                 <div class="text-xs-center m-t-20">
                     <a href="index.php" class="logo">
                         <i class="zmdi zmdi-group-work icon-c-logo"></i>
-                        <span>Uplon</span>
+                        <span>PatchCableMgr</span>
                     </a>
                 </div>
                 <div class="m-t-10 p-20">
@@ -90,7 +90,7 @@ if($qls->SQL->num_rows($query)) {
                             <div class="col-xs-12">
                                 <div class="checkbox checkbox-primary">
                                     <input id="checkbox-signup" type="checkbox" checked="checked">
-                                    <label for="checkbox-signup">I accept <a href="https://otterm8.com/app/user-agreement.php">Terms and Conditions</a></label>
+                                    <label for="checkbox-signup">I accept <a href="/user-agreement.php">Terms and Conditions</a></label>
                                 </div>
                             </div>
                         </div>

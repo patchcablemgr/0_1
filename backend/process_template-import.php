@@ -22,7 +22,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		// POST Request
 		$POSTData = array('data' => $dataJSON);
 
-		$ch = curl_init('https://otterm8.com/public/template-import.php');
+		$ch = curl_init('https://patchcablemgr.com/public/template-import.php');
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $POSTData);
@@ -75,7 +75,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$defaultCategoryName = $defaultCategory['name'];
 		$defaultCategoryID = $defaultCategory['id'];
 		
-		// Format the template data received from otterm8.com to be inserted into the DB
+		// Format the template data received from patchcablemgr.com to be inserted into the DB
 		$templateNameArray = array();
 		$templateValueArray = array();
 		foreach($importData['success']['template'] as $name => $value) {
@@ -123,7 +123,7 @@ function validate($data, &$validate){
 }
 
 function getImgFile($filename, &$validate) {
-	$url = 'https://otterm8.com/images/templateImages/'.$filename;
+	$url = 'https://patchcablemgr.com/images/templateImages/'.$filename;
 	$filePath = '../images/templateImages/'.$filename;
 	if(!file_exists($filePath)) {
 		$imgFile = fopen($filePath, "x+");

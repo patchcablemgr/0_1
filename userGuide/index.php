@@ -15,7 +15,7 @@
     <meta name="author" content="">
     <meta name="keywords" content="">
 
-    <title>Otterm8 User Guide</title>
+    <title>PatchCableMgr User Guide</title>
 
     <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
 
@@ -51,7 +51,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="big-title text-center">
-                            <h1>Otterm8 User Guide</h1>
+                            <h1>PatchCableMgr User Guide</h1>
                             <p class="lead">Tame Your Patch Cable Nightmare</p>
                         </div>
                         <!-- end title -->
@@ -104,15 +104,15 @@
 
                                         <hr>
                                         <div>
-                                            <p>Thank you for your interest in Otterm8, a web based patch cable management application designed with simplicity and usability in mind.</p>
+                                            <p>Thank you for your interest in PatchCableMgr, a web based patch cable management application designed with simplicity and usability in mind.</p>
 
-                                            <p>This documentation will help you setup, maintain, and get the most out of your account.  If you have any questions, please contact <a href="mailto:support@otterm8.com">support@otterm8.com</a>.</p>
+                                            <p>This documentation will help you setup, maintain, and get the most out of your account.  If you have any questions, please contact <a href="mailto:support@patchcablemgr.com">support@patchcablemgr.com</a>.</p>
 
                                             <h4>Requirements</h4>
-                                            <p>This short list of requirements is all you need to use Otterm8 in your organization.</p>
+                                            <p>This short list of requirements is all you need to use PatchCableMgr in your organization.</p>
                                             <ol>
                                                 <li><strong>Web Browser</strong></li>
-												<li><strong>Cable wraps</strong> to identify patch cable ends.  These can be purchased through Otterm8 or printed yourself.</li>
+												<li><strong>Cable wraps</strong> to identify patch cable ends.  These can be purchased through PatchCableMgr or printed yourself.</li>
                                                 <li><strong>Mobile device (optional)</strong> with front facing camera and LED</li>
                                             </ol>
                                             <div class="intro2 clearfix">
@@ -141,24 +141,22 @@
 
                         <div class="row">
                             <div class="col-md-12">
-                                <p>There are 3 different ways to get started with an Otterm8 account:</p>
+                                <p>There are 3 different ways to get started with an PatchCableMgr account:</p>
 								<ol>
 									<li><strong>Demo Account</strong>
-										<p>A demo account is intended to provide you with a prebuilt environment which allows you to immediately start working with the application to determine if it is right for your organization.</p>
-										<p>To create a demo account, enter a valid email address on the <a href="https://otterm8.com">landing page</a> and click the "Instant Demo" button.  An account with a prebuilt environment will be created for you and a temporary password sent to the email provided.</p>
-										<p>Some features are disabled in demo accounts.  You will not be able to invite users to join your organization, place purchase orders, or scan new cables into inventory.</p>
-										<p>While your account is in demo mode, you will see a yellow banner at the top of the page.  Converting your demo account to a live account is instant and free.  Click the "go live" link in the yellow demo banner to enable the features which are disabled in demo mode.</p>
+										<p>The demo account is intended to provide you with a sandbox environment which allows you to immediately start working with the application to determine if it is right for your organization.</p>
+										<p>To access the demo account, enter a valid email address on the <a href="https://patchcablemgr.com">landing page</a> and click the "Instant Demo" button.  You will be presented with a login page.  The username is 'demo@patchcablemgr.com' and the password is 'demo'.</p>
 										<div class="intro2 clearfix">
-											<p><i class="fa fa-exclamation-triangle"></i> Converting a demo account to a live account will delete all cables in the cable inventory.  Other environment data will persist.
+											<p><i class="fa fa-exclamation-triangle"></i> The demo account is a shared environment.  Any information entered in the demo account will be visible to the public.  Do not enter sensitive information while using the demo account.
 											</p>
 										</div>
 									</li>
 									<li><strong>Live Account</strong>
 										<p>A live account is a clean slate for you to start building your environment with.  Live accounts are created with default templates and basic location structure.</p>
-										<p>To create a live account, click on the "Dashboard" button at the top of the <a href="https://otterm8.com">landing page</a>.  This will bring you to a login form with a <a href="https://otterm8.com/app/register.php">signup link</a> at the bottom.  Fill out the form and click "Join Now".  An unrestricted live account will be created and ready for you to login.</p>
+										<p>To create a live account, click on the "Dashboard" button at the top of the <a href="https://patchcablemgr.com">landing page</a>.  This will bring you to a login form with a <a href="https://patchcablemgr.com/app/register.php">signup link</a> at the bottom.  Fill out the form and click "Join Now".  An unrestricted live account will be created and ready for you to login.</p>
 									</li>
 									<li><strong>Invitation</strong>
-										<p>Otterm8 supports role-based multiple user access.  When an administrator invites you to their organization, you will receive an email with a one time registration link.  Once you register, your account will be assigned to the organization for which you received the invitation from.  This allows you to view and manage the environment shared by other members of that organization.</p>
+										<p>PatchCableMgr supports role-based multiple user access.  When an administrator invites you to their organization, you will receive an email with a one time registration link.  Once you register, your account will be assigned to the organization for which you received the invitation from.  This allows you to view and manage the environment shared by other members of that organization.</p>
 									</li>
 								</ol>
                             </div>
@@ -190,7 +188,7 @@
                                     <li><strong>In-Use</strong> - Cables that are in-use have both ends connected to an object port.</li>
                                     <li><strong>Not In-Use</strong> - Cables that are not in-use do not have either end connected to an object port.</li>
 									<li><strong>Dead Wood</strong> - Cables that only have one end connected to an object port.</li>
-                                    <li><strong>Pending Delivery</strong> - Cables that have been purchased through Otterm8 and have not yet been delivered.</li>
+                                    <li><strong>Pending Delivery</strong> - Cables that have been purchased through PatchCableMgr and have not yet been delivered.</li>
                                 </ul>
                             </div>
                             <!-- end col -->
@@ -257,7 +255,7 @@
 									<li>
 										<h4>Template Details:</h4>
 										<p class="columnContent">The Selected Template card displays information about the template selected in the Available Templates card.  It also allows for some configuration as well as the ability to delete a selected template.</p>
-										<p class="columnContent">The Available Templates card lists all templates grouped by category.  Front and Back radio buttons toggle the face of all available templates.  Clicking on an object will highlight the selected partition and display information in the Selected Template card.<br><br>The Import button opens a window that allows you to browse a catalog of templates published by Otterm8.  Select a template and click "Import" to add it to your organization's list of available templates.</p>
+										<p class="columnContent">The Available Templates card lists all templates grouped by category.  Front and Back radio buttons toggle the face of all available templates.  Clicking on an object will highlight the selected partition and display information in the Selected Template card.<br><br>The Import button opens a window that allows you to browse a catalog of templates published by PatchCableMgr.  Select a template and click "Import" to add it to your organization's list of available templates.</p>
 									</li>
 								</ul>
 							</div>
@@ -289,7 +287,7 @@
 									<br>
 									Cable Paths can be added to represent usable cable paths between cabinets.  Consider a cable path as overhead cabletray, raised floor space, conduit, or any other path that patch cables can be ran.  A cable path can only be created between two cabinets in the same location.  Cable paths and their configured distances are considered when calculating possible cable paths with the path finder function.
 									<br>
-									Cabinet adjacencies can be configured to tell Otterm8 which cabinets neighbor the selected one.  A cabinet adjacency can only be created between two cabinets in the same pod.  Cabinet adjacencies are considered when calculating possible cable paths with the path finder function.
+									Cabinet adjacencies can be configured to tell PatchCableMgr which cabinets neighbor the selected one.  A cabinet adjacency can only be created between two cabinets in the same pod.  Cabinet adjacencies are considered when calculating possible cable paths with the path finder function.
 								</p>
 								<h4>Cabinet:</h4>
 								<p class="columnContent">
@@ -354,11 +352,11 @@
 								<br>
 								The Path card displays cable path information about the selected port.  Select a port by clicking on an individual port in a connectable object partition.  The port drop down provides an alternative way to select a port after a connectable object partition has been selected.
 								<br>
-								The Populated checkbox allows you to flag a port as populated even though an Otterm8 managed patch cable has not been connected to it.  This is useful for when you have existing patch cables that have not yet been scanned into your Otterm8 inventory, or when it is not necessary for a patch cable to be managed by Otterm8.  Flagging a port as populated will take it out of consideration when calculating possible cable paths with the Path Finder function.
+								The Populated checkbox allows you to flag a port as populated even though an PatchCableMgr managed patch cable has not been connected to it.  This is useful for when you have existing patch cables that have not yet been scanned into your PatchCableMgr inventory, or when it is not necessary for a patch cable to be managed by PatchCableMgr.  Flagging a port as populated will take it out of consideration when calculating possible cable paths with the Path Finder function.
 								<br>
 								When an individual port is selected, its cable path will be displayed.  The cable path is represented by colored boxes containing the full name of the object.  <strong style="color:#039cfd;">Blue boxes</strong> represent passive objects, <strong style="color:#158c75;">green boxes</strong> represent endpoint objects and red boxes indicate a patch cable is not connected to an object.  A vertical double-ended arrow represents a trunk connection between two objects.  Curved arrows represent a patch cable connection indicating the length of the patch cable.  The currently selected object port is identified by a pin icon to the left of the object name.
 								<br><br>
-								Clicking the Path Finder button opens the path finder modal.  The path finder modal allows you to calculate all possible paths between two ports (Endpoint A and Endpoint B).  Endpoint A is determined by the currently selected port.  Use the navigation dropdowns to indicate Endpoint B, the far port you wish to find available paths to.  Once you've narrowed down the path selection dropdowns to an individual port, the Run Path Finder button becomes enabled.  Clicking the Run Path Funder button tells Otterm8 to begin calculating all available paths between the two endpoints.  Results are returned in a table indicating the number of patch cables required for each unique path.  The results table indicates the number of local (between objects in the same cabinet), adjacent (between objects in neighboring cabinets), path (between objects reachable via cable path), and total patch cables required to connect the endpoints.  Clicking on a path in the result table will display the full cable path.
+								Clicking the Path Finder button opens the path finder modal.  The path finder modal allows you to calculate all possible paths between two ports (Endpoint A and Endpoint B).  Endpoint A is determined by the currently selected port.  Use the navigation dropdowns to indicate Endpoint B, the far port you wish to find available paths to.  Once you've narrowed down the path selection dropdowns to an individual port, the Run Path Finder button becomes enabled.  Clicking the Run Path Funder button tells PatchCableMgr to begin calculating all available paths between the two endpoints.  Results are returned in a table indicating the number of patch cables required for each unique path.  The results table indicates the number of local (between objects in the same cabinet), adjacent (between objects in neighboring cabinets), path (between objects reachable via cable path), and total patch cables required to connect the endpoints.  Clicking on a path in the result table will display the full cable path.
 								</p>
                             </div>
                             <!-- end col -->
@@ -383,7 +381,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <p class="columnContent">
-									The Purchasing page allows you to order patch cables and labels.  Patch cables ordered through Otterm8 come prelabeled and preloaded into your organization's Otterm8 inventory.
+									The Purchasing page allows you to order patch cables and labels.  Patch cables ordered through PatchCableMgr come prelabeled and preloaded into your organization's PatchCableMgr inventory.
 								</p>
                             </div>
                             <!-- end col -->
@@ -417,7 +415,7 @@
                                     <li><strong>Pending</strong> - An order has been placed and is pending review before fulfillment.</li>
                                     <li><strong>Fulfillment</strong> - The order has been review and is being fulfilled before being shipped.</li>
 									<li><strong>Shipped</strong> - The order has been shipped.  A shipping confirmation email will be sent to all organization administrators with the courier and tracking number.</li>
-									<li><strong>Delivered</strong> - The order has been confirmed by the courier as delivered.  Any inventory purchased with a status of Delivered will be available for use in the Otterm8 App.</li>
+									<li><strong>Delivered</strong> - The order has been confirmed by the courier as delivered.  Any inventory purchased with a status of Delivered will be available for use in the PatchCableMgr App.</li>
                                 </ul>
                             </div>
                             <!-- end col -->

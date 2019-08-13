@@ -16,7 +16,7 @@ exit;
                 <div class="text-xs-center m-t-20">
                     <a href="/" class="logo">
                         <i class="zmdi zmdi-group-work icon-c-logo"></i>
-                        <span>Otterm8</span>
+                        <span>PatchCableMgr</span>
                     </a>
                 </div>
                 <div class="m-t-10 p-20">

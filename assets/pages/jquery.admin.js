@@ -193,7 +193,7 @@ $( document ).ready(function() {
 			var alertMsg = '';
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {

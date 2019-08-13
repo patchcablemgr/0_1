@@ -74,7 +74,7 @@ function makePathDeleteClickable(selectSource){
 		$.post("backend/process_cabinet.php", {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -179,7 +179,7 @@ function makeRackObjectsClickable(){
 			var alertMsg = '';
 			var response = JSON.parse(responseJSON);
 			if (response.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(response.error).size() > 0){
 				displayError(response.error);
 			} else {
@@ -239,7 +239,7 @@ function makeFloorplanObjectsClickable(){
 		$.post("backend/retrieve_floorplan_object_details.php", {data:data}, function(responseJSON){
 			var response = JSON.parse(responseJSON);
 			if (response.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(response.error).size() > 0){
 				displayError(response.error);
 			} else {
@@ -341,7 +341,7 @@ function initializeEditable(){
 			var selectedObjID = $('#selectedObjectID').val();
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -372,7 +372,7 @@ function initializeEditable(){
 		success: function(responseJSON) {
 			var response = JSON.parse(responseJSON);
 			if (response.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(response.error).size() > 0){
 				displayError(response.error);
 			} else {
@@ -422,7 +422,7 @@ function initializeInsertDroppable(){
 				success: function(result){
 					var responseJSON = JSON.parse(result);
 					if (responseJSON.active == 'inactive'){
-						window.location.replace("https://otterm8.com/app/login.php");
+						window.location.replace("/");
 					} else if ($(responseJSON.error).size() > 0){
 						displayError(responseJSON.error);
 						validDrop = false;
@@ -620,7 +620,7 @@ function loadCabinetBuild(){
 				success: function(result){
 					var responseJSON = JSON.parse(result);
 					if (responseJSON.active == 'inactive'){
-						window.location.replace("https://otterm8.com/app/login.php");
+						window.location.replace("/");
 					} else if ($(responseJSON.error).size() > 0){
 						displayError(responseJSON.error);
 						validDrop = false;
@@ -990,7 +990,7 @@ $( document ).ready(function() {
 			$.post('backend/process_floorplan-objects.php', {data:data}, function(responseJSON){
 				var response = JSON.parse(responseJSON);
 				if (response.active == 'inactive'){
-					window.location.replace("https://otterm8.com/app/login.php");
+					window.location.replace("/");
 				} else if ($(response.error).size() > 0){
 					displayError(response.error);
 				} else {
@@ -1111,7 +1111,7 @@ $( document ).ready(function() {
 		$.post('backend/process_cabinet.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -1158,7 +1158,7 @@ $( document ).ready(function() {
 		$.post('backend/process_cabinet.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -1258,7 +1258,7 @@ $( document ).ready(function() {
 				var alertMsg = '';
 				var responseJSON = JSON.parse(response);
 				if (responseJSON.active == 'inactive'){
-					window.location.replace("https://otterm8.com/app/login.php");
+					window.location.replace("/");
 				} else if ($(responseJSON.error).size() > 0){
 					displayError(responseJSON.error);
 				} else {
@@ -1283,7 +1283,7 @@ $( document ).ready(function() {
 				var alertMsg = '';
 				var responseJSON = JSON.parse(response);
 				if (responseJSON.active == 'inactive'){
-					window.location.replace("https://otterm8.com/app/login.php");
+					window.location.replace("/");
 				} else if ($(responseJSON.error).size() > 0){
 					displayError(responseJSON.error);
 				} else {
@@ -1436,7 +1436,7 @@ $( document ).ready(function() {
 					var wapObject = '<i class="floorplanObject selectable fa fa-wifi fa-2x" style="cursor:grab;" data-type="wap"></i>';
 					var deviceObject = '<i class="floorplanObject selectable fa fa-laptop fa-2x" style="cursor:grab;" data-type="device"></i>';
 					
-					var floorplanImgPath = 'https://otterm8.com/images/floorplanImages/'+response.success.floorplanImg;
+					var floorplanImgPath = '/images/floorplanImages/'+response.success.floorplanImg;
 					$('#imgFloorplan').attr('src', floorplanImgPath);
 					
 					$.each(response.success.floorplanObjectData, function(index, item){
@@ -1505,7 +1505,7 @@ $( document ).ready(function() {
 		$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			} else {
@@ -1527,7 +1527,7 @@ $( document ).ready(function() {
 		$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
-				window.location.replace("https://otterm8.com/app/login.php");
+				window.location.replace("/");
 			} else if ($(responseJSON.error).size() > 0){
 				displayError(responseJSON.error);
 			}
@@ -1616,7 +1616,7 @@ function customMenu(node) {
 				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
-						window.location.replace("https://otterm8.com/app/login.php");
+						window.location.replace("/");
 					} else if ($(responseJSON.error).size() > 0){
 						displayError(responseJSON.error);
 					} else {
@@ -1650,7 +1650,7 @@ function customMenu(node) {
 				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
-						window.location.replace("https://otterm8.com/app/login.php");
+						window.location.replace("/");
 					} else if ($(responseJSON.error).size() > 0){
 						displayError(responseJSON.error);
 					} else {
@@ -1684,7 +1684,7 @@ function customMenu(node) {
 				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
-						window.location.replace("https://otterm8.com/app/login.php");
+						window.location.replace("/");
 					} else if ($(responseJSON.error).size() > 0){
 						displayError(responseJSON.error);
 					} else {
@@ -1718,7 +1718,7 @@ function customMenu(node) {
 				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
-						window.location.replace("https://otterm8.com/app/login.php");
+						window.location.replace("/");
 					} else if ($(responseJSON.error).size() > 0){
 						displayError(responseJSON.error);
 					} else {

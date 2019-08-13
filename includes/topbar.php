@@ -7,7 +7,7 @@
             <div class="topbar-left">
                 <a href="index.php" class="logo">
                     <i class="zmdi zmdi-group-work icon-c-logo"></i>
-                    <span>Otterm8 </span>
+                    <span>PatchCableMgr </span>
 					<span><small id="orgName"><?php echo $qls->org_info['name']; ?></small></span>
 
                 </a>
@@ -17,7 +17,7 @@
 
 
             <div class="menu-extras">
-				<small><span class="label label-warning" title="Otterm8 is currently in beta">Beta</span></small>
+				<small><span class="label label-warning" title="PatchCableMgr is currently in beta">Beta</span></small>
                 <ul class="nav navbar-nav pull-right">
 
                     <li class="nav-item">
