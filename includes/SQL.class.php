@@ -46,15 +46,14 @@ var $qls;
 	function __construct(&$qls) {
 	    $this->qls = &$qls;
 		
-		require 'database_info.php';
-        $this->database_type = $database_type;
-
 		/**
 		 * These security functions are in here because of the file
 		 * included above. I'll have to change it in later versions 0.o
 		 */
-		if (!SYSTEM_INSTALLED) {
-		    die(SYSTEM_NOT_INSTALLED);
+		include 'database_info.php';
+		if (SYSTEM_INSTALLED !== true) {
+			header('Location: /install/install.php');
+		    //die(SYSTEM_NOT_INSTALLED);
 		}
 
 		/*
@@ -69,6 +68,7 @@ var $qls;
 		 * End of security functions
 		 */
 
+		$this->database_type = $database_type;
         $this->qls->config['sql_prefix'] = $database_prefix;
 
         // Get the actual database class

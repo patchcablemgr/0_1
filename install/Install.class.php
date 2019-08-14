@@ -57,7 +57,8 @@ var $install_error = 'There was an error with the installation! This is most lik
 		if (!version_compare('5.5.0', PHP_VERSION, '<=')) {
 		    die('Minimum PHP version required to run this system is: <b>PHP 5.5.0</b>');
 		}
-
+		
+		// Check if mysql schema is readable
 		if (!is_readable($this->install_directory . '/schemas/mysql.sql')) {
 		    die('All the files in the <b>install/schemas</b> directory must be CHMOD to 755.');
 		}
@@ -242,6 +243,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 	 *	@return true on success, false on failure
 	 */
 	function install_system() {
+
         // Get the user browser information
         $browser = strtolower($_SERVER['HTTP_USER_AGENT']);
         $another_mime = (strpos($browser, 'msie') === true || strpos($browser, 'opera') === true) ? 'application/octetstream' : 'application/octet-stream';
@@ -787,9 +789,9 @@ var $install_error = 'There was an error with the installation! This is most lik
             $sql[] = "'redirect_type','{$redirect_type}'";
             $sql[] = "'online_users_format','{$online_users_format}'";
             $sql[] = "'online_users_separator','{$online_users_separator}'";
-			$sql[] = "'mail_method',''";
-			$sql[] = "'from_email',''";
-			$sql[] = "'from_name',''";
+			$sql[] = "'mail_method','sendmail'";
+			$sql[] = "'from_email','no-reply@example.com'";
+			$sql[] = "'from_name','No Reply'";
 			$sql[] = "'smtp_server',''";
 			$sql[] = "'smtp_port',''";
 			$sql[] = "'smtp_auth',''";
@@ -883,7 +885,8 @@ DATABASE_INFO;
 				if ($file_handle = fopen($this->main_directory . '/includes/database_info.php', 'w')) {
                     fwrite($file_handle, $database_info);
                     fclose($file_handle);
-                    die('You have successfully installed the system! Please move/rename/remove this directory and then you can access all of your pages!');
+                    //die('You have successfully installed the system! Please move/rename/remove this directory and then you can access all of your pages!');
+					header('Location: '.$cookie_path);
 				}
 				else {
                     // Prepare for download, then send the information

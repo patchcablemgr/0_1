@@ -25,9 +25,16 @@
 * Comments are always before the code they are commenting.
 *** *** *** *** *** ***/
 define('IN_INSTALL', true);
+define('QUADODO_IN_SYSTEM', true);
 
 if (!version_compare('5.5.0', PHP_VERSION, '<=')) {
     die('You currently have PHP version ' . PHP_VERSION . ' installed. The minimum requirement is PHP 5.5.0. Please visit the <a href="http://www.quadodo.net/s.php">support forum</a> for more information.');
+}
+
+// Check if system is already installed
+include '../includes/database_info.php';
+if (SYSTEM_INSTALLED === true) {
+	die('System is already installed.  To reinstall, delete the database_info.php file in the <b>includes/</b> directory.');
 }
 
 // Report all errors except E_NOTICE, because it screws things up...

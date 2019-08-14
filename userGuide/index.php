@@ -80,12 +80,6 @@
 								</ul>
 							</li>
 							<li><a href="#explore">Explore</a></li>
-							<li><a href="#purchasing">Purchasing</a>
-								<ul class="nav">
-									<li><a href="#order">Order</a></li>
-									<li><a href="#invoices">Invoices</a></li>
-								</ul>
-							</li>
 							<li><a href="#scan">Scan</a></li>
 							<li><a href="#cableInventory">Cable Inventory</a></li>
 							<li><a href="#admin">Admin</a></li>
@@ -365,65 +359,6 @@
 						
 					</section>
 					
-					<section id="purchasing" class="section">
-					
-						<div class="row">
-                            <div class="col-md-12 left-align">
-                                <h2 class="dark-text">
-									<img src="images/purchasing.png">
-									Purchasing <a href="#top">#back to top</a><hr>
-								</h2>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-					
-                        <div class="row">
-                            <div class="col-md-12">
-                                <p class="columnContent">
-									The Purchasing page allows you to order patch cables and labels.  Patch cables ordered through PatchCableMgr come prelabeled and preloaded into your organization's PatchCableMgr inventory.
-								</p>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-						
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h4 id="order">Order - <a href="#top">#back to top</a></h4>
-                                <p class="columnContent">
-									Select the appropriate product type, media type, length, color, and quantity to enable the checkout button.  Add or delete line items using the appropriate buttons.
-									<br><br>
-									The Notes field can be used for internal details or special instructions on how to fullfil the order.  Notes will be visible in the resulting invoice.
-									<br><br>
-									The Shipping Address dropdown field initially displays the default shipping address.  If no shipping addresses exist, you must create one.  Clicking on the shipping address editor button will open a modal popup where you can add, delete, or edit shipping addresses.
-									<br><br>
-									Click the Checkout button to enter payment details.  If the charge was successful, you will be redirected to the order confirmation page.  You can now track the progress of your order in the Invoices page.
-								</p>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-						
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h4 id="invoices">Invoices - <a href="#top">#back to top</a></h4>
-                                <p class="columnContent">
-									The Invoices page displays a table of all orders and subscription payments.  Clicking on the view icon will display a printable invoice below.  Invoices can have one of the following statuses:
-								</p>
-								<ul>
-                                    <li><strong>Pending</strong> - An order has been placed and is pending review before fulfillment.</li>
-                                    <li><strong>Fulfillment</strong> - The order has been review and is being fulfilled before being shipped.</li>
-									<li><strong>Shipped</strong> - The order has been shipped.  A shipping confirmation email will be sent to all organization administrators with the courier and tracking number.</li>
-									<li><strong>Delivered</strong> - The order has been confirmed by the courier as delivered.  Any inventory purchased with a status of Delivered will be available for use in the PatchCableMgr App.</li>
-                                </ul>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-						
-					</section>
-					
 					<section id="scan" class="section">
 						<div class="row">
                             <div class="col-md-12 left-align">
@@ -501,15 +436,18 @@
                                 <p class="columnContent">
 									The Admin page allows organization administrators to perform privileged functions.
 									<br><br>
-									Subscription levels are shown listing their name, price, features, and an action button.  The action button for your current subscription level will say "Current" and be disabled.  To change subscription levels click the "Select" button.  If you do not already have a valid payment option associated with the organization, you will be prompted for payment information.  To cancel a paid subscription, select the free tier.  Your organization will continue to operate under the paid subscription tier until the end of the subscription period.  When transitioning between paid tiers, the subscription period remains the same and any payment that exceeds the amount owed for the new subscription tier will be credited.
-									<br><br>
-									The Subscription Payment Info displays the credit card information that is on file for your organization.  Clicking the Update button will prompt you for credit card information to be used for future payments.
-									<br><br>
 									The Invite User section allows you to send an invitation to an individual to join your organization.  Recipients will receive an email with a link to join.  Existing users can also accept the invitation from their user Profile and can revert back to their original organization at any time.  Invited users are added to your organization with "User" level privileges by default.
+									<br><br>
+									The Email Settings section allows you to configure how PCM will send emails for the invitation and password reset functions.  There are three methods of sending emails:
+									<ul>
+										<li><strong>Sendmail</strong> - This is the simplest method and uses the server's SENDMAIL service.  Emails sent using this method are less likely to be delivered depending on how the destination mail server is configured.</li>
+										<li><strong>SMTP</strong> - Using an anonymous SMTP relay server is an easy way to deliver emails assuming your organization allows for unauthenticated SMTP relay.</li>
+										<li><strong>SMTP (authenticated)</strong> - This method is the most successful way for PCM to deliver emails, but requires an account on an SMTP server.  Google allows for SMTP relay using gmail account.</li>
+									</ul>
 									<br><br>
 									The Organization Name section allows an Administrator to change the organization name which is displayed a the top of the page and is visible by all users.
 									<br><br>
-									The Manage Users section allows you to remove or change roles of a user.  You cannot delete your own account, you cannot downgrade your role if you are the only administrator.  When deleting a user that accepted an invitation and already had an account, their account will be reverted back to the original organization and original role.
+									The Manage Users section allows you to remove or change roles of a user.  You cannot delete your own account, you cannot downgrade your role if you are the only administrator.
 								</p>
                             </div>
                             <!-- end col -->

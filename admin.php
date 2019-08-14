@@ -67,7 +67,7 @@ $qls->Security->check_auth_page('administrator.php');
 	
 	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-3">
 		<div class="card-box">
-			<h4 class="header-title m-t-0 m-b-30">SMTP Settings</h4>
+			<h4 class="header-title m-t-0 m-b-30">Email Settings</h4>
 			<div class="radio radio-inline">
 				<input class="mailMethod" type="radio" name="mailMethod" id="mailMethodSendmail" value="sendmail" <?php echo $qls->config['mail_method'] == 'sendmail' ? 'checked' : ''; ?>>
 				<label for="mailMethodSendmail">Sendmail</label>
