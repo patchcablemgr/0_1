@@ -22,11 +22,41 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			
 			// Super secret code so they can register
 			$code = sha1(md5($qls->config['sql_prefix']) . time() . $_SERVER['REMOTE_ADDR']);
-			$subject = "You\'ve been invited!";
+			$subject = "You've been invited!";
 			$recipientEmail = $data['email'];
+			
+			if($qls->config['cookie_domain'] == '') {
+				$domain = $_SERVER['SERVER_ADDR'];
+			} else {
+				$domain = $qls->config['cookie_domain'];
+			}
+			
+			if($qls->config['cookie_path'] == '') {
+				$appPath = '/';
+			} else {
+				$appPath = $qls->config['cookie_path'];
+				if(substr($appPath, -1) != '/') {
+					$appPath .= '/';
+				}
+			}
 
-			$btnURL = 'https://'.$qls->config['cookie_domain'].$qls->config['cookie_path'].'register.php?code='.$code;
+			$btnURL = $domain.$appPath.'register.php?code='.$code;
 			$btnText = 'Accept Invitation';
+			
+			$qls->SQL->insert('invitations',
+				array(
+					'email',
+					'to_id',
+					'from_id',
+					'code',
+				),
+				array(
+					$recipientEmail,
+					0,
+					$qls->user_info['id'],
+					$code,
+				)
+			);
 
 			$msg = file_get_contents('../html/email_invitation.html');
 			$msg = str_replace('<!--btnURL-->', $btnURL, $msg);
@@ -53,22 +83,4 @@ function validate($data, &$validate, &$qls){
 	return $error;
 }
 
-function canDelete(&$qls, &$validate){
-	$userGroupID = $qls->user_info['group_id'];
-	$userOrgID = $qls->user_info['org_id'];
-	$administratorCount = 0;
-	$queryUsers = $qls->SQL->select('*', 'users', array('org_id' => array('=', $userOrgID)));
-	$userCount = $qls->SQL->num_rows($queryUsers);
-	while($row = $qls->SQL->fetch_assoc($queryUsers)) {
-		if($row['group_id'] == 3) {
-			$administratorCount++;
-		}
-	}
-
-	if($userGroupID == 3 and ($userCount > 1 and $administratorCount < 2)) {
-		return false;
-	} else {
-		return true;
-	}
-}
 ?>

@@ -64,6 +64,7 @@ class qls {
 		$this->PHPmailer->addReplyTo($this->config['from_email'], $this->config['from_name']);
 		if($this->config['mail_method'] == 'smtp') {
 			$this->PHPmailer->isSMTP();
+			//$this->PHPmailer->SMTPDebug = 2;
 			$this->PHPmailer->Host = $this->config['smtp_server'];
 			$this->PHPmailer->Port = $this->config['smtp_port'];
 			$this->PHPmailer->SMTPSecure = 'tls';

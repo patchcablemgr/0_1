@@ -214,23 +214,25 @@ var $qls;
             );
             $user_info = $this->fetch_user_info($username);
 
+			// Get hostname
+			if($this->qls->config['cookie_domain'] == '') {
+				$domain = $_SERVER['SERVER_ADDR'];
+			} else {
+				$domain = $this->qls->config['cookie_domain'];
+			}
+			
+			// Get app path
+			if($this->qls->config['cookie_path'] == '') {
+				$appPath = '/';
+			} else {
+				$appPath = $this->qls->config['cookie_path'];
+				if(substr($appPath, -1) != '/') {
+					$appPath .= '/';
+				}
+			}
+			
 			// Generate the link
-			if (substr($this->qls->config['cookie_domain'], 0, 1) == '.') {
-				if (substr($this->qls->config['cookie_path'], -1) == '/') {
-				    $change_link = "http://www{$this->qls->config['cookie_domain']}{$this->qls->config['cookie_path']}change_password.php?code={$code}";
-				}
-				else {
-				    $change_link = "http://www{$this->qls->config['cookie_domain']}{$this->qls->config['cookie_path']}/change_password.php?code={$code}";
-				}
-			}
-			else {
-				if (substr($this->qls->config['cookie_path'], -1) == '/') {
-				    $change_link = "http://{$this->qls->config['cookie_domain']}{$this->qls->config['cookie_path']}change_password.php?code={$code}";
-				}
-				else {
-				    $change_link = "http://{$this->qls->config['cookie_domain']}{$this->qls->config['cookie_path']}/change_password.php?code={$code}";
-				}
-			}
+			$change_link = "{$domain}{$appPath}change_password.php?code={$code}";
 
 			return $change_link;
 		}
