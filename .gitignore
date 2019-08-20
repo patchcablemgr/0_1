@@ -1,4 +1,6 @@
 includes/composer.phar
+includes/composer-setup.php
 includes/composer.lock
 includes/vendor
+includes/database_info.php 
 includes/database_info.php
