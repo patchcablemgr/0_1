@@ -32,6 +32,19 @@ if (!defined('IN_INSTALL')) {
  * Contains all the necessary components for an installation
  */
 class Install {
+	
+	function __construct() {
+		
+		// Collect HTTP headers relating to the app
+		$this->appHeaders = array();
+		$appHeaderPrefix = 'PCM';
+		foreach(getallheaders() as $name => $value) {
+			if(substr($name, 0, strlen($appHeaderPrefix)) === $appHeaderPrefix) {
+				$this->appHeaders[$name] = $value;
+			}
+		}
+		
+	}
 
 /**
  * @var string $system_version - The version of the system

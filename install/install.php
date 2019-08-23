@@ -44,6 +44,11 @@ error_reporting(E_ALL ^ E_NOTICE);
 require_once('Install.class.php');
 $install = new Install();
 
+// Check if app is hosted
+if($install->appHeaders['PCM_Hosted']) {
+	die('This is a hosted application.  You may only run the installer on your locally hosted installations.');
+}
+
 if (isset($_POST['process'])) {
 	// Install the system
 	if (!$install->install_system()) {
@@ -65,9 +70,6 @@ else {
 	</head>
 
 	<body>
-		<div align="left">
-			You must read the User Guide before running the installation. Many things could go wrong! Once you run this form you will be asked to download a file, download it and replace the same file located in the <b>/includes</b> directory with the one that is downloaded.
-		</div>
 		<form action="install.php" method="post">
 		<input type="hidden" name="process" value="yes" />
 			<fieldset style="width: 50%;">
@@ -147,8 +149,7 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-			<br />
-			<br />
+			<br>
 			<fieldset style="width: 50%;">
 				<legend>
 					Cookie Information
@@ -199,8 +200,8 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-			<br />
-			<br />
+			<!--br />
+			<br /-->
 			<fieldset style="display: none; width: 50%;">
 				<legend>
 					Security Information
@@ -361,8 +362,7 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-			<br />
-			<br />
+			<br>
 			<fieldset style="width: 50%;">
 				<legend>
 					Admin User Information
@@ -410,7 +410,11 @@ else {
 					</tr>
 				</table>
 			</fieldset>
-		<br />
+		<br>
+		<div align="left">
+			Once you run this form you will be asked to download a file, download it and replace the same file located in the <b>/includes</b> directory with the one that is downloaded.
+		</div>
+		<br>
 		<input type="submit" value="Install" />
 		</form>
 	</body>

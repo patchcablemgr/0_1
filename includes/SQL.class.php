@@ -50,20 +50,15 @@ var $qls;
 		 * These security functions are in here because of the file
 		 * included above. I'll have to change it in later versions 0.o
 		 */
-		include 'database_info.php';
+		if(isset($qls->appHeaders['PCM_Hosted'])) {
+			include '/app/database_info.php';
+		} else {
+			include 'database_info.php';
+		}
 		if (SYSTEM_INSTALLED !== true) {
 			header('Location: /install/install.php');
-		    //die(SYSTEM_NOT_INSTALLED);
 		}
 
-		/*
-        $files = array('Install.class.php', 'install.php');
-        $file_location = str_replace('/includes', '/install/', dirname(__FILE__));
-
-		if (file_exists($file_location . $files[0]) || file_exists($file_location . $files[1])) {
-		    die(REMOVE_INSTALL_FILES);
-		}
-		*/
 		/**
 		 * End of security functions
 		 */
