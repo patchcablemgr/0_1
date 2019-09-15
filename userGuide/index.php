@@ -287,7 +287,7 @@
 								<p class="columnContent">
 									The Cabinet card displays the selected cabinet and all of the objects it contains.  Toggling the Front and Back radio buttons switches the cabinet view.  To install an object in the cabinet displayed, drag and drop a template from the Available Templates section.
 								</p>
-								<h4>Object Detailst:</h4>
+								<h4>Object Details:</h4>
 								<p class="columnContent">
 									The Object Details card displays information about the selected object and partition as well as templates available to be installed.
 									<br>

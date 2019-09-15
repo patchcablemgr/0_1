@@ -47,7 +47,7 @@ var $qls;
 	    $this->qls = &$qls;
 		
 		$this->envTreeArray = array();
-	$query = $this->qls->SQL->select('*', 'app_env_tree', false, array('name', 'ASC'));
+		$query = $this->qls->SQL->select('*', 'app_env_tree', false, array('name', 'ASC'));
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->envTreeArray[$row['id']] = $row;
 		}
@@ -61,7 +61,10 @@ var $qls;
 		$this->insertArray = array();
 		$query = $this->qls->SQL->select('*', 'app_object', array('parent_id' => array('<>', 0)));
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
-			$this->insertArray[$row['parent_id']] = $row;
+			if(!isset($this->insertArray[$row['parent_id']])) {
+				$this->insertArray[$row['parent_id']] = array();
+			}
+			array_push($this->insertArray[$row['parent_id']], $row);
 		}
 		
 		$this->templateArray = array();

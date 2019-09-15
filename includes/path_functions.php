@@ -1728,9 +1728,11 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 	$treeArray = array();
 	$templateTable = buildTemplateTable($qls);
 	
+	// Tree element
 	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $elementID)));
 	$element = $qls->SQL->fetch_assoc($query);
 	
+	// Object selected by user
 	$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $objectID)));
 	$object = $qls->SQL->fetch_assoc($query);
 	
@@ -1746,6 +1748,8 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 	$query = $qls->SQL->select('*','app_object_compatibility',array('template_id' => array('=',$element['template_id'])));
 	
 	while($row = $qls->SQL->fetch_assoc($query)) {
+		
+		// Partition is connectable
 		if($row['partitionType'] == 'Connectable') {
 			if($row['portTotal'] == $objectCompatibility['portTotal']) {
 				if($objectFunction == 'Endpoint' or $elementFunction == 'Endpoint') {
@@ -1794,7 +1798,11 @@ function buildTreePortGroups(&$qls, $objectID, $objectFace, $objectDepth, $eleme
 					));
 				}
 			}
+		
+		// Partition is enclosure
 		} else if($row['partitionType'] == 'Enclosure') {
+			
+			// Select all inserts that are installed in enclosure
 			$queryInserts = $qls->SQL->select(
 				'*',
 				'app_object',

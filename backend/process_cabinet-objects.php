@@ -185,26 +185,28 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$safeToDelete = false;
 			
 			// Check object for connections
-			$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $objectID), 'OR', 'b_object_id' => array('=', $objectID)));
-			if($qls->SQL->num_rows($query) == 0) {
+			if(!isset($qls->app->inventoryArray[$objectID])) {
 				$safeToDelete = true;
 			}
 			
 			// Check insert(s) for connections
-			foreach($qls->App->insertArray[$objectID] as $insert) {
-				$insertID = $insert['id'];
-				$query = $qls->SQL->select('*', 'app_inventory', array('a_object_id' => array('=', $insertID), 'OR', 'b_object_id' => array('=', $insertID)));
-				if($qls->SQL->num_rows($query) == 0) {
-					$safeToDelete = true;
+			if(isset($qls->App->insertArray[$objectID])) {
+				foreach($qls->App->insertArray[$objectID] as $insert) {
+					$insertID = $insert['id'];
+					if(!isset($qls->app->inventoryArray[$insertID])) {
+						$safeToDelete = true;
+					}
 				}
 			}
 			
 			if($safeToDelete) {
 				// Remove insert peer entries and populated ports
-				foreach($qls->App->insertArray[$objectID] as $insert) {
-					$insertID = $insert['id'];
-					$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
-					$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $insertID)));
+				if(isset($qls->App->insertArray[$objectID])) {
+					foreach($qls->App->insertArray[$objectID] as $insert) {
+						$insertID = $insert['id'];
+						$qls->SQL->delete('app_object_peer', array('a_id' => array('=', $insertID), 'OR', 'b_id' => array('=', $insertID)));
+						$qls->SQL->delete('app_populated_port', array('object_id' => array('=', $insertID)));
+					}
 				}
 				
 				// Remove object peer entries and populated ports

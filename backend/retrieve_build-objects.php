@@ -1,9 +1,9 @@
 <?php
 define('QUADODO_IN_SYSTEM', true);
-require_once '../includes/header.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
-require_once '../includes/templateFunctions.php';
-include_once('../includes/content-build-objectData.php');
-include_once('../includes/content-build-objects.php');
+require_once $_SERVER['DOCUMENT_ROOT'].'/includes/templateFunctions.php';
+include_once($_SERVER['DOCUMENT_ROOT'].'/includes/content-build-objectData.php');
+include_once($_SERVER['DOCUMENT_ROOT'].'/includes/content-build-objects.php');
 ?>

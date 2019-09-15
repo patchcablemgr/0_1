@@ -1373,13 +1373,13 @@ function validateImportedInserts($importedInsertArray, $existingInsertArray, $im
 		if($parentPartition = retrievePartition($parentTemplate['templatePartitionData'][$face], $depth)) {
 			if($insertTemplate['templateFunction'] != $parentTemplate['templateFunction']) {
 				$compatible = false;
-			} else if($insertTemplate['sizeX'] != $parentPartition['encLayoutX']) {
+			} else if($insertTemplate['templateEncLayoutX'] != $parentPartition['encLayoutX']) {
 				$compatible = false;
-			} else if($insertTemplate['sizeY'] != $parentPartition['encLayoutY']) {
+			} else if($insertTemplate['templateEncLayoutY'] != $parentPartition['encLayoutY']) {
 				$compatible = false;
-			} else if($insertTemplate['parentH'] != $parentPartition['hUnits']) {
+			} else if($insertTemplate['templateHUnits'] != $parentPartition['hunits']) {
 				$compatible = false;
-			} else if($insertTemplate['parentV'] != $parentPartition['vUnits']) {
+			} else if($insertTemplate['templateVUnits'] != $parentPartition['vunits']) {
 				$compatible = false;
 			}
 		} else {
@@ -1387,7 +1387,7 @@ function validateImportedInserts($importedInsertArray, $existingInsertArray, $im
 			array_push($validate->returnData['error'], $errMsg);
 		}
 		
-		if(!compatible) {
+		if(!$compatible) {
 			$errMsg = 'Insert on line '.$line.' of '.$fileName.' is not compatible with slot.';
 			array_push($validate->returnData['error'], $errMsg);
 		}
@@ -2562,7 +2562,7 @@ function insertTemplateAdds(&$qls, $templateAdds, &$importedTemplateArray, $impo
 				$mediaType = $templateFunction == 'Endpoint' ? 8 : $compatibilityRecord['mediaType'];
 				$mediaCategory = $templateFunction == 'Endpoint' ? 5 : $mediaTypeArray[$mediaType]['category_id'];
 				$mediaCategoryType = $objectPortTypeArray[$portType]['category_type_id'];
-				$portTotal = array_key_exists('portLayoutX', $compatibilityRecord) ? $compatibilityRecord['portLayoutX'] * $compatibilityRecord['portLayoutY'] : 0;
+				$portTotal = array_key_exists('portX', $compatibilityRecord) ? $compatibilityRecord['portX'] * $compatibilityRecord['portY'] : 0;
 				
 				$compatibilityAttributes = array(
 					'template_id',
@@ -2645,9 +2645,9 @@ function deleteTemplateDeletes(&$qls, $templateDeletes){
 
 // Process Connections
 function processConnections(&$qls, $importedConnectionArray){
-	$query = 'TRUNCATE TABLE `table_inventory`';
+	$query = 'TRUNCATE TABLE `qls3_app_inventory`';
 	$qls->SQL->query($query);
-	$query = 'TRUNCATE TABLE `table_populated_port`';
+	$query = 'TRUNCATE TABLE `qls3_app_populated_port`';
 	$qls->SQL->query($query);
 	
 	foreach($importedConnectionArray as $connection) {

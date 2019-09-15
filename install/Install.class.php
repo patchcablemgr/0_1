@@ -504,7 +504,7 @@ var $install_error = 'There was an error with the installation! This is most lik
 			}
 
 			// Add administrator
-			if (!$this->test->query("INSERT INTO `{$database_prefix}users` (`username`,`password`,`code`,`active`,`last_login`,`last_session`,`blocked`,`tries`,`last_try`,`email`,`mask_id`,`group_id`) VALUES('{$username}','{$final_hash}','{$user_code}','yes','0','0','no','0','0','{$email}',1,1)")) {
+			if (!$this->test->query("INSERT INTO `{$database_prefix}users` (`username`,`password`,`code`,`active`,`last_login`,`last_session`,`blocked`,`tries`,`last_try`,`email`,`mask_id`,`group_id`) VALUES('{$username}','{$final_hash}','{$user_code}','yes','0','0','no','0','0','{$email}',3,3)")) {
 			    $this->test->output_error();
 			}
 			

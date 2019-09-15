@@ -471,7 +471,7 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- RU Size -->
-						<fieldset id="objectRUSize" class="dependantField templateType standard form-group">
+						<fieldset id="objectRUSize" class="form-group">
 							<label>Template Size</label>
 							<div class="inputBlock" style="margin-bottom:10px;">
 								<div style="display:inline;">RU:</div>
@@ -480,7 +480,7 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- Object Function -->
-						<fieldset id="objectFunction" class="dependantField templateType standard form-group">
+						<fieldset id="objectFunction" class="form-group">
 							<label>Template Function</label>
 							<div class="inputBlock" >
 								<div class="radio">
@@ -495,7 +495,7 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- Mounting Configuration -->
-						<fieldset id="objectMountConfig" class="dependantField templateType standard form-group">
+						<fieldset id="objectMountConfig" class="form-group">
 							<label>Mounting Configuration</label>
 							<div class="inputBlock" >
 								<div class="radio">
@@ -509,8 +509,27 @@ require_once './includes/templateFunctions.php';
 							</div>
 						</fieldset>
 						
+						<!-- Partition Type -->
+						<fieldset id="objectPartitionType" class="form-group">
+							<label>Partition Type</label>
+							<div class="inputBlock" >
+								<div class="radio">
+									<input class="partitionType" type="radio" name="partitionType" id="inputPartitionTypeGeneric" value="Generic" checked>
+									<label for="inputPartitionTypeGeneric">Generic</label>
+								</div>
+								<div class="radio">
+									<input class="partitionType" type="radio" name="partitionType" id="inputPartitionTypeConnectable" value="Connectable">
+									<label for="inputPartitionTypeConnectable">Connectable</label>
+								</div>
+								<div class="radio">
+									<input class="partitionType" type="radio" name="partitionType" id="inputPartitionTypeEnclosure" value="Enclosure">
+									<label for="inputPartitionTypeEnclosure">Enclosure</label>
+								</div>
+							</div>
+						</fieldset>
+						
 						<!-- Custom Add/Remove Partition -->
-						<fieldset id="objectPartitionAddRemove" class="dependantField templateType partitionable form-group">
+						<fieldset id="objectPartitionAddRemove" class="dependantField partitionType generic form-group">
 							<label>Add/Remove Partition</label>
 							<div class="inputBlock">
 								<div class="radio">
@@ -527,29 +546,10 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- Custom Partition Size -->
-						<fieldset id="objectPartitionSize" class="dependantField templateType partitionable form-group">
+						<fieldset id="objectPartitionSize" class="dependantField partitionType generic form-group">
 							<label>Partition Size</label>
 							<div class="inputBlock" >
 							<input id="inputCustomPartitionSize" name="customSectionSize" type="number" step="0.5" min="0.5" max="1" value="0.5" disabled />
-							</div>
-						</fieldset>
-						
-						<!-- Partition Type -->
-						<fieldset id="objectPartitionType" class="dependantField templateType standard form-group">
-							<label>Partition Type</label>
-							<div class="inputBlock" >
-								<div class="radio">
-									<input class="partitionType" type="radio" name="partitionType" id="inputPartitionTypeGeneric" value="Generic" checked>
-									<label for="inputPartitionTypeGeneric">Generic</label>
-								</div>
-								<div class="radio">
-									<input class="partitionType" type="radio" name="partitionType" id="inputPartitionTypeConnectable" value="Connectable">
-									<label for="inputPartitionTypeConnectable">Connectable</label>
-								</div>
-								<div class="radio">
-									<input class="partitionType" type="radio" name="partitionType" id="inputPartitionTypeEnclosure" value="Enclosure">
-									<label for="inputPartitionTypeEnclosure">Enclosure</label>
-								</div>
 							</div>
 						</fieldset>
 						

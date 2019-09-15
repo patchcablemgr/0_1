@@ -3,31 +3,40 @@
  * This page creates custom cabinet objects (servers, switches, routers, etc.)
  */
 
-function handleOrientationInput(){
+function handlePartitionOrientaion(){
 	var variables = getVariables();
 	var isParent = $(variables['selectedObj']).hasClass('flex-container-parent');
-	var hasChildren = $(variables['selectedObj']).children().length > 0;
+	var hasChildren = $(variables['selectedObj']).children('.flex-container').length > 0;
 	var disabledState = isParent && !hasChildren ? false : true;
 	
-	var flexDirection = $(variables['selectedObj']).css('flex-direction');
-	var selectedUnitAttr = flexDirection == 'column' ? 'data-hUnits' : 'data-vUnits';
-	var parentUnitAttr = flexDirection == 'column' ? 'data-vUnits' : 'data-hUnits';
-	var parentFlexUnits = parseInt($(variables['selectedObj']).parent().attr(parentUnitAttr), 10);
-	var spaceTaken = 0;
-	$(variables['selectedObj']).children().each(function(){
-		spaceTaken += parseInt($(this).attr(parentUnitAttr), 10)
-	});
-	var spaceAvailable = parentFlexUnits - spaceTaken;
-	
 	// Check the appropriate partition orientation radio
-	if($(variables['selectedObj']).css('flex-direction') == 'column') {
-		$('#partitionH').prop('checked', true);
-	} else {
-		$('#partitionV').prop('checked', true);
+	if(!isParent || hasChildren){
+		if($(variables['selectedObj']).css('flex-direction') == 'column') {
+			$('#partitionH').prop('checked', true);
+		} else {
+			$('#partitionV').prop('checked', true);
+		}
 	}
 	
 	$('#partitionH').prop('disabled', disabledState);
 	$('#partitionV').prop('disabled', disabledState);
+}
+
+function handlePartitionAddRemove(){
+	var variables = getVariables();
+	var isParent = $(variables['selectedObj']).hasClass('flex-container-parent');
+	var flexDirection = $(variables['selectedObj']).css('flex-direction');
+	var partitionOrientation = $('input.partitionAxis:checked').val();
+	var parentUnitAttr = partitionOrientation == 'h' ? 'data-vunits' : 'data-hunits';
+	var parentFlexUnits = parseInt($(variables['selectedObj']).parent().attr(parentUnitAttr), 10);
+	var spaceTaken = 0;
+	var spaceAvailable = parentFlexUnits - spaceTaken;
+	
+	if(isParent) {
+		$(variables['selectedObj']).children('.flex-container').each(function(){
+			spaceTaken += parseInt($(this).attr(parentUnitAttr), 10)
+		});
+	}
 	
 	// Handle partition add button
 	if(spaceAvailable == 0 || (spaceAvailable == 1 && parentFlexUnits == 1)){
@@ -42,6 +51,11 @@ function handleOrientationInput(){
 	} else {
 		$('#customPartitionRemove').removeClass('disabled').prop('disabled', false);
 	}
+}
+ 
+function handleOrientationInput(){
+	handlePartitionOrientaion();
+	handlePartitionAddRemove();
 }
 
 function loadProperties(){
@@ -182,8 +196,6 @@ function resetRUSize(){
 }
 
 function setDefaultData(obj){
-	var templateType = $('input[name="objectTypeRadio"]:checked').val();
-	var partitionType = templateType == 'Standard' ? 'Generic' : 'Connectable';
 	var portNameFormat = [
 		{
 			type:"static",
@@ -202,7 +214,7 @@ function setDefaultData(obj){
 	$(obj).data('portLayoutY', 1);
 	$(obj).data('encLayoutX', 0);
 	$(obj).data('encLayoutY', 0);
-	$(obj).data('partitionType', partitionType);
+	$(obj).data('partitionType', 'Generic');
 	$(obj).data('portOrientation', 1);
 	$(obj).data('portType', 1);
 	$(obj).data('mediaType', 1);
@@ -603,6 +615,7 @@ function togglePartitionTypeDependencies(){
 	$('.dependantField.partitionType').hide();
 	switch(partitionType) {
 		case 'Generic':
+			$('.dependantField.partitionType.generic').show().prop('disabled', false);
 			break;
 			
 		case 'Connectable':
@@ -621,23 +634,6 @@ function togglePartitionTypeDependencies(){
 		case 'Enclosure':
 			$('.dependantField.partitionType.enclosure').show();
 			break;
-	}
-}
-
-function toggleTemplateTypeDependencies(partitionable){
-	var templateType = $('#objectType').find('.objectType:checked').val();
-	$('.dependantField.templateType').hide();
-	switch(templateType) {
-		case 'Standard':
-			$('.dependantField.templateType.standard').show().prop('disabled', false);
-			break;
-		
-		case 'Insert':
-			$('.dependantField.templateType.insert').show().prop('disabled', false);
-			break;
-	}
-	if(partitionable) {
-		$('.dependantField.templateType.partitionable').show().prop('disabled', false);
 	}
 }
 
@@ -1224,7 +1220,6 @@ $( document ).ready(function() {
 		buildObj(x, 10, 2, 'column');
 	}
 	setCategory();
-	toggleTemplateTypeDependencies(true);
 	
 	$('#objDelete').click(function(){
 		var templateID = $('#availableContainer').find('.rackObjSelected').closest('[data-templateid]').attr('data-templateid');
@@ -1522,21 +1517,24 @@ $( document ).ready(function() {
 	
 	// Object Type
 	$('input.objectType').on('change', function(){
-		var variables = getVariables();
 		var category = $('#inputCategory').find('option:selected').attr('data-value');
 		
 		$('.dependantField').hide();
 		
 		switch($(this).val()) {
 			case 'Insert':
-				// Default mounting config, only Endpoints can be 4-post
+				// Inserts cannot be enclosures
+				$('#inputPartitionTypeEnclosure').prop('disabled', true);
+				
+				// Inserts cannot be 4-post mountable
 				$('.sideSelector').prop('disabled', true);
 				$('#inputSideCount2Post').prop('checked', true);
 				$('#sideSelectorFront').prop('checked', true);
 				switchSides(0);
+				
+				// Variables must be retrieved after switchSides() because it updates the reference to the currently selected object
+				var variables = getVariables();
 				loadProperties();
-				//setInputValues(true);
-				toggleTemplateTypeDependencies(false);
 				handleOrientationInput();
 				
 				// Disable relevant input fields
@@ -1551,7 +1549,6 @@ $( document ).ready(function() {
 					//Determine if insert is able to be partitioned
 					var numRows = $(this).find('tr').length;
 					var numCols = $(this).find('td').length;
-					var partitionable = numRows > 1 || numCols > 1 ? false : true;
 					
 					var enclosureParent = $(this).parent();
 					var enclosureObject = $(this).closest('.flex-container-parent');
@@ -1586,7 +1583,6 @@ $( document ).ready(function() {
 					.find('.selectedEnclosure')
 					.find('tr:first')
 					.find('td:first')
-					.addClass('rackObjSelected')
 					.removeClass('enclosureTable')
 					//.data(data)
 					.html('<div id="previewObj3" class="objBaseline" data-hUnits="'+hUnits+'" data-vUnits="'+vUnits+'" data-encLayoutX="'+encLayoutX+'" data-encLayoutY="'+encLayoutY+'"></div>');
@@ -1598,7 +1594,6 @@ $( document ).ready(function() {
 					setObjectSize();
 					buildObj(3, hUnits, vUnits, objectFlexDirection);
 					setCategory();
-					toggleTemplateTypeDependencies(partitionable);
 					togglePartitionTypeDependencies();
 					buildPortTable();
 					updatePortNameDisplay();
@@ -1606,13 +1601,15 @@ $( document ).ready(function() {
 				break;
 				
 			case 'Standard':
+				// Variables must be retrieved here... see above comment under 'Insert' case
+				var variables = getVariables();
+				$('#inputPartitionTypeEnclosure').prop('disabled', false);
 				for(x=0; x<2; x++) {
 					buildObj(x, 10, 2, 'column');
 				}
 				$('#inputCurrentSide').val(0);
 				expandRackUnit(variables['RUSize']);
 				setObjectSize();
-				toggleTemplateTypeDependencies(true);
 				setCategory();
 				
 				// Remove the click hook from enclosure elements
@@ -1666,7 +1663,6 @@ $( document ).ready(function() {
 	
 	// Prevent Modal if Invoker is Disabled
 	$('#portNameModal').on('hide.bs.modal', function (e) {
-		console.log($(document).data('portNameFormatAction'));
 		if($(document).data('portNameFormatAction') == 'edit') {
 			// Gather user input
 			var data = {
@@ -1866,6 +1862,11 @@ $( document ).ready(function() {
 			$('#portNameResults').append(item+'<br>');
 		});
 		$('#portNameResults').append('...');
+	});
+	
+	// Custom Partition Orientation
+	$('.partitionAxis').on('change', function(){
+		handlePartitionAddRemove();
 	});
 	
 	// Custom Partition Add

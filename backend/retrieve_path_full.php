@@ -4,7 +4,7 @@ require_once '../includes/header.php';
 $qls->Security->check_auth_page('user.php');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-	require_once '../includes/Validate.class.php';
+	include_once $_SERVER['DOCUMENT_ROOT'].'/includes/Validate.class.php';
 	
 	$validate = new Validate($qls);
 	
@@ -24,12 +24,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$objDepth = isset($data['partitionDepth']) ? $data['partitionDepth'] : false;
 		
 		// Functions required to create $path
-		require_once '../includes/path_functions.php';
+		include_once $_SERVER['DOCUMENT_ROOT'].'/includes/path_functions.php';
 		// Create $path
 		if($connectorCode39) {
-			include_once './includes/content_cable_path.php';
+			include_once $_SERVER['DOCUMENT_ROOT'].'/includes/content_cable_path.php';
 		} else {
-			include_once './includes/content_port_path.php';
+			include_once $_SERVER['DOCUMENT_ROOT'].'/includes/content_port_path.php';
 		}
 		
 		$validate->returnData['success'] = $qls->App->buildPathFull($path);
