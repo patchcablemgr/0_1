@@ -97,14 +97,14 @@ while($row = $qls->SQL->fetch_assoc($query)) {
 		
 // Open ZIP File
 $zip = new ZipArchive();
-$zipFilename = './userDownloads/export.zip';
+$zipFilename = $_SERVER['DOCUMENT_ROOT'].'/userDownloads/export.zip';
 if ($zip->open($zipFilename, ZipArchive::CREATE | ZipArchive::OVERWRITE)!==TRUE) {
-    exit("cannot open <$filename>\n");
+    die('Cannot open zip file.');
 }
 
 // ####### Cabinets #######
 // Create File
-$fileCabinets = fopen('./userDownloads/Cabinets.csv', 'w');
+$fileCabinets = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinets.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -158,7 +158,7 @@ foreach($csvArray as $line) {
 
 // ####### Cabinet Cable Paths #######
 // Create File
-$fileCabinetCablePaths = fopen('./userDownloads/Cabinet Cable Paths.csv', 'w');
+$fileCabinetCablePaths = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv', 'w');
 
 $csvHeader = array(
 	'Cabinet A',
@@ -187,7 +187,7 @@ foreach($csvArray as $line) {
 
 // ####### Cabinet Objects #######
 // Create File
-$fileCabinetObjects = fopen('./userDownloads/Cabinet Objects.csv', 'w');
+$fileCabinetObjects = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -228,7 +228,7 @@ foreach($csvArray as $line) {
 
 // ####### Object Inserts #######
 // Create File
-$fileObjectInserts = fopen('./userDownloads/Object Inserts.csv', 'w');
+$fileObjectInserts = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv', 'w');
 
 $csvHeader = array(
 	'**Object',
@@ -309,7 +309,7 @@ foreach($csvArray as $object) {
 
 // ####### Templates #######
 // Create File
-$fileTemplates = fopen('./userDownloads/Templates.csv', 'w');
+$fileTemplates = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Templates.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -376,7 +376,7 @@ foreach($csvArray as $line) {
 
 // ####### Categories #######
 // Create File
-$fileCategories = fopen('./userDownloads/Categories.csv', 'w');
+$fileCategories = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Categories.csv', 'w');
 
 $csvHeader = array(
 	'Name',
@@ -410,7 +410,7 @@ foreach($csvArray as $line) {
 
 // ####### Connections #######
 // Create File
-$fileConnections = fopen('./userDownloads/Connections.csv', 'w');
+$fileConnections = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv', 'w');
 
 $csvHeader = array(
 	'PortA',
@@ -517,18 +517,43 @@ fclose($fileTemplates);
 fclose($fileCategories);
 fclose($fileConnections);
 
-$zip->addFile('./userDownloads/Categories.csv', '01 - Categories.csv');
-$zip->addFile('./userDownloads/Templates.csv', '02 - Templates.csv');
-$zip->addFile('./userDownloads/Cabinets.csv', '03 - Cabinets.csv');
-$zip->addFile('./userDownloads/Cabinet Cable Paths.csv', '04 - Cabinet Cable Paths.csv');
-$zip->addFile('./userDownloads/Cabinet Objects.csv', '05 - Cabinet Objects.csv');
-$zip->addFile('./userDownloads/Object Inserts.csv', '06 - Object Inserts.csv');
-$zip->addFile('./userDownloads/Connections.csv', '07 - Connections.csv');
-$zip->addFile('./userDownloads/README.txt', 'README.txt');
+// Add database data
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Categories.csv', '01 - Categories.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Templates.csv', '02 - Templates.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinets.csv', '03 - Cabinets.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv', '04 - Cabinet Cable Paths.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv', '05 - Cabinet Objects.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv', '06 - Object Inserts.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv', '07 - Connections.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/README.txt', 'README.txt');
+
+// Add template images
+if ($templateImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/templateImages/')) {
+	while (false !== ($templateImageFile = readdir($templateImageDir))) {
+		if ($templateImageFile != "." && $templateImageFile != "..") {
+			$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/images/templateImages/'.$templateImageFile, 'templateImages/'.$templateImageFile);
+		}
+	}
+	closedir($templateImageDir);
+} else {
+	die('Could not open template image directory.');
+}
+
+// Add floorplan images
+if ($floorplanImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/')) {
+	while (false !== ($floorplanImageFile = readdir($floorplanImageDir))) {
+		if ($floorplanImageFile != "." && $floorplanImageFile != "..") {
+			$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/'.$floorplanImageFile, 'floorplanImages/'.$floorplanImageFile);
+		}
+	}
+	closedir($floorplanImageDir);
+} else {
+	die('Could not open floorplan image directory.');
+}
 
 $zip->close();
 
-$yourfile = './userDownloads/export.zip';
+$yourfile = $_SERVER['DOCUMENT_ROOT'].'/userDownloads/export.zip';
 
 $file_name = basename($yourfile);
 

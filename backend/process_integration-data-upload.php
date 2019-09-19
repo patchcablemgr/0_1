@@ -23,7 +23,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			'maxSize' => 2, //Maximum Size of files {null, Number(in MB's)}
 			'extensions' => array('zip'), //Whitelist for file extension. {null, Array(ex: array('jpg', 'png'))}
 			'required' => false, //Minimum one file is required for upload {Boolean}
-			'uploadDir' => './userUploads/', //Upload directory {String}
+			'uploadDir' => $_SERVER['DOCUMENT_ROOT'].'/userUploads/', //Upload directory {String}
 			'title' => $filename, //New file name {null, String, Array} *please read documentation in README.md
 			'removeFiles' => true, //Enable file exclusion {Boolean(extra for jQuery.filer), String($_POST field name containing json data with file names)}
 			'perms' => null, //Uploaded file permisions {null, Number}
@@ -48,7 +48,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			
 			$zipFilename = $data['data']['metas'][0]['name'];
 			$zip = new ZipArchive;
-			$res = $zip->open('./userUploads/'.$zipFilename);
+			$res = $zip->open($_SERVER['DOCUMENT_ROOT'].'/userUploads/'.$zipFilename);
 			if ($res === TRUE) {
 				// Get Filenames
 				$filenameArray = array();
@@ -64,7 +64,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				}
 				
 				// Extract Files
-				$zip->extractTo('./userUploads/');
+				$zip->extractTo($_SERVER['DOCUMENT_ROOT'].'/userUploads/');
 				$zip->close();
 				
 // Prepare Required Data
@@ -188,7 +188,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$importedCabinetOccupancyArray = array();
 				
 				foreach($expectedFilenames as $csvFilename) {
-					if($csvFile = fopen('./userUploads/'.$csvFilename, 'r')) {
+					if($csvFile = fopen($_SERVER['DOCUMENT_ROOT'].'/userUploads/'.$csvFilename, 'r')) {
 						if($csvFilename == '03 - Cabinets.csv') {
 							$csvLineNumber = 0;
 							while($csvLine = fgetcsv($csvFile)) {
@@ -259,8 +259,20 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				validateImportedTemplates($importedTemplateArray, $existingTemplateArray, $importedCategoryArray, $validate);
 				validateImportedObjects($importedObjectArray, $existingObjectArray, $importedCabinetArray, $importedTemplateArray, $existingTemplateArray, $existingCabinetOccupancyArray, $validate);
 				validateImportedInserts($importedInsertArray, $existingInsertArray, $importedObjectArray, $importedTemplateArray, $validate);
+				$templateImageArray = validateImportedImages('templateImages', 'template', $validate);
+				$floorplanImageArray = validateImportedImages('floorplanImages', 'floorplan', $validate);
 				
 				if(count($validate->returnData['error']) == 0) {
+					// Copy template images
+					foreach($templateImageArray as $templateImage) {
+						copy($_SERVER['DOCUMENT_ROOT'].'/userUploads/templateImages/'.$templateImage, $_SERVER['DOCUMENT_ROOT'].'/images/templateImages/'.$templateImage);
+					}
+					
+					// Copy florplan images
+					foreach($floorplanImageArray as $floorplanImage) {
+						copy($_SERVER['DOCUMENT_ROOT'].'/userUploads/floorplanImages/'.$floorplanImage, $_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/'.$floorplanImage);
+					}
+					
 					$qls->SQL->transaction('BEGIN');
 					
 					// Find Category Changes
@@ -1565,6 +1577,46 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 	}
 }
 
+function validateImportedImages($dir, $imageType, &$validate){
+	// Validate Images
+	$imageExtensionArray = array('png','jpg','gif','jpeg');
+	
+	// Template Images
+	$imageArray = array();
+	if ($imageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/userUploads/'.$dir.'/')) {
+		while (false !== ($imageFile = readdir($imageDir))) {
+			if ($imageFile != "." && $imageFile != "..") {
+				$imageFileArray = explode('.', $imageFile);
+				$extension = strtolower($imageFileArray[count($imageFileArray)-1]);
+				error_log($extension);
+				$existingFilename = $_SERVER['DOCUMENT_ROOT'].'/images/'.$dir.'/'.$imageFile;
+				$importFilename = $_SERVER['DOCUMENT_ROOT'].'/userUploads/'.$dir.'/'.$imageFile;
+				// Do not copy if file already exists
+				if (!file_exists($existingFilename)) {
+					// Do not copy if file is larger than 1MB
+					if (filesize($importFilename) < 1000000) {
+						// Do not copy if file extension is not image
+						if (in_array($extension, $imageExtensionArray)) {
+							array_push($imageArray, $imageFile);
+						} else {
+							$errMsg = ucfirst($imageType).' image file extension is not valid: '.$imageFile;
+							array_push($validate->returnData['error'], $errMsg);
+						}
+					} else {
+						$errMsg = ucfirst($imageType).' image file is too large: '.$imageFile;
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				}
+			}
+		}
+		closedir($imageDir);
+	} else {
+		$errMsg = 'Could not open '.$imageType.' image directory.';
+		array_push($validate->returnData['error'], $errMsg);
+	}
+	
+	return $imageArray;
+}
 
 
 // Cabinet Changes

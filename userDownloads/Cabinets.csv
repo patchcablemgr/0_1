@@ -1,0 +1,5 @@
+Name,Type,"RU Size","Adj Left","Adj Right","*Original Cabinet"
+Location,location,,,,Location
+Location.Sub-Location,location,,,,Location.Sub-Location
+Location.Sub-Location.Pod,pod,,,,Location.Sub-Location.Pod
+Location.Sub-Location.Pod.Cab1,cabinet,42,,,Location.Sub-Location.Pod.Cab1

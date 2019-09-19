@@ -1,6 +1,23 @@
+# Composer includes
 includes/composer.phar
 includes/composer-setup.php
 includes/composer.lock
 includes/vendor
-includes/database_info.php 
+
+# System generated
 includes/database_info.php
+
+# User upload/download working directories
+app/app/public/userDownloads/*
+app/app/public/userUploads/*
+!app/app/public/userDownloads/.keep
+!app/app/public/userUploads/.keep
+
+# Floorplan images
+app/app/public/images/floorplanImages/*
+!app/app/public/images/floorplanImages/floorplan-default.png
+
+# Template images
+app/app/public/images/templateImages/*
+# 6p_LC_OM4
+!app/app/public/images/templateImages/f782af8c83a096a188ba333d0039aaf7.jpg

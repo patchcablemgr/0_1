@@ -17,7 +17,7 @@ class Validate {
 		);
 		$this->nameRegEx = '/^[a-zA-Z0-9-\/\\\_]{0,250}$/';
 		$this->textRegEx = '/^[a-zA-Z0-9\/\\\-\_\s]{0,250}$/';
-		$this->IDRegEx = '/^[1-9]$|^[1-9][0-9]+$/';
+		$this->IDRegEx = '/^[0-9]$|^[1-9][0-9]+$/';
 		$this->portIDRegEx = '/^[0-9]+$/';
 		$this->portNameFieldIncrementalRegEx = '/^[a-zA-Z]$|^[0-9]$|^[1-9][0-9]+$/';
 	}

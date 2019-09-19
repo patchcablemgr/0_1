@@ -471,7 +471,7 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- RU Size -->
-						<fieldset id="objectRUSize" class="form-group">
+						<fieldset id="objectRUSize" class="dependantField objectType standard form-group">
 							<label>Template Size</label>
 							<div class="inputBlock" style="margin-bottom:10px;">
 								<div style="display:inline;">RU:</div>
@@ -480,7 +480,7 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- Object Function -->
-						<fieldset id="objectFunction" class="form-group">
+						<fieldset id="objectFunction" class="dependantField objectType standard form-group">
 							<label>Template Function</label>
 							<div class="inputBlock" >
 								<div class="radio">
@@ -495,7 +495,7 @@ require_once './includes/templateFunctions.php';
 						</fieldset>
 						
 						<!-- Mounting Configuration -->
-						<fieldset id="objectMountConfig" class="form-group">
+						<fieldset id="objectMountConfig" class="dependantField objectType standard form-group">
 							<label>Mounting Configuration</label>
 							<div class="inputBlock" >
 								<div class="radio">
@@ -563,6 +563,21 @@ require_once './includes/templateFunctions.php';
 							<div class="inputBlock" >
 								<div style="display:inline;">Row:</div>
 								<input style="position:absolute; left:40px;" id="inputEnclosureLayoutY" name="encLayoutY" type="number" min="1" max="12" value="1"/>
+							</div>
+						</fieldset>
+						
+						<!-- Enclosure Insert Fitment -->
+						<fieldset id="objectEnclosureInsertFitment" class="dependantField partitionType enclosure form-group">
+							<label>Enclosure Insert Fitment</label>
+							<div class="inputBlock" >
+								<div class="radio">
+									<input class="enclosureInsertFitment" type="radio" name="enclosureInsertFitment" id="inputEnclosureInsertFitmentStrict" value="Strict" checked>
+									<label for="inputEnclosureInsertFitmentStrict">Strict</label>
+								</div>
+								<div class="radio">
+									<input class="enclosureInsertFitment" type="radio" name="enclosureInsertFitment" id="inputEnclosureInsertFitmentLoose" value="Loose">
+									<label for="inputEnclosureInsertFitmentLoose">Loose</label>
+								</div>
 							</div>
 						</fieldset>
 						

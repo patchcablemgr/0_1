@@ -238,7 +238,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 						insertTableInventory($qls, $objID, $objFace, $objDepth, $objPort, $elementID, $elementFace, $elementDepth, $elementPort);
 					}
 					
-					include_once './includes/content_port_path.php';
+					include_once $_SERVER['DOCUMENT_ROOT'].'/includes/content_port_path.php';
 				
 					$validate->returnData['success']['pathFull'] = buildPathFull($path);
 					$validate->returnData['success']['peerPortID'] = $peerPortID;

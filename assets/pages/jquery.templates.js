@@ -109,9 +109,10 @@ function setInputValues(defaultValues){
 		
 		var encLayoutX = 0;
 		var encLayoutY = 0;
+		var encInsertFitment = 'Strict';
 		var portLayoutX = 1;
 		var portLayoutY = 1;
-		var partitionType = templateType == 'Standard' ? 'Generic' : 'Connectable';
+		var partitionType = 'Generic';
 		var portOrientation = 1;
 		var portType = 1;
 		var mediaType = 1;
@@ -120,6 +121,7 @@ function setInputValues(defaultValues){
 		
 		var encLayoutX = $(variables['selectedObj']).data('encLayoutX');
 		var encLayoutY = $(variables['selectedObj']).data('encLayoutY');
+		var encInsertFitment = $(variables['selectedObj']).data('encInsertFitment');
 		var portLayoutX = $(variables['selectedObj']).data('portLayoutX');
 		var portLayoutY = $(variables['selectedObj']).data('portLayoutY');
 		var partitionType = $(variables['selectedObj']).data('partitionType');
@@ -129,6 +131,7 @@ function setInputValues(defaultValues){
 	}
 	$('#inputEnclosureLayoutX').val(encLayoutX);
 	$('#inputEnclosureLayoutY').val(encLayoutY);
+	$('[name="enclosureInsertFitment"][value='+encInsertFitment+']').prop('checked', true);
 	$('#inputPortLayoutX').val(portLayoutX);
 	$('#inputPortLayoutY').val(portLayoutY);
 	$('[name="partitionType"][value='+partitionType+']').prop('checked', true);
@@ -212,8 +215,9 @@ function setDefaultData(obj){
 	
 	$(obj).data('portLayoutX', 1);
 	$(obj).data('portLayoutY', 1);
-	$(obj).data('encLayoutX', 0);
-	$(obj).data('encLayoutY', 0);
+	$(obj).data('encLayoutX', 1);
+	$(obj).data('encLayoutY', 1);
+	$(obj).data('encInsertFitment', 'Strict');
 	$(obj).data('partitionType', 'Generic');
 	$(obj).data('portOrientation', 1);
 	$(obj).data('portType', 1);
@@ -262,16 +266,30 @@ function addPartition(){
 }
 
 function buildTable(inputX, inputY, className){
+	/*
 	var table = "<table style='border-collapse: collapse;height:100%;width:100%;'>";
 	for (y = 0; y < inputY; y++){
 		//Create table row and calculate height
-		table += '<tr class="'+className+'" style="width:100%;height:'+100/inputY+'%;">';
+		table += '<tr class="'+className+'" style="width:100%;height:'+Math.floor(100/inputY)+'%;">';
 		for (x = 0; x < inputX; x++){
-			table += '<td class="'+className+'" style="width:'+100/inputX+'%;height:'+100/inputY+'%;"></td>';
+			table += '<td class="'+className+'" style="width:'+100/inputX+'%;height:'+Math.floor(100/inputY)+'%;"></td>';
 		}
 		table+= "</tr>";
 	}
 	table += "</table>";
+	*/
+	var table = '';
+	//table += '<div style="flex:1;display:flex;flex-direction:row;">';
+	for (y = 0; y < inputY; y++){
+		//Create table row and calculate height
+		
+		table += '<div class="'+className+' tableRow">';
+		for (x = 0; x < inputX; x++){
+			table += '<div class="tableCol"></div>';
+		}
+		table += '</div>';
+	}
+	//table += '</div>';
 	return table;
 }
 
@@ -633,6 +651,20 @@ function togglePartitionTypeDependencies(){
 			
 		case 'Enclosure':
 			$('.dependantField.partitionType.enclosure').show();
+			break;
+	}
+}
+
+function toggleObjectTypeDependencies(){
+	var objectType = $('input.objectType:checked').val();
+	$('.dependantField.objectType').hide();
+	switch(objectType) {
+		case 'Standard':
+			$('.dependantField.objectType.standard').show().prop('disabled', false);
+			break;
+			
+		case 'Insert':
+			$('.dependantField.objectType.insert').show().prop('disabled', false);
 			break;
 	}
 }
@@ -1190,6 +1222,8 @@ function initializeTemplateCatalog(){
 }
 
 $( document ).ready(function() {
+	toggleObjectTypeDependencies();
+	
 	$('#containerTemplateCatalog').load('https://patchcablemgr.com/public/template-catalog.php', function(){
 		initializeTemplateCatalog();
 	});
@@ -1518,8 +1552,7 @@ $( document ).ready(function() {
 	// Object Type
 	$('input.objectType').on('change', function(){
 		var category = $('#inputCategory').find('option:selected').attr('data-value');
-		
-		$('.dependantField').hide();
+		toggleObjectTypeDependencies();
 		
 		switch($(this).val()) {
 			case 'Insert':
@@ -1595,8 +1628,8 @@ $( document ).ready(function() {
 					buildObj(3, hUnits, vUnits, objectFlexDirection);
 					setCategory();
 					togglePartitionTypeDependencies();
-					buildPortTable();
-					updatePortNameDisplay();
+					//buildPortTable();
+					//updatePortNameDisplay();
 				});
 				break;
 				
@@ -1943,6 +1976,13 @@ $( document ).ready(function() {
 		
 		//Apply the selected category to the active object
 		$(".activeObj").addClass($('#inputCategory').find('option:selected').attr('data-value'));
+	});
+	
+	// Enclosure Strict Insert Fitment
+	$('[id^=inputEnclosureInsertFitment]').on('change', function(){
+		var enclosureInsertFitment = $(this).val();
+		var variables = getVariables();
+		$(variables['selectedObj']).data('encInsertFitment', enclosureInsertFitment);
 	});
 	
 	//Port Layout

@@ -634,7 +634,6 @@ var $qls;
 			}
 		} else {
 			$objName = $obj['name'];
-			error_log('templateID: '.$templateID.' objFace: '.$objFace.' objDepth: '.$objDepth);
 			$objCompatibility = $this->compatibilityArray[$templateID][$objFace][$objDepth];
 			$partitionFunction = $objCompatibility['partitionFunction'];
 			$portNameFormat = json_decode($objCompatibility['portNameFormat'], true);

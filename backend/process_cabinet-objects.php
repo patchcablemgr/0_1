@@ -182,19 +182,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$validate->returnData['success'] = $name;
 		} else if($action == 'delete') {
 			$objectID = $data['objectID'];
-			$safeToDelete = false;
+			$safeToDelete = true;
 			
 			// Check object for connections
-			if(!isset($qls->app->inventoryArray[$objectID])) {
-				$safeToDelete = true;
+			if(isset($qls->App->inventoryArray[$objectID])) {
+				$safeToDelete = false;
 			}
 			
 			// Check insert(s) for connections
 			if(isset($qls->App->insertArray[$objectID])) {
 				foreach($qls->App->insertArray[$objectID] as $insert) {
 					$insertID = $insert['id'];
-					if(!isset($qls->app->inventoryArray[$insertID])) {
-						$safeToDelete = true;
+					if(isset($qls->App->inventoryArray[$insertID])) {
+						$safeToDelete = false;
 					}
 				}
 			}
@@ -235,6 +235,7 @@ function checkInsertCompatibility($parent_id, $parent_face, $parent_depth, $obje
 	$parent = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $parentTemplateID), 'AND', 'side' => array('=', $parent_face), 'AND', 'depth' => array('=', $parent_depth))));
 	$insert = $qls->SQL->fetch_assoc($qls->SQL->select('*', 'app_object_templates', 'id='.$objectTemplateID));
 	
+	/*
 	if($parent['hUnits'] != $insert['templateHUnits']) {
 		$compatible = false;
 	}
@@ -247,6 +248,7 @@ function checkInsertCompatibility($parent_id, $parent_face, $parent_depth, $obje
 	if($parent['encLayoutY'] != $insert['templateEncLayoutY']) {
 		$compatible = false;
 	}
+	*/
 	if($parent['partitionFunction'] != $insert['templateFunction']) {
 		$compatible = false;
 	}

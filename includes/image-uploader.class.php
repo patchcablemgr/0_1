@@ -330,7 +330,7 @@ class Uploader {
 		$type = is_array($conf) && isset($conf[0]) ? $conf[0] : $conf;
         $type = $type ? $type : 'name';
 		$length = is_array($conf) && isset($conf[1]) ? $conf[1] : null;
-		$random_string = substr(str_shuffle("_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length ? $length : 10);
+		$random_string = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length ? $length : 10);
 		$string = "";
 		
 		switch($type){

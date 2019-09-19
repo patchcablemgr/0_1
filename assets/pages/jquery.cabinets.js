@@ -1502,7 +1502,7 @@ $( document ).ready(function() {
 			};
 		data = JSON.stringify(data);
 		
-		$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
+		$.post('/backend/process_environment-tree.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
 				window.location.replace("/");
@@ -1524,7 +1524,7 @@ $( document ).ready(function() {
 			};
 		data = JSON.stringify(data);
 		
-		$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
+		$.post('/backend/process_environment-tree.php', {data:data}, function(response){
 			var responseJSON = JSON.parse(response);
 			if (responseJSON.active == 'inactive'){
 				window.location.replace("/");
@@ -1613,7 +1613,7 @@ function customMenu(node) {
 					type: 'location'
 				};
 				data = JSON.stringify(data);
-				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
+				$.post('/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
 						window.location.replace("/");
@@ -1647,7 +1647,7 @@ function customMenu(node) {
 					type: 'pod'
 				};
 				data = JSON.stringify(data);
-				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
+				$.post('/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
 						window.location.replace("/");
@@ -1681,7 +1681,7 @@ function customMenu(node) {
 					type: 'cabinet'
 				};
 				data = JSON.stringify(data);
-				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
+				$.post('/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
 						window.location.replace("/");
@@ -1715,7 +1715,7 @@ function customMenu(node) {
 					type: 'floorplan'
 				};
 				data = JSON.stringify(data);
-				$.post('/app/backend/process_environment-tree.php', {data:data}, function(response){
+				$.post('/backend/process_environment-tree.php', {data:data}, function(response){
 					var responseJSON = JSON.parse(response);
 					if (responseJSON.active == 'inactive'){
 						window.location.replace("/");
