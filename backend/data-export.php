@@ -527,10 +527,21 @@ $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv', '06
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv', '07 - Connections.csv');
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/README.txt', 'README.txt');
 
+// Identify template images in use
+$templateImageArray = array();
+foreach($qls->App->templateArray as $template) {
+	if($template['frontImage']) {
+		array_push($templateImageArray, $template['frontImage']);
+	}
+	if($template['rearImage']) {
+		array_push($templateImageArray, $template['rearImage']);
+	}
+}
+
 // Add template images
 if ($templateImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/templateImages/')) {
 	while (false !== ($templateImageFile = readdir($templateImageDir))) {
-		if ($templateImageFile != "." && $templateImageFile != "..") {
+		if (in_array($templateImageFile, $templateImageArray)) {
 			$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/images/templateImages/'.$templateImageFile, 'templateImages/'.$templateImageFile);
 		}
 	}
@@ -539,10 +550,18 @@ if ($templateImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/templateImage
 	die('Could not open template image directory.');
 }
 
+// Identify flooplan images in use
+$floorplanImageArray = array();
+foreach($qls->App->envTreeArray as $env) {
+	if($env['floorplan_img']) {
+		array_push($floorplanImageArray, $env['floorplan_img']);
+	}
+}
+
 // Add floorplan images
 if ($floorplanImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/')) {
 	while (false !== ($floorplanImageFile = readdir($floorplanImageDir))) {
-		if ($floorplanImageFile != "." && $floorplanImageFile != "..") {
+		if (in_array($floorplanImageFile, $floorplanImageArray)) {
 			$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/'.$floorplanImageFile, 'floorplanImages/'.$floorplanImageFile);
 		}
 	}

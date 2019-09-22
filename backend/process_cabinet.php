@@ -152,7 +152,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$query = $qls->SQL->select('*', 'app_object_peer', array('floorplan_peer' => array('=', 1)));
 			while($row = $qls->SQL->fetch_assoc($query)) {
 				$objectID = $row['a_id'];
-				if(!count($peerData[$objectID])) {
+				if(!isset($peerData[$objectID])) {
 					$peerData[$objectID] = array();
 				}
 				array_push($peerData[$objectID], $row);
