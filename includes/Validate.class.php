@@ -20,6 +20,7 @@ class Validate {
 		$this->IDRegEx = '/^[0-9]$|^[1-9][0-9]+$/';
 		$this->portIDRegEx = '/^[0-9]+$/';
 		$this->portNameFieldIncrementalRegEx = '/^[a-zA-Z]$|^[0-9]$|^[1-9][0-9]+$/';
+		$this->md5RegEx = '/^[a-f0-9]{32}$/';
 	}
 	
 	//
@@ -154,6 +155,21 @@ class Validate {
 		} else {
 			if (!preg_match('/^[0-9]+$/', $input)){
 				$errorMsg = $errMsg ? $errMsg : 'Invalid RU.';
+				array_push($this->returnData['error'], $errorMsg);
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	function validateMD5($input, $errMsg=false) {
+		if (!isset($input)){
+			$errorMsg = $errMsg ? $errMsg : 'Value is required.';
+			array_push($this->returnData['error'], $errorMsg);
+			return false;
+		} else {
+			if (!preg_match($this->md5RegEx, $input)){
+				$errorMsg = $errMsg ? $errMsg : 'Invalid value.';
 				array_push($this->returnData['error'], $errorMsg);
 				return false;
 			}

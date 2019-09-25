@@ -55,7 +55,7 @@ $objectArray = array();
 $insertArray = array();
 $query = $qls->SQL->select('*', 'app_object');
 while($row = $qls->SQL->fetch_assoc($query)) {
-	if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
+	//if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
 		if($row['parent_id'] == 0) {
 			$objectArray[$row['id']] = $row;
 		} else {
@@ -92,7 +92,7 @@ while($row = $qls->SQL->fetch_assoc($query)) {
 			$insertArray[$parentID][$parentFace]['enclosureCount'] = $insertArray[$parentID][$parentFace]['enclosureCount'] + 1;
 			$insertArray[$parentID][$parentFace][$parentDepth][$encX][$encY] = $row;
 		}
-	}
+	//}
 }
 		
 // Open ZIP File
@@ -112,7 +112,8 @@ $csvHeader = array(
 	'RU Size',
 	'Adj Left',
 	'Adj Right',
-	'*Original Cabinet'
+	'*Original Cabinet',
+	'**Floorplan Image'
 );
 
 fputcsv($fileCabinets,$csvHeader);
@@ -120,9 +121,9 @@ fputcsv($fileCabinets,$csvHeader);
 $envTreeArray = array();
 $query = $qls->SQL->select('*', 'app_env_tree');
 while($row = $qls->SQL->fetch_assoc($query)) {
-	if($row['type'] != 'floorplan') {
-		$envTreeArray[$row['id']] = $row;
-	}
+	//if($row['type'] != 'floorplan') {
+	$envTreeArray[$row['id']] = $row;
+	//}
 }
 
 foreach($envTreeArray as &$entry) {
@@ -138,6 +139,7 @@ foreach($envTreeArray as &$entry) {
 $csvArray = array();
 foreach($envTreeArray as $location) {
 	$size = $location['type'] == 'cabinet' ? $location['size'] : '';
+	$floorplanImg = $location['type'] == 'floorplan' ? $location['floorplan_img'] : '';
 	$adjLeft = isset($envAdjArray[$location['id']]) ? $envTreeArray[$envAdjArray[$location['id']]['left']]['nameString'] : '';
 	$adjRight = isset($envAdjArray[$location['id']]) ? $envTreeArray[$envAdjArray[$location['id']]['right']]['nameString'] : '';
 	$line = array(
@@ -146,7 +148,8 @@ foreach($envTreeArray as $location) {
 		$size,
 		$adjLeft,
 		$adjRight,
-		$location['nameString']
+		$location['nameString'],
+		$floorplanImg
 	);
 	$csvArray[$location['nameString']] = $line;
 }
@@ -195,20 +198,29 @@ $csvHeader = array(
 	'**Template',
 	'RU',
 	'Cabinet Face',
-	'*Original Object'
+	'*Original Object',
+	'**Flooplan Object X',
+	'**Flooplan Object Y'
 );
 fputcsv($fileCabinetObjects, $csvHeader);
 
 $csvArray = array();
 foreach($objectArray as $object) {
+	$floorplanObj = (1 <= $object['template_id'] and $object['template_id'] <= 3) ? true : false;
 	$name = $object['name'];
 	$cabinet = $envTreeArray[$object['env_tree_id']]['nameString'];
-	$template = $templateArray[$object['template_id']]['templateName'];
-	$RUSize = $templateArray[$object['template_id']]['templateRUSize'];
-	$topRU = $object['RU'];
-	$bottomRU = $topRU - ($RUSize - 1);
-	$cabinetFace = $object['cabinet_front'] == 0 ? 'Front' : 'Rear';
+	$template = $floorplanObj ? '' : $templateArray[$object['template_id']]['templateName'];
+	$RUSize = $floorplanObj ? '' : $templateArray[$object['template_id']]['templateRUSize'];
+	$topRU = $floorplanObj ? '' : $object['RU'];
+	$bottomRU = $floorplanObj ? '' : $topRU - ($RUSize - 1);
+	if($floorplanObj) {
+		$cabinetFace = '';
+	} else {
+		$cabinetFace = $object['cabinet_front'] == 0 ? 'Front' : 'Rear';
+	}
 	$original = $cabinet.'.'.$name;
+	$posTop = $floorplanObj ? $object['position_top'] : '';
+	$posLeft = $floorplanObj ? $object['position_left'] : '';
 	
 	$line = array(
 		$name,
@@ -216,7 +228,9 @@ foreach($objectArray as $object) {
 		$template,
 		$bottomRU,
 		$cabinetFace,
-		$original
+		$original,
+		$posLeft,
+		$posTop
 	);
 	$csvArray[$original] = $line;
 }
@@ -581,5 +595,15 @@ header('Content-Disposition: attachment; filename='.$file_name);
 header('Content-Length: '.filesize($yourfile));
 
 readfile($yourfile);
+
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Categories.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Templates.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinets.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/export.zip');
+
 exit;
 ?>

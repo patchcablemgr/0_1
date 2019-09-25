@@ -10,7 +10,7 @@ includes/database_info.php
 # User upload/download working directories
 app/app/public/userDownloads/*
 app/app/public/userUploads/*
-!app/app/public/userDownloads/.keep
+!app/app/public/userDownloads/README.txt
 !app/app/public/userUploads/.keep
 
 # Floorplan images

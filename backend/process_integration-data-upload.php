@@ -69,6 +69,22 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				
 // Prepare Required Data
 				
+				// Store import type
+				$importType = 'none';
+				if(isset($_POST['importType'])) {
+					if(strtolower($_POST['importType']) == 'edit') {
+						$importType = 'edit';
+					} else if(strtolower($_POST['importType']) == 'restore') {
+						$importType = 'restore';
+					} else {
+						$errMsg = 'Invalid import type.';
+						array_push($validate->returnData['error'], $errMsg);
+					}
+				} else {
+					$errMsg = 'Missing import type.';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+				
 				// Cabinet Adjacencies
 				$envAdjArray = array();
 				$query = $qls->SQL->select('*', 'app_cabinet_adj');
@@ -252,6 +268,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					}
 				}
 				
+				$validate->returnData['debug'] = $importedConnectionArray;
+				
 				// Validation
 				validateImportedCabinets($importedCabinetArray, $existingCabinetArray, $occupancyArray, $validate);
 				validateImportedPaths($importedPathArray, $importedCabinetArray, $validate);
@@ -275,35 +293,52 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					
 					$qls->SQL->transaction('BEGIN');
 					
+					// Clear app tables if importing as restore
+					if($importType == 'restore') {
+						clearAppTables($qls);
+					}
+					
 					// Find Category Changes
 					$categoryAdds = findCategoryAdds($importedCategoryArray);
-					$categoryEdits = findCategoryEdits($importedCategoryArray, $existingCategoryArray);
-					$categoryDeletes = findCategoryDeletes($importedCategoryArray, $existingCategoryArray);
+					if($importType == 'edit') {
+						$categoryEdits = findCategoryEdits($importedCategoryArray, $existingCategoryArray);
+						$categoryDeletes = findCategoryDeletes($importedCategoryArray, $existingCategoryArray);
+					}
 					
 					// Process Category Changes
 					insertCategoryAdds($qls, $categoryAdds, $importedCategoryArray);
-					updateCategoryEdits($qls, $categoryEdits);
-					deleteCategoryDeletes($qls, $categoryDeletes);
+					if($importType == 'edit') {
+						updateCategoryEdits($qls, $categoryEdits);
+						deleteCategoryDeletes($qls, $categoryDeletes);
+					}
 					
 					// Find Template Changes
 					$templateAdds = findTemplateAdds($importedTemplateArray);
-					$templateEdits = findTemplateEdits($importedTemplateArray, $existingTemplateArray);
-					$templateDeletes = findTemplateDeletes($importedTemplateArray, $existingTemplateArray);
+					if($importType == 'edit') {
+						$templateEdits = findTemplateEdits($importedTemplateArray, $existingTemplateArray);
+						$templateDeletes = findTemplateDeletes($importedTemplateArray, $existingTemplateArray);
+					}
 					
-					// Process Object Changes
+					// Process Template Changes
 					insertTemplateAdds($qls, $templateAdds, $importedTemplateArray, $importedCategoryArray);
-					updateTemplateEdits($qls, $templateEdits, $importedCategoryArray);
-					deleteTemplateDeletes($qls, $templateDeletes);
+					if($importType == 'edit') {
+						updateTemplateEdits($qls, $templateEdits, $importedCategoryArray);
+						deleteTemplateDeletes($qls, $templateDeletes);
+					}
 					
 					// Find Cabinet Changes
 					$cabinetAdds = findCabinetAdds($importedCabinetArray, $existingCabinetArray);
-					$cabinetEdits = findCabinetEdits($importedCabinetArray, $existingCabinetArray);
-					$cabinetDeletes = findCabinetDeletes($importedCabinetArray, $existingCabinetArray);
+					if($importType == 'edit') {
+						$cabinetEdits = findCabinetEdits($importedCabinetArray, $existingCabinetArray);
+						$cabinetDeletes = findCabinetDeletes($importedCabinetArray, $existingCabinetArray);
+					}
 					
 					// Process Cabinet Changes
 					insertCabinetAdds($qls, $cabinetAdds, $importedCabinetArray, $existingCabinetArray);
-					updateCabinetEdits($qls, $cabinetEdits, $importedCabinetArray, $existingCabinetArray);
-					deleteCabinetDeletes($qls, $cabinetDeletes, $cabinetObjects);
+					if($importType == 'edit') {
+						updateCabinetEdits($qls, $cabinetEdits, $importedCabinetArray, $existingCabinetArray);
+						deleteCabinetDeletes($qls, $cabinetDeletes, $cabinetObjects);
+					}
 					
 					
 					// Populate importedPathArray with cabinet IDs...
@@ -314,13 +349,17 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					
 					// Find Path Changes
 					$pathAdds = findPathAdds($importedPathArray, $existingPathArray);
-					$pathEdits = findPathEdits($importedPathArray, $existingPathArray);
-					$pathDeletes = findPathDeletes($importedPathArray, $existingPathArray);
+					if($importType == 'edit') {
+						$pathEdits = findPathEdits($importedPathArray, $existingPathArray);
+						$pathDeletes = findPathDeletes($importedPathArray, $existingPathArray);
+					}
 					
 					// Process Path Changes
 					insertPathAdds($qls, $pathAdds, $importedCabinetArray);
-					updatePathEdits($qls, $pathEdits);
-					deletePathDeletes($qls, $pathDeletes);
+					if($importType == 'edit') {
+						updatePathEdits($qls, $pathEdits);
+						deletePathDeletes($qls, $pathDeletes);
+					}
 					
 					
 					// Populate importedObjectArray with cabinet IDs...
@@ -331,25 +370,33 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					
 					// Find Object Changes
 					$objectAdds = findObjectAdds($importedObjectArray);
-					$objectEdits = findObjectEdits($importedObjectArray, $existingObjectArray);
-					$objectDeletes = findObjectDeletes($importedObjectArray, $existingObjectArray);
+					if($importType == 'edit') {
+						$objectEdits = findObjectEdits($importedObjectArray, $existingObjectArray);
+						$objectDeletes = findObjectDeletes($importedObjectArray, $existingObjectArray);
+					}
 					
 					// Process Object Changes
 					insertObjectAdds($qls, $objectAdds, $importedObjectArray, $importedCabinetArray, $importedTemplateArray);
-					updateObjectEdits($qls, $objectEdits, $importedCabinetArray, $existingTemplateArray);
-					deleteObjectDeletes($qls, $objectDeletes);
+					if($importType == 'edit') {
+						updateObjectEdits($qls, $objectEdits, $importedCabinetArray, $existingTemplateArray);
+						deleteObjectDeletes($qls, $objectDeletes);
+					}
 					
 					
 					
 					// Find Insert Changes
 					$insertAdds = findInsertAdds($importedInsertArray);
-					$insertEdits = findInsertEdits($importedInsertArray, $existingInsertArray);
-					$insertDeletes = findInsertDeletes($importedInsertArray, $existingInsertArray);
+					if($importType == 'edit') {
+						$insertEdits = findInsertEdits($importedInsertArray, $existingInsertArray);
+						$insertDeletes = findInsertDeletes($importedInsertArray, $existingInsertArray);
+					}
 					
 					// Process Insert Changes
 					insertInsertAdds($qls, $insertAdds, $importedInsertArray, $importedObjectArray, $importedCabinetArray, $importedTemplateArray);
-					updateInsertEdits($qls, $insertEdits, $importedObjectArray, $importedCabinetArray);
-					deleteInsertDeletes($qls, $insertDeletes);
+					if($importType == 'edit') {
+						updateInsertEdits($qls, $insertEdits, $importedObjectArray, $importedCabinetArray);
+						deleteInsertDeletes($qls, $insertDeletes);
+					}
 					
 					
 					
@@ -418,7 +465,8 @@ function buildImportedCabinetArray($csvLine, $csvLineNumber, $csvFilename, &$imp
 	$cabinetSize = $csvLine[2];
 	$cabinetLeft = $csvLine[3];
 	$cabinetRight = $csvLine[4];
-	$originalCabinetName = $csvLine[5];
+	$originalCabinetName = ($GLOBALS['importType'] == 'edit') ? $csvLine[5] : '';
+	$floorplanImg = $csvLine[5];
 	$importedCabinetNameHash = md5(strtolower($cabinetName));
 	$originalCabinetNameHash = md5(strtolower($originalCabinetName));
 	$cabinetParent = explode('.', $cabinetName);
@@ -437,7 +485,7 @@ function buildImportedCabinetArray($csvLine, $csvLineNumber, $csvFilename, &$imp
 		$importedCabinetArray[$importedCabinetNameHash]['id'] = $existingCabinetArray[$importedCabinetNameHash]['id'];
 	}
 	
-	$importedCabinetArray[$importedCabinetNameHash]['filename'] = $csvFilename;
+	$importedCabinetArray[$importedCabinetNameHash]['fileName'] = $csvFilename;
 	$importedCabinetArray[$importedCabinetNameHash]['line'] = $csvLineNumber;
 	$importedCabinetArray[$importedCabinetNameHash]['nameString'] = $cabinetName;
 	$importedCabinetArray[$importedCabinetNameHash]['name'] = $name;
@@ -453,6 +501,7 @@ function buildImportedCabinetArray($csvLine, $csvLineNumber, $csvFilename, &$imp
 	$importedCabinetArray[$importedCabinetNameHash]['originalCabinetName'] = $originalCabinetName;
 	$importedCabinetArray[$importedCabinetNameHash]['originalCabinetNameHash'] = $originalCabinetNameHash;
 	$importedCabinetArray[$importedCabinetNameHash]['id'] = $originalCabinetNameHash ? $existingCabinetArray[$originalCabinetNameHash]['id'] : null;
+	$importedCabinetArray[$importedCabinetNameHash]['floorplanImg'] = ($floorplanImg != '') ? strtolower($floorplanImg) : null;
 }
 
 
@@ -548,7 +597,7 @@ function buildImportedPathArray($csvLine, $csvLineNumber, $csvFilename, &$import
 	$importedPathArray[$pathHash]['distance'] = $distance;
 	$importedPathArray[$pathHash]['entrance'] = 42;
 	$importedPathArray[$pathHash]['notes'] = $notes;
-	$importedPathArray[$pathHash]['filename'] = $csvFilename;
+	$importedPathArray[$pathHash]['fileName'] = $csvFilename;
 	$importedPathArray[$pathHash]['line'] = $csvLineNumber;
 }
 
@@ -594,7 +643,7 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 	$templateNameHash = md5(strtolower($templateName));
 	$RU = $csvLine[3];
 	$cabinetFace = strtolower($csvLine[4]);
-	$originalObjectName = $csvLine[5];
+	$originalObjectName = ($GLOBALS['importType'] == 'edit') ? $csvLine[5] : '';
 	$originalObjectNameHash = md5(strtolower($originalObjectName));
 	$originalCabinetNameArray = explode('.', $originalObjectName);
 	array_pop($originalCabinetNameArray);
@@ -666,7 +715,7 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 			}
 		}
 	} else {
-		$errMsg = 'Duplicate original object on line '.$csvLineNumber.' of '.$csvFilename;
+		$errMsg = 'Duplicate original object on line '.$csvLineNumber.' of "'.$csvFilename.'".';
 		array_push($validate->returnData['error'], $errMsg);
 	}
 }
@@ -721,7 +770,7 @@ function buildImportedInsertArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 	$slotID = strtolower($csvLine[2]);
 	$insertName = $csvLine[3];
 	$templateName = $csvLine[4];
-	$originalInsert = strtolower($csvLine[5]);
+	$originalInsert = ($GLOBALS['importType'] == 'edit') ? strtolower($csvLine[5]) : '';
 	$originalInsertArray = explode('.', $originalInsert);
 	$originalInsertName = array_pop($originalInsertArray);
 	$originalInsertSlotID = array_pop($originalInsertArray);
@@ -784,7 +833,7 @@ function buildImportedCategoryArray($csvLine, $csvLineNumber, $csvFilename, &$im
 	$categoryName = $csvLine[0];
 	$categoryColor = $csvLine[1];
 	$categoryDefaultOption = $csvLine[2];
-	$originalCategoryName = $csvLine[3];
+	$originalCategoryName = ($GLOBALS['importType'] == 'edit') ? $csvLine[3] : '';
 	$originalCategoryNameHash = md5(strtolower($originalCategoryName));
 	$categoryNameHash = md5(strtolower($categoryName));
 	
@@ -826,7 +875,7 @@ function buildExistingTemplateArray($tableTemplateArray, $tableCategoryArray){
 function buildImportedTemplateArray($csvLine, $csvLineNumber, $csvFilename, &$importedTemplateArray, $existingTemplateArray){
 	$templateName = $csvLine[0];
 	$templateCategoryName = $csvLine[1];
-	$templateOriginalTemplateName = $csvLine[2];
+	$templateOriginalTemplateName = ($GLOBALS['importType'] == 'edit') ? $csvLine[2] : '';
 	$templateType = $csvLine[3];
 	$templateFunction = $csvLine[4];
 	$templateRUSize = $csvLine[5];
@@ -848,7 +897,7 @@ function buildImportedTemplateArray($csvLine, $csvLineNumber, $csvFilename, &$im
 	$importedTemplateArray[$templateNameHash]['templateMountConfig'] = strtolower($templateMountConfig);
 	$importedTemplateArray[$templateNameHash]['templateStructure'] = json_decode($templateStructure, true);
 	$importedTemplateArray[$templateNameHash]['line'] = $csvLineNumber;
-	$importedTemplateArray[$templateNameHash]['filename'] = $csvFilename;
+	$importedTemplateArray[$templateNameHash]['fileName'] = $csvFilename;
 	
 	if($templateOriginalTemplateName != '') {
 		$importedTemplateArray[$templateNameHash]['id'] = $existingTemplateArray[$originalTemplateNameHash]['id'];
@@ -878,17 +927,36 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 	$mediaType = ($mediaType != '' and $mediaType != 'none') ? $mediaType : false;
 	$length = ($length != '' and $length != 'none') ? $length : false;
 	
-	if($aPortNameHash) {
-		$importedConnectionArray[$aPortNameHash]['portNameHash'] = $aPortNameHash;
-		$importedConnectionArray[$aPortNameHash]['code39'] = $aCode39;
-		$importedConnectionArray[$aPortNameHash]['connector'] = $aConnector;
-		$importedConnectionArray[$aPortNameHash]['peerPortNameHash'] = $bPortNameHash;
-		$importedConnectionArray[$aPortNameHash]['peerCode39'] = $bCode39;
-		$importedConnectionArray[$aPortNameHash]['peerConnector'] = $bConnector;
-		$importedConnectionArray[$aPortNameHash]['mediaType'] = $mediaType;
-		$importedConnectionArray[$aPortNameHash]['length'] = $length;
-		$importedConnectionArray[$aPortNameHash]['line'] = $csvLineNumber;
-		$importedConnectionArray[$aPortNameHash]['filename'] = $csvFilename;
+	$addConnection = false;
+	
+	if($aPortNameHash or $aCode39) {
+		$addConnection = true;
+		$workingArray = array(
+			'portNameHash' => $aPortNameHash,
+			'code39' => $aCode39,
+			'connector' => $aConnector,
+			'peerPortNameHash' => $bPortNameHash,
+			'peerCode39' => $bCode39,
+			'peerConnector' => $bConnector
+		);
+	} else if($bPortNameHash or $bCode39) {
+		$addConnection = true;
+		$workingArray = array(
+			'portNameHash' => $bPortNameHash,
+			'code39' => $bCode39,
+			'connector' => $bConnector,
+			'peerPortNameHash' => $aPortNameHash,
+			'peerCode39' => $aCode39,
+			'peerConnector' => $aConnector
+		);
+	}
+	
+	if($addConnection) {
+		$workingArray['mediaType'] = $mediaType;
+		$workingArray['length'] = $length;
+		$workingArray['line'] = $csvLineNumber;
+		$workingArray['fileName'] = $csvFilename;
+		array_push($importedConnectionArray, $workingArray);
 	}
 }
 
@@ -898,6 +966,7 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, $occupancyArray, &$validate){
 	
 	$arrayOriginalHashes = array();
+	$arrayImportedHashes = array();
 	$allowedLocationTypes = array(
 		'location',
 		'pod',
@@ -914,12 +983,13 @@ function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, 
 		$cabinetLeft = $cabinet['left'];
 		$cabinetRight = $cabinet['right'];
 		$csvLineNumber = $cabinet['line'];
-		$csvFilename = $cabinet['filename'];
+		$csvFilename = $cabinet['fileName'];
 		$cabinetParentName = $cabinet['parentName'];
 		$cabinetParentNameHash = $cabinet['parentNameHash'];
 		$topOccupiedRU = $occupancyArray[$cabinetNameHash]['topOccupiedRU'];
 		$originalCabinetName = $cabinet['originalCabinetName'];
 		$originalCabinetNameHash = $cabinet['originalCabinetNameHash'];
+		$floorplanImg = $cabinet['floorplanImg'];
 		
 		// Validate Cabinet Name
 		$cabinetNameArray = explode('.', $cabinetName);
@@ -934,10 +1004,10 @@ function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, 
 		if($cabinetType == 'cabinet') {
 			
 			// Validate RU Size
-			$validate->validateRUSize($cabinetSize, 'Invalid RU size on line '.$csvLineNumber.' of '.$csvFilename);
+			$validate->validateRUSize($cabinetSize, 'Invalid RU size on line '.$csvLineNumber.' of "'.$csvFilename.'".');
 			
 			if($cabinetSize < $topOccupiedRU) {
-				$errMsg = 'Cabinet RU size on line '.$csvLineNumber.' of"'.$csvFilename.'"is less than the top occupied RU.';
+				$errMsg = 'Cabinet RU size on line '.$csvLineNumber.' of "'.$csvFilename.'" is less than the top occupied RU.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
 			
@@ -981,12 +1051,50 @@ function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, 
 					}
 				}
 			}
+		} else if($cabinetType == 'floorplan') {
+			
+			// Floorplans cannot have cabinet adjacencies
+			if($cabinet['leftHash'] or $cabinet['rightHash']) {
+				$errMsg = 'Floorplan on line '.$csvLineNumber.' of "'.$csvFilename.'" cannot be configured with cabinet adjacencies.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+			
+			// Validate floorplan image
+			if($floorplanImg) {
+				$floorplanImgArray = explode('.', $floorplanImg);
+				if(count($floorplanImgArray) == 2) {
+					$floorplanImgName = $floorplanImgArray[0];
+					$floorplanImgExt = $floorplanImgArray[1];
+					$floorplanImgExtArray = array(
+						'jpg',
+						'jpeg',
+						'gif',
+						'png'
+					);
+					$validate->validateInArray($floorplanImgExt, $floorplanImgExtArray, 'Floorplan Image name on line '.$csvLineNumber.' of "'.$csvFilename.'".');
+					$validate->validateMD5($floorplanImgName, 'Invalid Flooplan Image name on line '.$csvLineNumber.' of "'.$csvFilename.'".');
+				} else {
+					$errMsg = 'Invalid Floorplan Image name on line '.$csvLineNumber.' of "'.$csvFilename.'"';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			} else {
+				$errMsg = 'Floorplan Image cannot be blank on line '.$csvLineNumber.' of "'.$csvFilename.'"';
+				array_push($validate->returnData['error'], $errMsg);
+			}
+		}
+		
+		if($cabinetType != 'floorplan') {
+			// Only floorplans can have a floorplan image
+			if($floorplanImg) {
+				$errMsg = 'Entry on line '.$csvLineNumber.' of "'.$csvFilename.'" cannot be configured with a floorplan image.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
 		}
 		
 		// Validate Parent Exists
 		if($cabinetParentName != '') {
 			if(!array_key_exists($cabinetParentNameHash, $importedCabinetArray)) {
-				$errMsg = 'Path does not exist on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				$errMsg = 'Path does not exist on line '.$csvLineNumber.' of "'.$csvFilename.'".';
 				array_push($validate->returnData['error'], $errMsg);
 			}
 		}
@@ -994,13 +1102,13 @@ function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, 
 		// Validate Original Cabinet Name
 		if($originalCabinetName != '') {
 			if(!array_key_exists($originalCabinetNameHash, $existingCabinetArray)) {
-				$errMsg = 'Original cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist.';
+				$errMsg = 'Original cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
 			
 			// Check for duplicate Original Cabinet Names
 			if(in_array($originalCabinetNameHash, $arrayOriginalHashes)) {
-				$errMsg = 'Duplicate original cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				$errMsg = 'Duplicate original cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'".';
 				array_push($validate->returnData['error'], $errMsg);
 			} else {
 				array_push($arrayOriginalHashes, $originalCabinetNameHash);
@@ -1013,7 +1121,7 @@ function validateImportedPaths($importedPathArray, $importedCabinetArray, &$vali
 	foreach($importedPathArray as $path) {
 		$distance = $path['distance'];
 		$notes = $path['notes'];
-		$csvFilename = $path['filename'];
+		$csvFilename = $path['fileName'];
 		$csvLineNumber = $path['line'];
 		
 		foreach($path['cabinets'] as $cabinet) {
@@ -1108,7 +1216,7 @@ function validateImportedTemplates(&$importedTemplateArray, $existingTemplateArr
 		$templateMountConfig = $template['templateMountConfig'];
 		$templateStructure = $template['templateStructure'];
 		
-		$csvFilename = $template['filename'];
+		$csvFilename = $template['fileName'];
 		$csvLineNumber = $template['line'];
 		
 		// Validate Template Structure JSON
@@ -1232,19 +1340,22 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 		$objectOriginalObjectName = $object['originalObjectName'];
 		$objectOriginalObjectNameHash = $object['originalObjectNameHash'];
 		
+		$csvFilename = $object['fileName'];
+		$csvLineNumber = $object['line'];
+		
 		// Validate Cabinet Face
 		$allowedFaceArray = array('front', 'rear');
-		$cabinetFaceValidated = $validate->validateInArray($objectCabinetFace, $allowedFaceArray, 'cabinet face on line '.$line.' of '.$fileName);
+		$cabinetFaceValidated = $validate->validateInArray($objectCabinetFace, $allowedFaceArray, 'cabinet face on line '.$csvLineNumber.' of '.$fileName);
 		
 		// Validate Name
-		$validate->validateNameText($objectName, 'Object name on line '.$line.' of '.$fileName);
+		$validate->validateNameText($objectName, 'Object name on line '.$csvLineNumber.' of '.$fileName);
 		
 		// Validate Cabinet
 		if(!array_key_exists($objectCabinetNameHash, $importedCabinetArray)) {
-			$errMsg = 'Cabinet on line '.$line.' of '.$fileName.' does not exist in "Cabinets.csv".';
+			$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist in "Cabinets.csv".';
 			array_push($validate->returnData['error'], $errMsg);
 		} else if($importedCabinetArray[$objectCabinetNameHash]['type'] != 'cabinet') {
-			$errMsg = 'Cabinet on line '.$line.' of '.$fileName.' needs to be of type "Cabinet".';
+			$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" needs to be of type "Cabinet".';
 			array_push($validate->returnData['error'], $errMsg);
 		} else {
 			$cabinetRUSize = $importedCabinetArray[$objectCabinetNameHash]['size'];
@@ -1253,11 +1364,11 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 		
 		// Validate Template
 		if(!array_key_exists($objectTemplateHash, $importedTemplateArray)) {
-			$errMsg = 'Template referenced on line '.$line.' of '.$fileName.' does not exist.';
+			$errMsg = 'Template referenced on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist.';
 			array_push($validate->returnData['error'], $errMsg);
 		} else {
 			if($importedTemplateArray[$objectTemplateHash]['templateType'] != 'standard') {
-				$errMsg = 'Template referenced on line '.$line.' of '.$fileName.' is not a "Standard" template.';
+				$errMsg = 'Template referenced on line '.$csvLineNumber.' of "'.$csvFilename.'" is not a "Standard" template.';
 				array_push($validate->returnData['error'], $errMsg);
 			} else {
 				$templateRUSize = $importedTemplateArray[$objectTemplateHash]['RUSize'];
@@ -1267,7 +1378,7 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 		}
 		
 		// Validate RU
-		if($validate->validateRUSize($objectRU, 'Invalid RU on line '.$line.' of '.$fileName)) {
+		if($validate->validateRUSize($objectRU, 'Invalid RU on line '.$csvLineNumber.' of '.$fileName)) {
 			if($cabinetRUSize and $templateRUSize) {
 				$topRU = $objectRU + ($templateRUSize - 1);
 				$bottomRU = $objectRU;
@@ -1277,7 +1388,7 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 					if($templateMountConfig == 0) {
 						for($x=$bottomRU; $x<=$topRU; $x++) {
 							if(in_array($x, $existingCabinetOccupancyArray[$cabinetID][$cabinetFace])) {
-								$errMsg = 'Object on line '.$line.' of '.$fileName.' collides with another object.';
+								$errMsg = 'Object on line '.$csvLineNumber.' of "'.$csvFilename.'" collides with another object.';
 								array_push($validate->returnData['error'], $errMsg);
 								break;
 							}
@@ -1285,7 +1396,7 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 					} else if($templateMountConfig == 1) {
 						for($x=$bottomRU; $x<=$topRU; $x++) {
 							if(in_array($x, $existingCabinetOccupancyArray[$cabinetID]['front']) or in_array($x, $existingCabinetOccupancyArray[$cabinetID]['rear'])) {
-								$errMsg = 'Object on line '.$line.' of '.$fileName.' collides with another object.';
+								$errMsg = 'Object on line '.$csvLineNumber.' of "'.$csvFilename.'" collides with another object.';
 								array_push($validate->returnData['error'], $errMsg);
 								break;
 							}
@@ -1294,7 +1405,7 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 				}
 				
 				if($topRU > $cabinetRUSize) {
-					$errMsg = 'Object on line '.$line.' of '.$fileName.' extends beyond cabinet size.';
+					$errMsg = 'Object on line '.$csvLineNumber.' of "'.$csvFilename.'" extends beyond cabinet size.';
 					array_push($validate->returnData['error'], $errMsg);
 				}
 			}
@@ -1303,13 +1414,13 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 		// Validate Original Object
 		if($objectOriginalObjectName != '') {
 			if(!array_key_exists($objectOriginalObjectNameHash, $existingObjectArray)) {
-				$errMsg = 'Original object on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist.';
+				$errMsg = 'Original object on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
 			
 			// Check for original duplicates
 			if(in_array($objectOriginalObjectNameHash, $arrayOriginalHashes)) {
-				$errMsg = 'Duplicate original object on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+				$errMsg = 'Duplicate original object on line '.$csvLineNumber.' of "'.$csvFilename.'"';
 				array_push($validate->returnData['error'], $errMsg);
 			} else {
 				array_push($arrayOriginalHashes, $objectOriginalObjectNameHash);
@@ -1322,8 +1433,6 @@ function validateImportedInserts($importedInsertArray, $existingInsertArray, $im
 	$arrayOriginalHashes = array();
 	
 	foreach($importedInsertArray as $insert) {
-		$line = $insert['line'];
-		$fileName = $insert['fileName'];
 		$objectNameHash = $insert['objectNameHash'];
 		$objectFace = strtolower($insert['objectFace']);
 		$slotID = $insert['slotID'];
@@ -1332,26 +1441,29 @@ function validateImportedInserts($importedInsertArray, $existingInsertArray, $im
 		$originalInsertHash = $insert['originalInsertHash'];
 		$templateNameHash = $insert['templateNameHash'];
 		
+		$csvFilename = $insert['fileName'];
+		$csvLineNumber = $insert['line'];
+		
 		// Validate Object
 		if(!array_key_exists($objectNameHash, $importedObjectArray)) {
-			$errMsg = 'Object referenced on line '.$line.' of '.$fileName.' does not exist.';
+			$errMsg = 'Object referenced on line '.$csvLineNumber.' of '.$csvFilename.' does not exist.';
 			array_push($validate->returnData['error'], $errMsg);
 		}
 		
 		// Validate Object Face
 		$allowedFaceArray = array('front', 'rear');
-		$objectFaceValidated = $validate->validateInArray($objectFace, $allowedFaceArray, 'cabinet face on line '.$line.' of '.$fileName);
+		$objectFaceValidated = $validate->validateInArray($objectFace, $allowedFaceArray, 'cabinet face on line '.$csvLineNumber.' of '.$csvFilename);
 		
 		// Validate Slot ID
-		$slotIDValidated = $validate->validateSlotID($slotID, 'slot ID on line '.$line.' of '.$fileName);
+		$slotIDValidated = $validate->validateSlotID($slotID, 'slot ID on line '.$csvLineNumber.' of '.$csvFilename);
 		
 		// Validate Name
-		$validate->validateNameText($insertName, 'Insert name on line '.$line.' of '.$fileName);
+		$validate->validateNameText($insertName, 'Insert name on line '.$csvLineNumber.' of '.$csvFilename);
 		
 		// Validate Original Insert
 		if($originalInsert != '') {
 			if(!array_key_exists($originalInsertHash, $existingInsertArray)) {
-				$errMsg = 'Original insert on line '.$csvLineNumber.' of"'.$csvFilename.'"does not exist.';
+				$errMsg = 'Original insert on line '.$csvLineNumber.' of "'.$csvFilename.'" adoes not exist.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
 			
@@ -1447,29 +1559,49 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 							$connection['peerDepth'] = $peerDepth;
 							$connection['peerPortID'] = $peerPortID;
 						} else {
-							$errMsg = 'PortB on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+							$errMsg = 'PortB on line '.$connection['line'].' of file "'.$connection['fileName'].'" is a duplicate.';
 							array_push($validate->returnData['error'], $errMsg);
 						}
 						
 					} else {
-						$errMsg = 'PortB on line '.$connection['line'].' of file "'.$connection['filename'].'" does not exist.';
-						array_push($validate->returnData['error'], $errMsg);
+						if($connection['peerCode39']) {
+							$connection['peerObjID'] = 0;
+							$connection['peerFace'] = 0;
+							$connection['peerDepth'] = 0;
+							$connection['peerPortID'] = 0;
+						} else {
+							$errMsg = 'PortB on line '.$connection['line'].' of file "'.$connection['fileName'].'" does not exist.';
+							array_push($validate->returnData['error'], $errMsg);
+						}
 					}
 				}
 			} else {
-				$errMsg = 'PortA on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+				$errMsg = 'PortA on line '.$connection['line'].' of file "'.$connection['fileName'].'" is a duplicate.';
 				array_push($validate->returnData['error'], $errMsg);
 			}
 		} else {
-			$errMsg = 'PortA on line '.$connection['line'].' of file "'.$connection['filename'].'" does not exist.';
-			array_push($validate->returnData['error'], $errMsg);
+			if($connection['peerCode39']) {
+				// Managed cable is not connected to anything.
+				$connection['objID'] = 0;
+				$connection['face'] = 0;
+				$connection['depth'] = 0;
+				$connection['portID'] = 0;
+				
+				$connection['peerObjID'] = 0;
+				$connection['peerFace'] = 0;
+				$connection['peerDepth'] = 0;
+				$connection['peerPortID'] = 0;
+			} else {
+				$errMsg = 'PortA on line '.$connection['line'].' of file "'.$connection['fileName'].'" does not exist.';
+				array_push($validate->returnData['error'], $errMsg);
+			}
 		}
 		
 		// Check to see if cableA end ID is valid
 		if($cableEndID = $connection['code39']) {
 			$cableEndID = (int)base_convert($cableEndID, 36, 10);
 			if(in_array($cableEndID, $cableEndIDArray)) {
-				$errMsg = 'CableA ID on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+				$errMsg = 'CableA ID on line '.$connection['line'].' of file "'.$connection['fileName'].'" is a duplicate.';
 				array_push($validate->returnData['error'], $errMsg);
 			} else {
 				array_push($cableEndIDArray, $cableEndID);
@@ -1481,7 +1613,7 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 		if($peerCableEndID = $connection['peerCode39']) {
 			$peerCableEndID = (int)base_convert($peerCableEndID, 36, 10);
 			if(in_array($peerCableEndID, $cableEndIDArray)) {
-				$errMsg = 'CableB ID on line '.$connection['line'].' of file "'.$connection['filename'].'" is a duplicate.';
+				$errMsg = 'CableB ID on line '.$connection['line'].' of file "'.$connection['fileName'].'" is a duplicate.';
 				array_push($validate->returnData['error'], $errMsg);
 			} else {
 				array_push($cableEndIDArray, $peerCableEndID);
@@ -1501,7 +1633,7 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 				if($connectorValue) {
 					$connection['connector'] = $connectorValue;
 				} else {
-					$errMsg = 'CableA connector type on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+					$errMsg = 'CableA connector type on line '.$connection['line'].' of file "'.$connection['fileName'].'" is invalid.';
 					array_push($validate->returnData['error'], $errMsg);
 				}
 			}
@@ -1519,7 +1651,7 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 				if($connectorValue) {
 					$connection['peerConnector'] = $connectorValue;
 				} else {
-					$errMsg = 'CableB connector type on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+					$errMsg = 'CableB connector type on line '.$connection['line'].' of file "'.$connection['fileName'].'" is invalid.';
 					array_push($validate->returnData['error'], $errMsg);
 				}
 			}
@@ -1536,7 +1668,7 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 				if($mediaType) {
 					$connection['mediaType'] = $mediaType;
 				} else {
-					$errMsg = 'Media type on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+					$errMsg = 'Media type on line '.$connection['line'].' of file "'.$connection['fileName'].'" is invalid.';
 					array_push($validate->returnData['error'], $errMsg);
 				}
 			}
@@ -1557,11 +1689,11 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 							$connection['length'] = 0;
 						}
 					} else {
-						$errMsg = 'Length on line '.$connection['line'].' of file "'.$connection['filename'].'" is invalid.';
+						$errMsg = 'Length on line '.$connection['line'].' of file "'.$connection['fileName'].'" is invalid.';
 						array_push($validate->returnData['error'], $errMsg);
 					}
 				} else {
-					$errMsg = 'Length on line '.$connection['line'].' of file "'.$connection['filename'].'" requires media type.';
+					$errMsg = 'Length on line '.$connection['line'].' of file "'.$connection['fileName'].'" requires media type.';
 					array_push($validate->returnData['error'], $errMsg);
 				}
 			}
@@ -1588,7 +1720,6 @@ function validateImportedImages($dir, $imageType, &$validate){
 			if ($imageFile != "." && $imageFile != "..") {
 				$imageFileArray = explode('.', $imageFile);
 				$extension = strtolower($imageFileArray[count($imageFileArray)-1]);
-				error_log($extension);
 				$existingFilename = $_SERVER['DOCUMENT_ROOT'].'/images/'.$dir.'/'.$imageFile;
 				$importFilename = $_SERVER['DOCUMENT_ROOT'].'/userUploads/'.$dir.'/'.$imageFile;
 				// Do not copy if file already exists
@@ -1624,7 +1755,7 @@ function findCabinetAdds($importedCabinetArray, $existingCabinetArray){
 	$return = array();
 	foreach($importedCabinetArray as $cabinet) {
 		$cabinetNameHash = $cabinet['nameHash'];
-		if(!array_key_exists($cabinetNameHash, $existingCabinetArray)) {
+		if($cabinet['originalCabinetName'] == '') {
 			$return[$cabinetNameHash] = $cabinet;
 		}
 	}
@@ -2007,8 +2138,9 @@ function insertCabinetAdds(&$qls, $cabinetAdds, &$importedCabinetArray, $existin
 		}
 		$type = $cabinet['type'];
 		$size = $type == 'cabinet' ? $cabinet['size'] : 42;
+		$floorplanImg = $cabinet['floorplanImg'];
 		
-		$qls->SQL->insert('app_env_tree', array('name', 'parent', 'type', 'size'), array($name, $parent, $type, $size));
+		$qls->SQL->insert('app_env_tree', array('name', 'parent', 'type', 'size', 'floorplan_img'), array($name, $parent, $type, $size, $floorplanImg));
 		$importedCabinetArray[$nameHash]['id'] = $qls->SQL->insert_id();
 	}
 
@@ -2697,9 +2829,9 @@ function deleteTemplateDeletes(&$qls, $templateDeletes){
 
 // Process Connections
 function processConnections(&$qls, $importedConnectionArray){
-	$query = 'TRUNCATE TABLE `qls3_app_inventory`';
+	$query = "TRUNCATE TABLE ".$qls->config['sql_prefix']."app_inventory";
 	$qls->SQL->query($query);
-	$query = 'TRUNCATE TABLE `qls3_app_populated_port`';
+	$query = "TRUNCATE TABLE ".$qls->config['sql_prefix']."app_populated_port";
 	$qls->SQL->query($query);
 	
 	foreach($importedConnectionArray as $connection) {
@@ -2739,9 +2871,10 @@ function processConnections(&$qls, $importedConnectionArray){
 		$b_object_depth = $peerDepth ? $peerDepth : 0;
 		$mediaType = $mediaType ? $mediaType : 0;
 		$length = $length ? $length : 0;
-		$editable = ($a_id and $a_code39 and $a_connector and $b_id and $b_code39 and $b_connector and $mediaType and $length) ? 1 : 0;
+		$editable = ($a_code39 and $a_connector and $b_code39 and $b_connector and $mediaType and $length) ? 0 : 1;
+		$active = ($a_code39 or $b_code39) ? 1 : 0;
 		
-		if($a_id or $b_object_id) {
+		if(($a_object_id and $b_object_id) or ($a_id or $b_id)) {
 			// Insert into inventory table
 			$tableAttributes = array(
 				'a_id',
@@ -2760,7 +2893,8 @@ function processConnections(&$qls, $importedConnectionArray){
 				'b_port_id',
 				'mediaType',
 				'length',
-				'editable'
+				'editable',
+				'active'
 			);
 			
 			$tableValues = array(
@@ -2780,7 +2914,8 @@ function processConnections(&$qls, $importedConnectionArray){
 				$b_port_id,
 				$mediaType,
 				$length,
-				$editable
+				$editable,
+				$active
 			);
 			
 			$qls->SQL->insert('app_inventory', $tableAttributes, $tableValues);
@@ -2957,6 +3092,74 @@ function buildPortArray(&$qls){
 	}
 	
 	return $portArray;
+}
+
+function clearAppTables(&$qls){
+	// Clear app tables if import restore
+	$tableArray = array(
+		'app_cabinet_adj',
+		'app_cable_path',
+		'app_env_tree',
+		'app_inventory',
+		'app_object',
+		'app_object_category',
+		'app_object_compatibility',
+		'app_object_peer',
+		'app_object_templates',
+		'app_populated_port'
+	);
+	
+	foreach($tableArray as $table) {
+		$qls->SQL->query('TRUNCATE TABLE '.$qls->config['sql_prefix'].$table);
+	}
+	
+	// Restore floorplan object templates
+	// Floorplan object template values
+	$objectTemplateValuesArray = array(
+		array('Walljack', 'walljack', 'Passive'),
+		array('WAP', 'wap', 'Endpoint'),
+		array('Device', 'device', 'Endpoint')
+	);
+	
+	// Object template columns
+	$objectTemplateColumns = array(
+		'templateName',
+		'templateType',
+		'templateFunction'
+	);
+	
+	// Add object templates
+	foreach($objectTemplateValuesArray as $objectTemplateValues) {
+		$qls->SQL->insert('app_object_templates', $objectTemplateColumns, $objectTemplateValues);
+	}
+	
+	// Floorplan object compatibility values
+	$objectCompatibilityValuesArray = array(
+		array('1', null, null, null, 'walljack', 'Connectable', 'Passive', '1', '8', '1', '1', null),
+		array('2', '1', '1', '1', 'wap', 'Connectable', 'Endpoint', '1', '8', '1', '1', '[{\"type\":\"static\",\"value\":\"NIC\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]'),
+		array('3', '1', '1', '1', 'device', 'Connectable', 'Endpoint', '1', '8', '1', '1', '[{\"type\":\"static\",\"value\":\"NIC\",\"count\":0,\"order\":0},{\"type\":\"incremental\",\"value\":\"1\",\"count\":0,\"order\":1}]')
+	);
+	
+	// Object compatibility columns
+	$objectCompatibilityColumns = array(
+		'template_id',
+		'portLayoutX',
+		'portLayoutY',
+		'portTotal',
+		'templateType',
+		'partitionType',
+		'partitionFunction',
+		'portType',
+		'mediaType',
+		'mediaCategory',
+		'mediaCategoryType',
+		'portNameFormat'
+	);
+	
+	// Add object compatibility
+	foreach($objectCompatibilityValuesArray as $objectCompatibilityValues) {
+		$qls->SQL->insert('app_object_compatibility', $objectCompatibilityColumns, $objectCompatibilityValues);
+	}
 }
 
 ?>

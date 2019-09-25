@@ -1,1 +1,4 @@
 PortA,"CableA ID","CableA Connector Type",PortB,"CableB ID","CableB Connector Type","Media Type",Length
+Location.Sub-Location.Pod.Cab1.PanelA.Port1,1,RJ45,None,2,RJ45,Cat5e,"15 ft."
+Location.Sub-Location.Pod.Cab1.PanelA.Port2,None,None,Location.Sub-Location.Pod.Cab1.PanelC.Port2,None,None,None,None
+Location.Sub-Location.Pod.Cab1.PanelA.Port3,None,None,None,None,None,None,None

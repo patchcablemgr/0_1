@@ -7,8 +7,8 @@ $( document ).ready(function() {
 	
 	'use-strict';
 
-    //Example 2
-	$('#fileDataImport').filer({
+    // JQuery Filer data
+	var filerData = {
         limit: 1,
         maxSize: 5,
         extensions: ['zip'],
@@ -78,7 +78,7 @@ $( document ).ready(function() {
         },
         uploadFile: {
             url: 'backend/process_integration-data-upload.php',
-            data: false,
+            data: null,
             type: 'POST',
             enctype: 'multipart/form-data',
             beforeSend: function(){},
@@ -89,7 +89,7 @@ $( document ).ready(function() {
                 });
 				var responseJSON = JSON.parse(data);
 				if (responseJSON.active == 'inactive'){
-					window.location.replace('/app/login.php');
+					window.location.replace('/');
 				} else if ($(responseJSON.error).size() > 0){
 					displayError(responseJSON.error);
 				} else {
@@ -132,7 +132,24 @@ $( document ).ready(function() {
                 filesSizeAll: "Files you've choosed are too large! Please upload files up to {{fi-maxSize}} MB."
             }
         }
-    });
+    };
+	
+	$("#fileDataImport").filer(filerData);
+	var filerKit = $("#fileDataImport").prop("jFiler");
+	
+	$('#buttonDataImport').on('click', function(){
+		var importType = $('input[name="importType"]:checked').val();
+		var dataObj = {importType:importType};
+		//filerData.uploadFile.data = dataObj;
+		filerKit.options.uploadFile.data = dataObj;
+		console.log(filerKit.options);
+		//filerKit.options = filerData;
+	});
+	
+	$('.importTypeRadio').on('click', function(){
+		$('.importTypeRadio').removeProp('checked');
+		$(this).prop('checked');
+	});
 
 	$('#buttonDataExport').on('click', function(){
 		window.open('/backend/data-export.php');

@@ -59,26 +59,26 @@ $qls->Security->check_auth_page('administrator.php');
 	<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 col-xl-4">
 		<div class="card-box">
 			<h4 class="header-title m-t-0 m-b-30">Manage Data</h4>
-			<table>
-				<tr>
-					<td>Export</td>
-					<td>Import</td>
-				</tr>
-				<tr>
-					<td>
-						<button id="buttonDataExport" type="button" class="btn btn-success waves-effect waves-light">
-							<span class="btn-label"><i class="fa fa-upload"></i>
-							</span>.CSV
-						</button>
-					</td>
-					<td>
-						<button id="buttonDataImport" type="button" class="btn btn-danger waves-effect waves-light" data-toggle="modal" data-target="#importModal">
-							<span class="btn-label"><i class="fa fa-download"></i>
-							</span>.CSV
-						</button>
-					</td>
-				</tr>
-			</table>
+			<button id="buttonDataExport" type="button" class="btn btn-success waves-effect waves-light">
+				<span class="btn-label"><i class="fa fa-upload"></i>
+				</span>Export
+			</button>
+			<button id="buttonDataImport" type="button" class="btn btn-danger waves-effect waves-light" data-toggle="modal" data-target="#importModal">
+				<span class="btn-label"><i class="fa fa-download"></i>
+				</span>Import
+			</button>
+			<fieldset class="form-group m-t-10">
+				<div class="inputBlock">
+					<div class="radio">
+						<input class="importTypeRadio" type="radio" name="importType" id="importEdit" value="Edit" checked>
+							<label for="importEdit"><span>Import - Edit</span></label>
+					</div>
+					<div class="radio">
+						<input class="importTypeRadio" type="radio" name="importType" id="importRestore" value="Restore">
+							<label for="importRestore"><span>Import - Restore</span></label>
+					</div>
+				</div>
+			</fieldset>
 		</div>
 	</div>
 </div>
