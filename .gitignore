@@ -5,7 +5,7 @@ includes/composer.lock
 includes/vendor
 
 # System generated
-includes/database_info.php
+#includes/database_info.php
 
 # User upload/download working directories
 userDownloads/*
@@ -19,5 +19,13 @@ images/floorplanImages/*
 
 # Template images
 images/templateImages/*
-# 6p_LC_OM4
+# Default template images
 !images/templateImages/f782af8c83a096a188ba333d0039aaf7.jpg
+!images/templateImages/105137c8ec469aecd387cef6ef807dc0.jpg
+!images/templateImages/86257b172c9a706aa704abfdad4de53c.jpg
+!images/templateImages/7ae4f0a4040a7fe8f3a823b167952f26.jpg
+!images/templateImages/ab97c853ba94a8ebb9d950f6867601de.jpg
+!images/templateImages/93c68d70070b0ccb5645bd6bfd53c89b.jpg
+!images/templateImages/c4e7eb2d860f17b94042199509ca4b28.jpg
+!images/templateImages/47618b55d38fcaf9ad73be0ead312d68.jpg
+!images/templateImages/0e1b15f076088230505a14c5a6e010c0.jpg
