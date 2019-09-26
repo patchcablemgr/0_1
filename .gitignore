@@ -8,16 +8,16 @@ includes/vendor
 includes/database_info.php
 
 # User upload/download working directories
-app/app/public/userDownloads/*
-app/app/public/userUploads/*
-!app/app/public/userDownloads/README.txt
-!app/app/public/userUploads/.keep
+userDownloads/*
+userUploads/*
+!userDownloads/README.txt
+!userUploads/.keep
 
 # Floorplan images
-app/app/public/images/floorplanImages/*
-!app/app/public/images/floorplanImages/floorplan-default.png
+images/floorplanImages/*
+!images/floorplanImages/floorplan-default.png
 
 # Template images
-app/app/public/images/templateImages/*
+images/templateImages/*
 # 6p_LC_OM4
-!app/app/public/images/templateImages/f782af8c83a096a188ba333d0039aaf7.jpg
+!images/templateImages/f782af8c83a096a188ba333d0039aaf7.jpg
