@@ -54,7 +54,7 @@ var $qls;
 			include '/app/database_info.php';
 		} else {
 			try {
-				require 'database_info.php';
+				include 'database_info.php';
 			} catch (Exception $e) {
 				header('Location: /install/install.php');
 			}
