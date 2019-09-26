@@ -560,6 +560,7 @@ foreach($qls->App->templateArray as $template) {
 
 // Add template images
 if ($templateImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/templateImages/')) {
+	$zip->addEmptyDir('templateImages');
 	while (false !== ($templateImageFile = readdir($templateImageDir))) {
 		if (in_array($templateImageFile, $templateImageArray)) {
 			$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/images/templateImages/'.$templateImageFile, 'templateImages/'.$templateImageFile);
@@ -580,6 +581,7 @@ foreach($qls->App->envTreeArray as $env) {
 
 // Add floorplan images
 if ($floorplanImageDir = opendir($_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/')) {
+	$zip->addEmptyDir('floorplanImages');
 	while (false !== ($floorplanImageFile = readdir($floorplanImageDir))) {
 		if (in_array($floorplanImageFile, $floorplanImageArray)) {
 			$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/images/floorplanImages/'.$floorplanImageFile, 'floorplanImages/'.$floorplanImageFile);
