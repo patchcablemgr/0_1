@@ -55,7 +55,9 @@ var $qls;
 		} else {
 			include 'database_info.php';
 		}
-		if (SYSTEM_INSTALLED !== true) {
+		try {
+			require 'filename.php';
+		} catch (Exception $e) {
 			header('Location: /install/install.php');
 		}
 
