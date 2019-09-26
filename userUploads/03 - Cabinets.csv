@@ -1,0 +1,7 @@
+Name,Type,"RU Size","Adj Left","Adj Right","*Original Cabinet","**Floorplan Image"
+Location,location,,,,Location,
+Location.New_Node,location,,,,Location.New_Node,
+Location.Sub-Location,location,,,,Location.Sub-Location,
+Location.Sub-Location.Pod,pod,,,,Location.Sub-Location.Pod,
+Location.Sub-Location.Pod.Cab1,cabinet,42,,,Location.Sub-Location.Pod.Cab1,
+Location.Sub-Location.Test,floorplan,,,,Location.Sub-Location.Test,floorplan-default.png

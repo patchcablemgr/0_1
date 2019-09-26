@@ -204,12 +204,18 @@ $csvHeader = array(
 );
 fputcsv($fileCabinetObjects, $csvHeader);
 
+$floorplanObjTemplateArray = array(
+	1 => 'walljack',
+	2 => 'wap',
+	3 => 'device'
+);
+
 $csvArray = array();
 foreach($objectArray as $object) {
 	$floorplanObj = (1 <= $object['template_id'] and $object['template_id'] <= 3) ? true : false;
 	$name = $object['name'];
 	$cabinet = $envTreeArray[$object['env_tree_id']]['nameString'];
-	$template = $floorplanObj ? '' : $templateArray[$object['template_id']]['templateName'];
+	$template = $floorplanObj ? $floorplanObjTemplateArray[$object['template_id']] : $templateArray[$object['template_id']]['templateName'];
 	$RUSize = $floorplanObj ? '' : $templateArray[$object['template_id']]['templateRUSize'];
 	$topRU = $floorplanObj ? '' : $object['RU'];
 	$bottomRU = $floorplanObj ? '' : $topRU - ($RUSize - 1);
