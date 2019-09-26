@@ -53,11 +53,10 @@ var $qls;
 		if(isset($qls->appHeaders['PCM_Hosted'])) {
 			include '/app/database_info.php';
 		} else {
-			try {
-				include 'database_info.php';
-			} catch (Exception $e) {
-				header('Location: /install/install.php');
-			}
+			include 'database_info.php';
+		}
+		if (SYSTEM_INSTALLED !== true) {
+			header('Location: /install/install.php');
 		}
 
 		/**
