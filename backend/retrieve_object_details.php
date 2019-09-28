@@ -48,8 +48,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$portIndexFirst = 0;
 			$portIndexLast = $portTotal - 1;
 			$portNameFirst = $qls->App->generatePortName($portNameFormat, $portIndexFirst, $portTotal);
-			$portNameLast = $qls->App->generatePortName($portNameFormat, $portIndexLast, $portTotal);
-			$portRange = $portNameFirst.'&nbsp;&#8209;&nbsp;'.$portNameLast;
+			if($portTotal > 1) {
+				error_log('1: '.$portTotal);
+				$portNameLast = '&nbsp;&#8209;&nbsp;'.$qls->App->generatePortName($portNameFormat, $portIndexLast, $portTotal);
+			} else {
+				error_log('2: '.$portTotal);
+				$portNameLast = '';
+			}
+			$portRange = $portNameFirst.$portNameLast;
 			$portProperties = getPortProperties($qls);
 			$portType = $portProperties['portType'][$partitionData['portType']];
 			$portOrientation = $portProperties['portOrientation'][$partitionData['portOrientation']];

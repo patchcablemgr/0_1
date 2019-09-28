@@ -266,18 +266,18 @@ function addPartition(){
 }
 
 function buildTable(inputX, inputY, className){
-	/*
 	var table = "<table style='border-collapse: collapse;height:100%;width:100%;'>";
 	for (y = 0; y < inputY; y++){
 		//Create table row and calculate height
-		table += '<tr class="'+className+'" style="width:100%;height:'+Math.floor(100/inputY)+'%;">';
+		table += '<tr class="'+className+'" style="width:100%;height:'+100/inputY+'%;">';
 		for (x = 0; x < inputX; x++){
-			table += '<td class="'+className+'" style="width:'+100/inputX+'%;height:'+Math.floor(100/inputY)+'%;"></td>';
+			table += '<td class="'+className+'" style="width:'+100/inputX+'%;height:'+100/inputY+'%;"></td>';
 		}
 		table+= "</tr>";
 	}
 	table += "</table>";
-	*/
+	/*
+	// This is for future development
 	var table = '';
 	//table += '<div style="flex:1;display:flex;flex-direction:row;">';
 	for (y = 0; y < inputY; y++){
@@ -290,6 +290,7 @@ function buildTable(inputX, inputY, className){
 		table += '</div>';
 	}
 	//table += '</div>';
+	*/
 	return table;
 }
 

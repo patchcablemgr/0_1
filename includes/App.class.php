@@ -46,16 +46,22 @@ var $qls;
 	function __construct(&$qls) {
 	    $this->qls = &$qls;
 		
+		// Generate environment tree object
 		$this->envTreeArray = array();
 		$query = $this->qls->SQL->select('*', 'app_env_tree', false, array('name', 'ASC'));
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->envTreeArray[$row['id']] = $row;
 		}
 		
-		$this->objectArray = array();
-		$query = $this->qls->SQL->select('*', 'app_object');
-		while($row = $this->qls->SQL->fetch_assoc($query)) {
-			$this->objectArray[$row['id']] = $row;
+		// Add full path names for each environment tree object
+		foreach($this->envTreeArray as &$entry) {
+			$parentID = $entry['parent'];
+			$nameString = $entry['name'];
+			while($parentID != '#') {
+				$nameString = $this->envTreeArray[$parentID]['name'].'.'.$nameString;
+				$parentID = $this->envTreeArray[$parentID]['parent'];
+			}
+			$entry['nameString'] = $nameString;
 		}
 		
 		$this->insertArray = array();
@@ -71,6 +77,33 @@ var $qls;
 		$query = $this->qls->SQL->select('*', 'app_object_templates');
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->templateArray[$row['id']] = $row;
+		}
+		
+		// Generate object... object...
+		$this->objectArray = array();
+		$query = $this->qls->SQL->select('*', 'app_object');
+		while($row = $this->qls->SQL->fetch_assoc($query)) {
+			$this->objectArray[$row['id']] = $row;
+		}
+		
+		// Add full path names for each object... this is dependant on envTreeArray, templateArray, and objectArray
+		foreach($this->objectArray as &$object) {
+			$objectName = $object['name'];
+			$objectTemplateID = $object['template_id'];
+			$objectTemplate = $this->templateArray[$objectTemplateID];
+			$objectTemplateType = $objectTemplate['templateType'];
+			if($objectTemplateType == 'Insert') {
+				$objectParentID = $object['parent_id'];
+				$objectParent = $this->objectArray[$objectParentID];
+				$objectParentName = '.'.$objectParent['name'].'.';
+			} else {
+				$objectParentName = '.';
+			}
+			$cabinetID = $object['env_tree_id'];
+			$cabinet = $this->envTreeArray[$cabinetID];
+			$cabinetNameString = $cabinet['nameString'];
+			$nameString = $cabinetNameString.$objectParentName.$objectName;
+			$object['nameString'] = $nameString;
 		}
 		
 		$this->categoryArray = array();
@@ -212,11 +245,32 @@ var $qls;
 		}
 		
 		$this->peerArrayStandard = array();
+		$this->peerArray = array();
 		$this->peerArrayStandardFloorplan = array();
 		$this->peerArrayWalljack = array();
 		$this->peerArrayWalljackEntry = array();
 		$query = $this->qls->SQL->select('*', 'app_object_peer');
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
+			$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
+				'id' => $row['id'],
+				'selfEndpoint' => $row['a_endpoint'],
+				'peerID' => $row['b_id'],
+				'peerFace' => $row['b_face'],
+				'peerDepth' => $row['b_depth'],
+				'peerPort' => false,
+				'peerEndpoint' => $row['b_endpoint'],
+				'floorplanPeer' => $row['floorplan_peer']
+			);
+			$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']] = array(
+				'id' => $row['id'],
+				'selfEndpoint' => $row['b_endpoint'],
+				'peerID' => $row['a_id'],
+				'peerFace' => $row['a_face'],
+				'peerDepth' => $row['a_depth'],
+				'peerPort' => false,
+				'peerEndpoint' => $row['a_endpoint'],
+				'floorplanPeer' => $row['floorplan_peer']
+			);
 			if(!$row['floorplan_peer']) {
 				$this->peerArrayStandard[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
 					'rowID' => $row['id'],
@@ -291,6 +345,34 @@ var $qls;
 		}
 	}
 
+	function generateObjectName($objID, $objFace=false, $objDepth=false, $objPort=false, $range=false) {
+		$object = $this->objectArray[$objID];
+		$envTreeID = $object['env_tree_id'];
+		$objectTemplateID = $object['template_id'];
+		$template = $this->templateArray[$objectTemplateID];
+		$templateType = $template['templateType'];
+		$locationArray = array();
+		
+		// Save object name separately if it's an insert
+		if($templateType == 'Insert') {
+			array_push($locationArray, $object['name']);
+			$parentID = $object['parent_id'];
+			$object = $this->objectArray[$parentID];
+		}
+		array_push($object['name']);
+		
+		//Locations
+		$rootTreeNode = false;
+		while(!$rootTreeNode) {
+			$node = $this->envTreeArray[$envTreeID];
+			array_push($locationArray, $node['name']);
+			$envTreeID = $node['parent'];
+			$rootTreeNode = $envTreeID == '#' ? true : false;
+		}
+		
+		return implode('.', $locationArray);
+	}
+	
 	/**
 	 * Generates human readable port name
 	 * @return string
@@ -821,38 +903,40 @@ var $qls;
 			
 			if($isCompatible) {
 				if($elementItem['templateType'] == 'walljack') {
-					foreach($this->peerArrayWalljack[$nodeID] as $peerEntry) {
-						$peerID = $peerEntry['id'];
-						$peerFace = $peerEntry['face'];
-						$peerDepth = $peerEntry['depth'];
-						$peerPort = $peerEntry['port'];
-						$selfPortID = $peerEntry['selfPortID'];
-						$peerObject = $this->objectArray[$peerID];
-						$peerTemplateID = $peerObject['template_id'];
-						$peerCompatibility = $this->compatibilityArray[$peerTemplateID][$peerFace][$peerDepth];
-						$portTotal = $peerCompatibility['portLayoutX'] * $peerCompatibility['portLayoutY'];
-						$portNameFormat = json_decode($peerCompatibility['portNameFormat'], true);
-						
-						$flagString = $this->getPortFlags($nodeID, 0, 0, $selfPortID);
-						$portName = $this->generatePortName($portNameFormat, $peerPort, $portTotal);
-						$portName = $portName.$flagString;
-						
-						$value = array(
-							4,
-							$nodeID,
-							0,
-							0,
-							$selfPortID
-						);
-						$value = implode('-', $value);
-						
-						array_push($treeArray, array(
-							'id' => $value,
-							'text' => $portName,
-							'parent' => 'O'.$nodeID,
-							'type' => 'port',
-							'data' => array('globalID' => $value)
-						));
+					if(isset($this->peerArrayWalljack[$nodeID])) {
+						foreach($this->peerArrayWalljack[$nodeID] as $peerEntry) {
+							$peerID = $peerEntry['id'];
+							$peerFace = $peerEntry['face'];
+							$peerDepth = $peerEntry['depth'];
+							$peerPort = $peerEntry['port'];
+							$selfPortID = $peerEntry['selfPortID'];
+							$peerObject = $this->objectArray[$peerID];
+							$peerTemplateID = $peerObject['template_id'];
+							$peerCompatibility = $this->compatibilityArray[$peerTemplateID][$peerFace][$peerDepth];
+							$portTotal = $peerCompatibility['portLayoutX'] * $peerCompatibility['portLayoutY'];
+							$portNameFormat = json_decode($peerCompatibility['portNameFormat'], true);
+							
+							$flagString = $this->getPortFlags($nodeID, 0, 0, $selfPortID);
+							$portName = $this->generatePortName($portNameFormat, $peerPort, $portTotal);
+							$portName = $portName.$flagString;
+							
+							$value = array(
+								4,
+								$nodeID,
+								0,
+								0,
+								$selfPortID
+							);
+							$value = implode('-', $value);
+							
+							array_push($treeArray, array(
+								'id' => $value,
+								'text' => $portName,
+								'parent' => 'O'.$nodeID,
+								'type' => 'port',
+								'data' => array('globalID' => $value)
+							));
+						}
 					}
 				} else {
 					$portNameFormat = json_decode($elementItem['portNameFormat'], true);

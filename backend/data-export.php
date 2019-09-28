@@ -3,21 +3,6 @@ define('QUADODO_IN_SYSTEM', true);
 require_once '../includes/header.php';
 $qls->Security->check_auth_page('administrator.php');
 
-// Templates
-$templateArray = array();
-$query = $qls->SQL->select('*', 'app_object_templates');
-while($row = $qls->SQL->fetch_assoc($query)) {
-	if($row['id'] != 1 and $row['id'] != 2 and $row['id'] != 3)
-	$templateArray[$row['id']] = $row;
-}
-
-// Categories
-$categoryArray = array();
-$query = $qls->SQL->select('*', 'app_object_category');
-while($row = $qls->SQL->fetch_assoc($query)) {
-	$categoryArray[$row['id']] = $row;
-}
-
 // Template Compatibility
 $templateEnclosureArray = array();
 $query = $qls->SQL->select('*', 'app_object_compatibility');
@@ -102,440 +87,15 @@ if ($zip->open($zipFilename, ZipArchive::CREATE | ZipArchive::OVERWRITE)!==TRUE)
     die('Cannot open zip file.');
 }
 
-// ####### Cabinets #######
-// Create File
-$fileCabinets = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinets.csv', 'w');
-
-$csvHeader = array(
-	'Name',
-	'Type',
-	'RU Size',
-	'Adj Left',
-	'Adj Right',
-	'*Original Cabinet',
-	'**Floorplan Image'
-);
-
-fputcsv($fileCabinets,$csvHeader);
-
-$envTreeArray = array();
-$query = $qls->SQL->select('*', 'app_env_tree');
-while($row = $qls->SQL->fetch_assoc($query)) {
-	//if($row['type'] != 'floorplan') {
-	$envTreeArray[$row['id']] = $row;
-	//}
-}
-
-foreach($envTreeArray as &$entry) {
-	$parentID = $entry['parent'];
-	$nameString = $entry['name'];
-	while($parentID != '#') {
-		$nameString = $envTreeArray[$parentID]['name'].'.'.$nameString;
-		$parentID = $envTreeArray[$parentID]['parent'];
-	}
-	$entry['nameString'] = $nameString;
-}
-
-$csvArray = array();
-foreach($envTreeArray as $location) {
-	$size = $location['type'] == 'cabinet' ? $location['size'] : '';
-	$floorplanImg = $location['type'] == 'floorplan' ? $location['floorplan_img'] : '';
-	$adjLeft = isset($envAdjArray[$location['id']]) ? $envTreeArray[$envAdjArray[$location['id']]['left']]['nameString'] : '';
-	$adjRight = isset($envAdjArray[$location['id']]) ? $envTreeArray[$envAdjArray[$location['id']]['right']]['nameString'] : '';
-	$line = array(
-		$location['nameString'],
-		$location['type'],
-		$size,
-		$adjLeft,
-		$adjRight,
-		$location['nameString'],
-		$floorplanImg
-	);
-	$csvArray[$location['nameString']] = $line;
-}
-
-ksort($csvArray);
-foreach($csvArray as $line) {
-	fputcsv($fileCabinets, $line);
-}
-
-// ####### Cabinet Cable Paths #######
-// Create File
-$fileCabinetCablePaths = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv', 'w');
-
-$csvHeader = array(
-	'Cabinet A',
-	'Cabinet B',
-	'Distance (m.)',
-	'Notes'
-);
-fputcsv($fileCabinetCablePaths, $csvHeader);
-
-$csvArray = array();
-$query = $qls->SQL->select('*', 'app_cable_path');
-while($row = $qls->SQL->fetch_assoc($query)) {
-	$line = array(
-		$envTreeArray[$row['cabinet_a_id']]['nameString'],
-		$envTreeArray[$row['cabinet_b_id']]['nameString'],
-		$row['distance']*.001,
-		$row['notes']
-	);
-	$csvArray[$envTreeArray[$row['cabinet_a_id']]['nameString']] = $line;
-}
-
-ksort($csvArray);
-foreach($csvArray as $line) {
-	fputcsv($fileCabinetCablePaths, $line);
-}
-
-// ####### Cabinet Objects #######
-// Create File
-$fileCabinetObjects = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv', 'w');
-
-$csvHeader = array(
-	'Name',
-	'Cabinet',
-	'**Template',
-	'RU',
-	'Cabinet Face',
-	'*Original Object',
-	'**Flooplan Object X',
-	'**Flooplan Object Y'
-);
-fputcsv($fileCabinetObjects, $csvHeader);
-
-$floorplanObjTemplateArray = array(
-	1 => 'walljack',
-	2 => 'wap',
-	3 => 'device'
-);
-
-$csvArray = array();
-foreach($objectArray as $object) {
-	$floorplanObj = (1 <= $object['template_id'] and $object['template_id'] <= 3) ? true : false;
-	$name = $object['name'];
-	$cabinet = $envTreeArray[$object['env_tree_id']]['nameString'];
-	$template = $floorplanObj ? $floorplanObjTemplateArray[$object['template_id']] : $templateArray[$object['template_id']]['templateName'];
-	$RUSize = $floorplanObj ? '' : $templateArray[$object['template_id']]['templateRUSize'];
-	$topRU = $floorplanObj ? '' : $object['RU'];
-	$bottomRU = $floorplanObj ? '' : $topRU - ($RUSize - 1);
-	if($floorplanObj) {
-		$cabinetFace = '';
-	} else {
-		$cabinetFace = $object['cabinet_front'] == 0 ? 'Front' : 'Rear';
-	}
-	$original = $cabinet.'.'.$name;
-	$posTop = $floorplanObj ? $object['position_top'] : '';
-	$posLeft = $floorplanObj ? $object['position_left'] : '';
-	
-	$line = array(
-		$name,
-		$cabinet,
-		$template,
-		$bottomRU,
-		$cabinetFace,
-		$original,
-		$posLeft,
-		$posTop
-	);
-	$csvArray[$original] = $line;
-}
-
-ksort($csvArray);
-foreach($csvArray as $line) {
-	fputcsv($fileCabinetObjects, $line);
-}
-
-// ####### Object Inserts #######
-// Create File
-$fileObjectInserts = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv', 'w');
-
-$csvHeader = array(
-	'**Object',
-	'**Face',
-	'**Slot',
-	'Insert Name',
-	'**Insert Template',
-	'*Original Insert'
-);
-fputcsv($fileObjectInserts, $csvHeader);
-
-$csvArray = array();
-foreach($objectArray as $object) {
-	$templateID = $object['template_id'];
-	
-	if(array_key_exists($templateID, $templateEnclosureArray)) {
-		$objectID = $object['id'];
-		$cabinetID = $object['env_tree_id'];
-		$objectName = $object['name'];
-		$parentID = $object['parent_id'];
-		$parentFace = $object['parent_id'];
-		$parentDepth = $object['parent_id'];
-		$slotX = $object['insertSlotX'];
-		$slotY = $object['insertSlotY'];
-		$cabinetNameString = $envTreeArray[$cabinetID]['nameString'];
-		$objectNameString = $cabinetNameString.'.'.$objectName;
-	
-		foreach($templateEnclosureArray[$templateID] as $face=>$templateFace) {
-			$faceString = $face == 0 ? 'Front' : 'Rear';
-			
-			foreach($templateFace as $depth=>$templatePartition) {
-
-				for($y=0; $y<$templatePartition['encLayoutY']; $y++) {
-					for($x=0; $x<$templatePartition['encLayoutX']; $x++) {
-
-						$enc = $depth;
-						$row = chr($y+65);
-						$col = $x+1;
-						$slotID = 'Enc'.$enc.'Slot'.$row.$col;
-						$line = array(
-							$objectNameString,
-							$faceString,
-							$slotID
-						);
-						
-						if(isset($insertArray[$objectID][$face][$depth][$x][$y])) {
-							$insert = $insertArray[$objectID][$face][$depth][$x][$y];
-							$insertName = $insert['name'];
-							$insertTemplateID = $insert['template_id'];
-							$insertTemplateName = $templateArray[$insertTemplateID]['templateName'];
-							array_push($line, $insertName);
-							array_push($line, $insertTemplateName);
-							array_push($line, $objectNameString.'.'.$faceString.'.'.$slotID.'.'.$insertName);
-						} else {
-							array_push($line, '');
-							array_push($line, '');
-							array_push($line, '');
-						}
-						
-						if(!array_key_exists($objectNameString, $csvArray)) {
-							$csvArray[$objectNameString] = array();
-						}
-						
-						array_push($csvArray[$objectNameString], $line);
-					}
-				}
-			}
-		}
-	}
-}
-
-ksort($csvArray);
-foreach($csvArray as $object) {
-	foreach($object as $encSlot) {
-		fputcsv($fileObjectInserts, $encSlot);
-	}
-}
-
-// ####### Templates #######
-// Create File
-$fileTemplates = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Templates.csv', 'w');
-
-$csvHeader = array(
-	'Name',
-	'Category',
-	'*Original Template',
-	'**Type',
-	'**Function',
-	'**RU Size',
-	'**Mount Config',
-	'**Template Structure'
-);
-fputcsv($fileTemplates, $csvHeader);
-
-$csvArray = array();
-foreach($templateArray as $template) {
-	$templateID = $template['id'];
-	$templateCategoryID = $template['templateCategory_id'];
-	$templateName = $template['templateName'];
-	$templateCategoryName = $categoryArray[$templateCategoryID]['name'];
-	$templateType = $template['templateType'];
-	$templateFunction = $template['templateFunction'];
-	$templateRUSize = $template['templateRUSize'];
-	$templateMountConfig = $template['templateMountConfig'];
-	$sizeX = $template['templateEncLayoutX'] ? $template['templateEncLayoutX'] : null;
-	$sizeY = $template['templateEncLayoutY'] ? $template['templateEncLayoutY'] : null;
-	$parentH = $template['templateHUnits'] ? $template['templateHUnits'] : null;
-	$parentV = $template['templateVUnits'] ? $template['templateVUnits'] : null;
-	$templateStructure = json_decode($template['templatePartitionData'], true);
-	$templateFrontImage = $template['frontImage'] ? $template['frontImage'] : null;
-	$templateRearImage = $template['rearImage'] ? $template['rearImage'] : null;
-	$templateJSON = json_encode(array(
-		'sizeX' => $sizeX,
-		'sizeY' => $sizeY,
-		'parentH' => $parentH,
-		'parentV' => $parentV,
-		'frontImage' => $templateFrontImage,
-		'rearImage' => $templateRearImage,
-		'structure' => $templateStructure,
-	));
-	if($templateMountConfig !== null) {
-		$templateMountConfigString = $templateMountConfig == 0 ? '2-Post' : '4-Post';
-	} else {
-		$templateMountConfigString = 'N/A';
-	}
-	
-	$line = array(
-		$templateName,
-		$templateCategoryName,
-		$templateName,
-		$templateType,
-		$templateFunction,
-		$templateRUSize,
-		$templateMountConfigString,
-		$templateJSON
-	);
-	
-	$csvArray[$templateName] = $line;
-}
-
-ksort($csvArray);
-foreach($csvArray as $line) {
-	fputcsv($fileTemplates, $line);
-}
-
-// ####### Categories #######
-// Create File
-$fileCategories = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Categories.csv', 'w');
-
-$csvHeader = array(
-	'Name',
-	'Color',
-	'Default',
-	'*Original Category'
-);
-fputcsv($fileCategories, $csvHeader);
-
-$csvArray = array();
-foreach($categoryArray as $category) {
-	$categoryID = $category['id'];
-	$categoryName = $category['name'];
-	$categoryColor = $category['color'];
-	$categoryDefault = $category['defaultOption'] == 1 ? 'X' : '';
-	
-	$line = array(
-		$categoryName,
-		$categoryColor,
-		$categoryDefault,
-		$categoryName
-	);
-	
-	$csvArray[$categoryName] = $line;
-}
-
-ksort($csvArray);
-foreach($csvArray as $line) {
-	fputcsv($fileCategories, $line);
-}
-
-// ####### Connections #######
-// Create File
-$fileConnections = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv', 'w');
-
-$csvHeader = array(
-	'PortA',
-	'CableA ID',
-	'CableA Connector Type',
-	'PortB',
-	'CableB ID',
-	'CableB Connector Type',
-	'Media Type',
-	'Length'
-);
-fputcsv($fileConnections, $csvHeader);
-
-$csvArray = array();
-foreach($qls->App->inventoryAllArray as $connection) {
-	$aObjID = $connection['a_object_id'];
-	$aObjFace = $connection['a_object_face'];
-	$aObjDepth = $connection['a_object_depth'];
-	$aObjPort = $connection['a_port_id'];
-	$aCode39 = $connection['a_code39'] ? $connection['a_code39'] : 'None';
-	$aConnectorID = $connection['a_connector'];
-	$aConnector = $aConnectorID ? $qls->App->connectorTypeValueArray[$aConnectorID]['name'] : 'None';
-	
-	$bObjID = $connection['b_object_id'];
-	$bObjFace = $connection['b_object_face'];
-	$bObjDepth = $connection['b_object_depth'];
-	$bObjPort = $connection['b_port_id'];
-	$bCode39 = $connection['b_code39'] == 0 ? 'None' : $connection['b_code39'];
-	$bConnectorID = $connection['b_connector'];
-	$bConnector = $bConnectorID ? $qls->App->connectorTypeValueArray[$bConnectorID]['name'] : 'None';
-	
-	if($aObjID) {
-		error_log('A');
-		$aObjectName = $qls->App->getPortNameString($aObjID, $aObjFace, $aObjDepth, $aObjPort);
-	} else {
-		$aObjectName = 'None';
-	}
-	
-	if($bObjID) {
-		error_log('B');
-		$bObjectName = $qls->App->getPortNameString($bObjID, $bObjFace, $bObjDepth, $bObjPort);
-	} else {
-		$bObjectName = 'None';
-	}
-	
-	$mediaTypeID = $connection['mediaType'];
-	$mediaType = $mediaTypeID ? $qls->App->mediaTypeValueArray[$mediaTypeID]['name'] : 'None';
-	$length = $connection['length'];
-	if($mediaTypeID and $length) {
-		$lengthString = $qls->App->calculateCableLength($mediaTypeID, $length, true);
-	} else {
-		$lengthString = 'None';
-	}
-	
-	$line = array(
-		$aObjectName,
-		$aCode39,
-		$aConnector,
-		$bObjectName,
-		$bCode39,
-		$bConnector,
-		$mediaType,
-		$lengthString
-	);
-	
-	$csvArray[$aObjectName] = $line;
-}
-
-foreach($qls->App->populatedPortAllArray as $port) {
-	$objID = $port['object_id'];
-	$objFace = $port['object_face'];
-	$objDepth = $port['object_depth'];
-	$objPort = $port['port_id'];
-	error_log('here');
-	$objectName = $qls->App->getPortNameString($objID, $objFace, $objDepth, $objPort);
-	
-	$line = array(
-		$objectName,
-		'None',
-		'None',
-		'None',
-		'None',
-		'None',
-		'None',
-		'None'
-	);
-	
-	$csvArray[$objectName] = $line;
-}
-
-ksort($csvArray);
-foreach($csvArray as $line) {
-	fputcsv($fileConnections, $line);
-}
-
-
-
-
-fclose($fileCabinets);
-fclose($fileCabinetCablePaths);
-fclose($fileCabinetObjects);
-fclose($fileObjectInserts);
-fclose($fileTemplates);
-fclose($fileCategories);
-fclose($fileConnections);
+// Create .csv files
+createCabinets($qls);
+createCablePaths($qls);
+createObjects($qls, $objectArray);
+createObjectInserts($qls, $objectArray, $insertArray, $templateEnclosureArray);
+createTemplates($qls);
+createCategories($qls);
+createConnections($qls);
+createTrunks($qls);
 
 // Add database data
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Categories.csv', '01 - Categories.csv');
@@ -545,6 +105,7 @@ $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv'
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv', '05 - Cabinet Objects.csv');
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv', '06 - Object Inserts.csv');
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv', '07 - Connections.csv');
+$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Trunks.csv', '08 - Trunks.csv');
 $zip->addFile($_SERVER['DOCUMENT_ROOT'].'/userDownloads/README.txt', 'README.txt');
 
 // Identify template images in use
@@ -611,7 +172,478 @@ unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv');
 unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv');
 unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv');
 unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv');
+unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Trunks.csv');
 unlink($_SERVER['DOCUMENT_ROOT'].'/userDownloads/export.zip');
 
 exit;
+
+function createCabinets(&$qls){
+	$fileCabinets = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinets.csv', 'w');
+
+	$csvHeader = array(
+		'Name',
+		'Type',
+		'RU Size',
+		'Adj Left',
+		'Adj Right',
+		'*Original Cabinet',
+		'**Floorplan Image'
+	);
+
+	fputcsv($fileCabinets,$csvHeader);
+
+	$csvArray = array();
+	foreach($qls->App->envTreeArray as $location) {
+		$size = $location['type'] == 'cabinet' ? $location['size'] : '';
+		$floorplanImg = $location['type'] == 'floorplan' ? $location['floorplan_img'] : '';
+		$adjLeft = isset($envAdjArray[$location['id']]) ? $qls->App->envTreeArray[$envAdjArray[$location['id']]['left']]['nameString'] : '';
+		$adjRight = isset($envAdjArray[$location['id']]) ? $qls->App->envTreeArray[$envAdjArray[$location['id']]['right']]['nameString'] : '';
+		$line = array(
+			$location['nameString'],
+			$location['type'],
+			$size,
+			$adjLeft,
+			$adjRight,
+			$location['nameString'],
+			$floorplanImg
+		);
+		$csvArray[$location['nameString']] = $line;
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileCabinets, $line);
+	}
+	
+	fclose($fileCabinets);
+}
+
+function createCablePaths(&$qls){
+	$fileCabinetCablePaths = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Cable Paths.csv', 'w');
+
+	$csvHeader = array(
+		'Cabinet A',
+		'Cabinet B',
+		'Distance (m.)',
+		'Notes'
+	);
+	fputcsv($fileCabinetCablePaths, $csvHeader);
+
+	$csvArray = array();
+	$query = $qls->SQL->select('*', 'app_cable_path');
+	while($row = $qls->SQL->fetch_assoc($query)) {
+		$line = array(
+			$qls->App->envTreeArray[$row['cabinet_a_id']]['nameString'],
+			$qls->App->envTreeArray[$row['cabinet_b_id']]['nameString'],
+			$row['distance']*.001,
+			$row['notes']
+		);
+		$csvArray[$qls->App->envTreeArray[$row['cabinet_a_id']]['nameString']] = $line;
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileCabinetCablePaths, $line);
+	}
+	
+	fclose($fileCabinetCablePaths);
+}
+
+function createObjects(&$qls, $objectArray){
+	$fileCabinetObjects = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Cabinet Objects.csv', 'w');
+
+	$csvHeader = array(
+		'Name',
+		'Cabinet',
+		'**Template',
+		'RU',
+		'Cabinet Face',
+		'*Original Object',
+		'**Flooplan Object X',
+		'**Flooplan Object Y'
+	);
+	fputcsv($fileCabinetObjects, $csvHeader);
+
+	$floorplanObjTemplateArray = array(
+		1 => 'walljack',
+		2 => 'wap',
+		3 => 'device'
+	);
+
+	$csvArray = array();
+	foreach($objectArray as $object) {
+		$floorplanObj = (1 <= $object['template_id'] and $object['template_id'] <= 3) ? true : false;
+		$name = $object['name'];
+		$cabinet = $qls->App->envTreeArray[$object['env_tree_id']]['nameString'];
+		$template = $floorplanObj ? $floorplanObjTemplateArray[$object['template_id']] : $qls->App->templateArray[$object['template_id']]['templateName'];
+		$RUSize = $floorplanObj ? '' : $qls->App->templateArray[$object['template_id']]['templateRUSize'];
+		$topRU = $floorplanObj ? '' : $object['RU'];
+		$bottomRU = $floorplanObj ? '' : $topRU - ($RUSize - 1);
+		if($floorplanObj) {
+			$cabinetFace = '';
+		} else {
+			$cabinetFace = $object['cabinet_front'] == 0 ? 'Front' : 'Rear';
+		}
+		$original = $cabinet.'.'.$name;
+		$posTop = $floorplanObj ? $object['position_top'] : '';
+		$posLeft = $floorplanObj ? $object['position_left'] : '';
+		
+		$line = array(
+			$name,
+			$cabinet,
+			$template,
+			$bottomRU,
+			$cabinetFace,
+			$original,
+			$posLeft,
+			$posTop
+		);
+		$csvArray[$original] = $line;
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileCabinetObjects, $line);
+	}
+	
+	fclose($fileCabinetObjects);
+}
+
+function createObjectInserts(&$qls, $objectArray, $insertArray, $templateEnclosureArray){
+	$fileObjectInserts = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Object Inserts.csv', 'w');
+
+	$csvHeader = array(
+		'**Object',
+		'**Face',
+		'**Slot',
+		'Insert Name',
+		'**Insert Template',
+		'*Original Insert'
+	);
+	fputcsv($fileObjectInserts, $csvHeader);
+
+	$csvArray = array();
+	foreach($objectArray as $object) {
+		$templateID = $object['template_id'];
+		
+		if(array_key_exists($templateID, $templateEnclosureArray)) {
+			$objectID = $object['id'];
+			$cabinetID = $object['env_tree_id'];
+			$objectName = $object['name'];
+			$parentID = $object['parent_id'];
+			$parentFace = $object['parent_id'];
+			$parentDepth = $object['parent_id'];
+			$slotX = $object['insertSlotX'];
+			$slotY = $object['insertSlotY'];
+			$cabinetNameString = $qls->App->envTreeArray[$cabinetID]['nameString'];
+			$objectNameString = $cabinetNameString.'.'.$objectName;
+		
+			foreach($templateEnclosureArray[$templateID] as $face=>$templateFace) {
+				$faceString = $face == 0 ? 'Front' : 'Rear';
+				
+				foreach($templateFace as $depth=>$templatePartition) {
+
+					for($y=0; $y<$templatePartition['encLayoutY']; $y++) {
+						for($x=0; $x<$templatePartition['encLayoutX']; $x++) {
+
+							$enc = $depth;
+							$row = chr($y+65);
+							$col = $x+1;
+							$slotID = 'Enc'.$enc.'Slot'.$row.$col;
+							$line = array(
+								$objectNameString,
+								$faceString,
+								$slotID
+							);
+							
+							if(isset($insertArray[$objectID][$face][$depth][$x][$y])) {
+								$insert = $insertArray[$objectID][$face][$depth][$x][$y];
+								$insertName = $insert['name'];
+								$insertTemplateID = $insert['template_id'];
+								$insertTemplateName = $qls->App->templateArray[$insertTemplateID]['templateName'];
+								array_push($line, $insertName);
+								array_push($line, $insertTemplateName);
+								array_push($line, $objectNameString.'.'.$faceString.'.'.$slotID.'.'.$insertName);
+							} else {
+								array_push($line, '');
+								array_push($line, '');
+								array_push($line, '');
+							}
+							
+							if(!array_key_exists($objectNameString, $csvArray)) {
+								$csvArray[$objectNameString] = array();
+							}
+							
+							array_push($csvArray[$objectNameString], $line);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $object) {
+		foreach($object as $encSlot) {
+			fputcsv($fileObjectInserts, $encSlot);
+		}
+	}
+	
+	fclose($fileObjectInserts);
+}
+
+function createTemplates(&$qls){
+	$fileTemplates = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Templates.csv', 'w');
+
+	$csvHeader = array(
+		'Name',
+		'Category',
+		'*Original Template',
+		'**Type',
+		'**Function',
+		'**RU Size',
+		'**Mount Config',
+		'**Template Structure'
+	);
+	fputcsv($fileTemplates, $csvHeader);
+
+	$csvArray = array();
+	foreach($qls->App->templateArray as $template) {
+		// Skip system generated templates
+		if($templateID > 4) {
+			$templateID = $template['id'];
+			$templateCategoryID = $template['templateCategory_id'];
+			$templateName = $template['templateName'];
+			$templateCategoryName = $qls->App->categoryArray[$templateCategoryID]['name'];
+			$templateType = $template['templateType'];
+			$templateFunction = $template['templateFunction'];
+			$templateRUSize = $template['templateRUSize'];
+			$templateMountConfig = $template['templateMountConfig'];
+			$sizeX = $template['templateEncLayoutX'] ? $template['templateEncLayoutX'] : null;
+			$sizeY = $template['templateEncLayoutY'] ? $template['templateEncLayoutY'] : null;
+			$parentH = $template['templateHUnits'] ? $template['templateHUnits'] : null;
+			$parentV = $template['templateVUnits'] ? $template['templateVUnits'] : null;
+			$templateStructure = json_decode($template['templatePartitionData'], true);
+			$templateFrontImage = $template['frontImage'] ? $template['frontImage'] : null;
+			$templateRearImage = $template['rearImage'] ? $template['rearImage'] : null;
+			$templateJSON = json_encode(array(
+				'sizeX' => $sizeX,
+				'sizeY' => $sizeY,
+				'parentH' => $parentH,
+				'parentV' => $parentV,
+				'frontImage' => $templateFrontImage,
+				'rearImage' => $templateRearImage,
+				'structure' => $templateStructure,
+			));
+			if($templateMountConfig !== null) {
+				$templateMountConfigString = $templateMountConfig == 0 ? '2-Post' : '4-Post';
+			} else {
+				$templateMountConfigString = 'N/A';
+			}
+			
+			$line = array(
+				$templateName,
+				$templateCategoryName,
+				$templateName,
+				$templateType,
+				$templateFunction,
+				$templateRUSize,
+				$templateMountConfigString,
+				$templateJSON
+			);
+			
+			$csvArray[$templateName] = $line;
+		}
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileTemplates, $line);
+	}
+	
+	fclose($fileTemplates);
+}
+
+function createCategories(&$qls){
+	$fileCategories = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Categories.csv', 'w');
+
+	$csvHeader = array(
+		'Name',
+		'Color',
+		'Default',
+		'*Original Category'
+	);
+	fputcsv($fileCategories, $csvHeader);
+
+	$csvArray = array();
+	foreach($qls->App->categoryArray as $category) {
+		$categoryID = $category['id'];
+		$categoryName = $category['name'];
+		$categoryColor = $category['color'];
+		$categoryDefault = $category['defaultOption'] == 1 ? 'X' : '';
+		
+		$line = array(
+			$categoryName,
+			$categoryColor,
+			$categoryDefault,
+			$categoryName
+		);
+		
+		$csvArray[$categoryName] = $line;
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileCategories, $line);
+	}
+	
+	fclose($fileCategories);
+}
+
+function createConnections(&$qls){
+	$fileConnections = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Connections.csv', 'w');
+
+	$csvHeader = array(
+		'PortA',
+		'CableA ID',
+		'CableA Connector Type',
+		'PortB',
+		'CableB ID',
+		'CableB Connector Type',
+		'Media Type',
+		'Length'
+	);
+	fputcsv($fileConnections, $csvHeader);
+
+	$csvArray = array();
+	foreach($qls->App->inventoryAllArray as $connection) {
+		$aObjID = $connection['a_object_id'];
+		$aObjFace = $connection['a_object_face'];
+		$aObjDepth = $connection['a_object_depth'];
+		$aObjPort = $connection['a_port_id'];
+		$aCode39 = $connection['a_code39'] ? $connection['a_code39'] : 'None';
+		$aConnectorID = $connection['a_connector'];
+		$aConnector = $aConnectorID ? $qls->App->connectorTypeValueArray[$aConnectorID]['name'] : 'None';
+		
+		$bObjID = $connection['b_object_id'];
+		$bObjFace = $connection['b_object_face'];
+		$bObjDepth = $connection['b_object_depth'];
+		$bObjPort = $connection['b_port_id'];
+		$bCode39 = $connection['b_code39'] == 0 ? 'None' : $connection['b_code39'];
+		$bConnectorID = $connection['b_connector'];
+		$bConnector = $bConnectorID ? $qls->App->connectorTypeValueArray[$bConnectorID]['name'] : 'None';
+		
+		if($aObjID) {
+			$aObjectName = $qls->App->getPortNameString($aObjID, $aObjFace, $aObjDepth, $aObjPort);
+		} else {
+			$aObjectName = 'None';
+		}
+		
+		if($bObjID) {
+			$bObjectName = $qls->App->getPortNameString($bObjID, $bObjFace, $bObjDepth, $bObjPort);
+		} else {
+			$bObjectName = 'None';
+		}
+		
+		$mediaTypeID = $connection['mediaType'];
+		$mediaType = $mediaTypeID ? $qls->App->mediaTypeValueArray[$mediaTypeID]['name'] : 'None';
+		$length = $connection['length'];
+		if($mediaTypeID and $length) {
+			$lengthString = $qls->App->calculateCableLength($mediaTypeID, $length, true);
+		} else {
+			$lengthString = 'None';
+		}
+		
+		$line = array(
+			$aObjectName,
+			$aCode39,
+			$aConnector,
+			$bObjectName,
+			$bCode39,
+			$bConnector,
+			$mediaType,
+			$lengthString
+		);
+		
+		$csvArray[$aObjectName] = $line;
+	}
+
+	foreach($qls->App->populatedPortAllArray as $port) {
+		$objID = $port['object_id'];
+		$objFace = $port['object_face'];
+		$objDepth = $port['object_depth'];
+		$objPort = $port['port_id'];
+		error_log('here');
+		$objectName = $qls->App->getPortNameString($objID, $objFace, $objDepth, $objPort);
+		
+		$line = array(
+			$objectName,
+			'None',
+			'None',
+			'None',
+			'None',
+			'None',
+			'None',
+			'None'
+		);
+		
+		$csvArray[$objectName] = $line;
+	}
+
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileConnections, $line);
+	}
+	
+	fclose($fileConnections);
+}
+
+function createTrunks(&$qls){
+	$fileTrunks = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Trunks.csv', 'w');
+
+	$csvHeader = array(
+		'ObjectA',
+		'ObjectA Start Port',
+		'ObjectA End Port',
+		'ObjectB',
+		'ObjectB Start Port',
+		'ObjectB End Port'
+	);
+
+	fputcsv($fileTrunks,$csvHeader);
+
+	$csvArray = array();
+	$peerArray = array();
+	foreach($qls->App->peerArray as $objAID => $obj) {
+		array_push($peerArray, $objAID);
+		foreach($obj as $objFace => $face) {
+			foreach($face as $objPartition => $partition) {
+				$objBID = $partition['peerID'];
+				if(!in_array($objBID, $peerArray)) {
+					//$objATemplateID = 
+					$objACompatibility = $qls->App->compatibilityArray[
+					$objectA = $qls->App->objectArray[$objAID]['nameString'];
+					$objectB = $qls->App->objectArray[$objBID]['nameString'];
+					
+					$line = array(
+						$objectA,
+						'',
+						'',
+						$objectB,
+						'',
+						''
+					);
+					$csvArray[$objectA] = $line;
+				}
+			}
+		}
+	}
+	
+	ksort($csvArray);
+	foreach($csvArray as $line) {
+		fputcsv($fileTrunks, $line);
+	}
+	
+	fclose($fileTrunks);
+}
 ?>

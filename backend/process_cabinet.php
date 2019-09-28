@@ -364,29 +364,29 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$addArray = array();
 			$deleteArray = array();
 			$portIDArray = array();
-			foreach($qls->App->peerArrayWalljack[$objectID] as $walljackPeerEntry) {
-				array_push($portIDArray, $walljackPeerEntry['selfPortID']);
-			}
 			
 			// Find Deletes
-			foreach($qls->App->peerArrayWalljack[$objectID] as $walljackPeerEntry) {
-				$delete = true;
-				foreach($value as $peer) {
-					$peerArray = explode('-', $peer);
-					$peerType = $peerArray[0];
-					$peerID = $peerArray[1];
-					$peerFace = $peerArray[2];
-					$peerDepth = $peerArray[3];
-					$peerPort = $peerArray[4];
-					
-					error_log('valueArray: '.$peerID.'-'.$peerFace.'-'.$peerDepth.'-'.$peerPort);
-					if($walljackPeerEntry['id'] == $peerID and $walljackPeerEntry['face'] == $peerFace and $walljackPeerEntry['depth'] == $peerDepth and $walljackPeerEntry['port'] == $peerPort) {
-						$delete = false;
+			if(isset($qls->App->peerArrayWalljack[$objectID])) {
+				foreach($qls->App->peerArrayWalljack[$objectID] as $walljackPeerEntry) {
+					array_push($portIDArray, $walljackPeerEntry['selfPortID']);
+					$delete = true;
+					foreach($value as $peer) {
+						$peerArray = explode('-', $peer);
+						$peerType = $peerArray[0];
+						$peerID = $peerArray[1];
+						$peerFace = $peerArray[2];
+						$peerDepth = $peerArray[3];
+						$peerPort = $peerArray[4];
+						
+						error_log('valueArray: '.$peerID.'-'.$peerFace.'-'.$peerDepth.'-'.$peerPort);
+						if($walljackPeerEntry['id'] == $peerID and $walljackPeerEntry['face'] == $peerFace and $walljackPeerEntry['depth'] == $peerDepth and $walljackPeerEntry['port'] == $peerPort) {
+							$delete = false;
+						}
 					}
-				}
-				error_log($delete ? 'true' : 'false');
-				if($delete) {
-					array_push($deleteArray, $walljackPeerEntry);
+					error_log($delete ? 'true' : 'false');
+					if($delete) {
+						array_push($deleteArray, $walljackPeerEntry);
+					}
 				}
 			}
 			

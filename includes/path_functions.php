@@ -908,24 +908,43 @@ function buildConnectorFlatPath($cable, $connectorEnd, &$qls){
 }
 
 function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
-	$query = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$objectDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$objectDepth.')');
-	if($qls->SQL->num_rows($query)) {
+	if(isset($qls->App->peerArray[$objectID][$objectFace][$objectDepth])) {
+	//$query = $qls->SQL->select('*', 'app_object_peer', '(a_id = '.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$objectDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$objectDepth.')');
+	//if($qls->SQL->num_rows($query)) {
 		// Peer variables
-		$peerRecord = $qls->SQL->fetch_assoc($query);
+		//$peerRecord = $qls->SQL->fetch_assoc($query);
+		$peerRecord = $qls->App->peerArray[$objectID][$objectFace][$objectDepth];
 		$peerAttr = $peerRecord['a_id'] == $objectID ? 'b' : 'a';
-		$peerID = $peerRecord[$peerAttr.'_id'];
-		$peerFace = $peerRecord[$peerAttr.'_face'];
-		$peerDepth = $peerRecord[$peerAttr.'_depth'];
+		$peerID = $peerRecord['id'];
+		$peerFace = $peerRecord['face'];
+		$peerDepth = $peerRecord['depth'];
 		
 		// Peer object variables
+		/*
 		$query = $qls->SQL->select('*', 'app_object', array('id' => array('=', $peerID)));
 		$peer = $qls->SQL->fetch_assoc($query);
+		*/
+		$peer = $qls->App->objectArray[$peerID];
 		$peerName = $peer['name'];
-		$templateID = $peer['template_id'];
+		$peerTemplateID = $peer['template_id'];
+		$peerTemplateType = $qls->App->templateArray[$peerTemplateID]['templateType'];
+		if($peerRecord['floorplan_peer']) {
+		//if($peerTemplateType == 'wap' or $peerTemplateType == 'walljack') {
+			$object = $objectArray[$objectID];
+			$templateID = $object['template_id'];
+			$face = $objectFace;
+			$depth = $objectDepth;
+		} else {
+			$templateID = $peerTemplateID;
+			$face = $peerFace;
+			$depth = $peerDepth;
+		}
 		
 		// Partition variables
-		$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $peerFace), 'AND', 'depth' => array('=', $peerDepth)));
-		$partitionCompatibility = $qls->SQL->fetch_assoc($query);
+		//error_log($peerTemplateID.'-'.$peerFace.'-'.$peerDepth);
+		//$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $peerTemplateID), 'AND', 'side' => array('=', $peerFace), 'AND', 'depth' => array('=', $peerDepth)));
+		//$partitionCompatibility = $qls->SQL->fetch_assoc($query);
+		$partitionCompatibility = $qls->App->compatibilityArray[$templateID][$face][$depth];
 		$templateType = $partitionCompatibility['templateType'];
 		$partitionFunction = $partitionCompatibility['partitionFunction'];
 		

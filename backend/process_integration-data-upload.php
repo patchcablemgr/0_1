@@ -640,7 +640,8 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 	$objectNameString = $cabinetName.'.'.$objectName;
 	$objectNameHash = md5(strtolower($objectNameString));
 	$templateName = $csvLine[2];
-	$templateNameHash = md5(strtolower($templateName));
+	$templateNameLower = strtolower($templateName);
+	$templateNameHash = md5($templateNameLower);
 	$RU = $csvLine[3];
 	$cabinetFace = strtolower($csvLine[4]);
 	$originalObjectName = ($GLOBALS['importType'] == 'edit') ? $csvLine[5] : '';
@@ -650,13 +651,17 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 	$originalCabinetName = implode('.', $originalCabinetNameArray);
 	$originalCabinetNameHash = md5(strtolower($originalCabinetName));
 	$template = $existingTemplateArray[$templateNameHash];
+	$floorplanPosLeft = $csvLine[6];
+	$floorplanPosTop = $csvLine[7];
 	
 	if(!array_key_exists($objectNameHash, $importedObjectArray)) {
+		$objectType = ($templateNameLower == 'wap' or $templateNameLower == 'walljack' or $templateNameLower == 'device') ? 'floorplanObject' : 'cabinetObject';
 		$importedObjectArray[$objectNameHash]['line'] = $csvLineNumber;
 		$importedObjectArray[$objectNameHash]['fileName'] = $csvFilename;
 		$importedObjectArray[$objectNameHash]['objectName'] = $objectName;
 		$importedObjectArray[$objectNameHash]['objectNameString'] = $objectNameString;
 		$importedObjectArray[$objectNameHash]['objectNameHash'] = $objectNameHash;
+		$importedObjectArray[$objectNameHash]['type'] = $objectType;
 		$importedObjectArray[$objectNameHash]['cabinetName'] = $cabinetName;
 		$importedObjectArray[$objectNameHash]['cabinetNameHash'] = $cabinetNameHash;
 		$importedObjectArray[$objectNameHash]['templateName'] = $templateName;
@@ -668,6 +673,8 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 		$importedObjectArray[$objectNameHash]['originalCabinetName'] = $originalCabinetName;
 		$importedObjectArray[$objectNameHash]['originalCabinetNameHash'] = $originalCabinetNameHash;
 		$importedObjectArray[$objectNameHash]['id'] = $originalObjectName ? $existingObjectArray[$originalObjectNameHash]['id'] : null;
+		$importedObjectArray[$objectNameHash]['posLeft'] = $objectType == 'floorplanObject' ? $floorplanPosLeft : null;
+		$importedObjectArray[$objectNameHash]['posTop'] = $objectType == 'floorplanObject' ? $floorplanPosTop : null;
 		
 		if($template) {
 			$RUSize = $template['templateRUSize'];
@@ -1034,15 +1041,15 @@ function validateImportedCabinets($importedCabinetArray, $existingCabinetArray, 
 							// Parents Must Match, Meaning Cabinets Are in Same Location
 							if($cabinetParentName == $adjacentCabinetParentName) {
 								if($cabinetName != $adjacentCabinetSideName) {
-									$errMsg = ucfirst($cabinetSide).' adjacency does not agree on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+									$errMsg = ucfirst($cabinetSide).' adjacency does not agree on line '.$csvLineNumber.' of "'.$csvFilename.'".';
 									array_push($validate->returnData['error'], $errMsg);
 								}
 							} else {
-								$errMsg = ucfirst($cabinetSide).' adjacency is not in the same location on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+								$errMsg = ucfirst($cabinetSide).' adjacency is not in the same location on line '.$csvLineNumber.' of "'.$csvFilename.'".';
 								array_push($validate->returnData['error'], $errMsg);
 							}
 						} else {
-							$errMsg = ucfirst($cabinetSide).' adjacency is not a cabinet on line '.$csvLineNumber.' of"'.$csvFilename.'"';
+							$errMsg = ucfirst($cabinetSide).' adjacency is not a cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'".';
 							array_push($validate->returnData['error'], $errMsg);
 						}
 					} else {
@@ -1328,11 +1335,6 @@ function validateImportedTemplates(&$importedTemplateArray, $existingTemplateArr
 
 function validateImportedObjects($importedObjectArray, $existingObjectArray, $importedCabinetArray, $importedTemplateArray, $existingTemplateArray, $existingCabinetOccupancyArray, &$validate){
 	$arrayOriginalHashes = array();
-	$systemTemplateArray = array(
-		md5('walljack'),
-		md5('wap'),
-		md5('device')
-	);
 	$allowedFaceArray = array('front', 'rear');
 	
 	foreach($importedObjectArray as $object) {
@@ -1343,10 +1345,13 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 		$objectCabinetNameHash = $object['cabinetNameHash'];
 		$objectTemplate = $object['templateName'];
 		$objectTemplateHash = $object['templateNameHash'];
+		$objectType = $object['type'];
 		$objectRU = $object['RU'];
 		$objectCabinetFace = $object['cabinetFace'];
 		$objectOriginalObjectName = $object['originalObjectName'];
 		$objectOriginalObjectNameHash = $object['originalObjectNameHash'];
+		$posLeft = $object['posLeft'];
+		$posTop = $object['posTop'];
 		
 		$csvFilename = $object['fileName'];
 		$csvLineNumber = $object['line'];
@@ -1355,19 +1360,27 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 		$validate->validateNameText($objectName, 'Object name on line '.$csvLineNumber.' of "'.$fileName.'".');
 		
 		// Validate Cabinet
-		if(!array_key_exists($objectCabinetNameHash, $importedCabinetArray)) {
-			$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist in "Cabinets.csv".';
-			array_push($validate->returnData['error'], $errMsg);
-		} else if($importedCabinetArray[$objectCabinetNameHash]['type'] != 'cabinet') {
-			$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" needs to be of type "Cabinet".';
-			array_push($validate->returnData['error'], $errMsg);
-		} else {
+		if(array_key_exists($objectCabinetNameHash, $importedCabinetArray)) {
 			$cabinetRUSize = $importedCabinetArray[$objectCabinetNameHash]['size'];
 			$cabinetID = $importedCabinetArray[$objectCabinetNameHash]['id'];
+			if($objectType == 'cabinetObject') {
+				if($importedCabinetArray[$objectCabinetNameHash]['type'] != 'cabinet') {
+					$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" needs to be of type "Cabinet".';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			} else if($objectType == 'floorplanObject') {
+				if($importedCabinetArray[$objectCabinetNameHash]['type'] != 'floorplan') {
+					$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" needs to be of type "Floorplan".';
+					array_push($validate->returnData['error'], $errMsg);
+				}
+			}
+		} else {
+			$errMsg = 'Cabinet on line '.$csvLineNumber.' of "'.$csvFilename.'" does not exist in "Cabinets.csv".';
+			array_push($validate->returnData['error'], $errMsg);
 		}
 		
 		// Cabinet Object Specific Validation
-		if(!array_key_exists($objectTemplateHash, $systemTemplateArray)) {
+		if($objectType == 'cabinetObject') {
 			
 			// Validate Template
 			if(!array_key_exists($objectTemplateHash, $importedTemplateArray)) {
@@ -1420,6 +1433,9 @@ function validateImportedObjects($importedObjectArray, $existingObjectArray, $im
 					}
 				}
 			}
+		} else {
+			$validate->validateID($posLeft, 'floorplan object X on line '.$csvLineNumber.' of "'.$csvFilename.'".');
+			$validate->validateID($posTop, 'floorplan object Y on line '.$csvLineNumber.' of "'.$csvFilename.'".');
 		}
 		
 		// Validate Original Object
@@ -2346,16 +2362,41 @@ function deletePath(&$qls, $path){
 
 // Process Objects
 function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCabinetArray, $importedTemplateArray){
+	$systemTemplateArray = array(
+		md5('walljack') => 1,
+		md5('wap') => 2,
+		md5('device') => 3
+	);
+	
 	foreach($objectAdds as $object) {
-		$template = $importedTemplateArray[$object['templateNameHash']];
+		$objectType = $object['type'];
 		$cabinetID = $importedCabinetArray[$object['cabinetNameHash']]['id'];
 		$name = $object['objectName'];
-		$templateID = $template['id'];
-		$objectRU = $object['RU'];
-		$RUSize = $template['templateRUSize'];
-		$RU = $objectRU + ($RUSize - 1);
-		$face = $object['cabinetFace'];
-		$mountConfig = $template['templateMountConfig'];
+		$posLeft = $object['posLeft'];
+		$posTop = $object['posTop'];
+		
+		if($objectType == 'floorplanObject') {
+			
+			// Floorplan object
+			$templateID = $systemTemplateArray[$object['templateNameHash']];
+			$RUSize = null;
+			$mountConfig = null;
+			$RU = null;
+			$face = null;
+			
+		} else {
+			
+			// Cabinet object
+			$template = $importedTemplateArray[$object['templateNameHash']];
+			$templateID = $template['id'];
+			$RUSize = $template['templateRUSize'];
+			$mountConfig = $template['templateMountConfig'];
+			$objectRU = $object['RU'];
+			$RU = $objectRU + ($RUSize - 1);
+			$face = $object['cabinetFace'];
+			
+		}
+		
 		if($face == 'front') {
 			$cabinetFront = 0;
 			$cabinetBack = $mountConfig == 1 ? 1 : null;
@@ -2364,7 +2405,8 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 			$cabinetFront = $mountConfig == 1 ? 1 : null;
 		}
 		
-		$qls->SQL->insert('app_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0));
+		error_log($posTop.'-'.$posLeft);
+		$qls->SQL->insert('app_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY', 'position_left', 'position_top'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0, $posLeft, $posTop));
 		
 		$importedObjectArray[$object['objectNameHash']]['id'] = $qls->SQL->insert_id();
 	}
