@@ -615,25 +615,51 @@ function createTrunks(&$qls){
 	$csvArray = array();
 	$peerArray = array();
 	foreach($qls->App->peerArray as $objAID => $obj) {
+		$objectA = $qls->App->objectArray[$objAID];
 		array_push($peerArray, $objAID);
 		foreach($obj as $objFace => $face) {
 			foreach($face as $objPartition => $partition) {
 				$objBID = $partition['peerID'];
+				
 				if(!in_array($objBID, $peerArray)) {
-					//$objATemplateID = 
-					//$objACompatibility = $qls->App->compatibilityArray[
-					$objectA = $qls->App->objectArray[$objAID]['nameString'];
-					$objectB = $qls->App->objectArray[$objBID]['nameString'];
+					$objectB = $qls->App->objectArray[$objBID];
+					$objBTemplateID = $objectB['template_id'];
+					$objATemplateID = $objectA['template_id'];
+					if($objATemplateID > 3) {
+						$objACompatibility = $qls->App->compatibilityArray[$objATemplateID][$objFace][$objPartition];
+						$objAPortNameFormat = json_decode($objACompatibility['portNameFormat'], true);
+						$objAPortTotal = $objACompatibility['portTotal'];
+						$objAFirstPort = $qls->App->generatePortName($objAPortNameFormat, 0, $objAPortTotal);
+						$objALastPort = $qls->App->generatePortName($objAPortNameFormat, $objAPortTotal-1, $objAPortTotal);
+					} else if($objATemplateID == 1) {
+						$walljackArray = $qls->App->peerArrayWalljack[$objAID];
+						$peerFace = $walljackArray[0]['face'];
+						$peerPartition = $walljackArray[0]['depth'];
+						$objBCompatibility = $qls->App->compatibilityArray[$objBTemplateID][$peerFace][$peerFace];
+						$objBPortNameFormat = json_decode($objBCompatibility['portNameFormat'], true);
+						$objBPortTotal = $objBCompatibility['portTotal'];
+						$objAFirstPortID = $qls->App->peerArrayWalljack[$objAID][0]['port'];
+						//$objALastPortID = $qls->App->peerArrayWalljack[$objAID][count($qls->App->peerArrayWalljack[$objAID])]['port'];
+						$walljackPortCount = count($qls->App->peerArrayWalljack[$objAID])-1;
+						$objALastPortID = $qls->App->peerArrayWalljack[$objAID][$walljackPortCount]['port'];
+						$objAFirstPort = $qls->App->generatePortName($objBPortNameFormat, $objAFirstPortID, $objBPortTotal);
+						$objALastPort = $qls->App->generatePortName($objBPortNameFormat, $objALastPortID, $objBPortTotal);
+					} else {
+						$objAFirstPort = '';
+						$objALastPort = '';
+					}
+					$objectAName = $qls->App->objectArray[$objAID]['nameString'];
+					$objectBName = $qls->App->objectArray[$objBID]['nameString'];
 					
 					$line = array(
-						$objectA,
-						'',
-						'',
-						$objectB,
+						$objectAName,
+						$objAFirstPort,
+						$objALastPort,
+						$objectBName,
 						'',
 						''
 					);
-					$csvArray[$objectA] = $line;
+					$csvArray[$objectAName] = $line;
 				}
 			}
 		}

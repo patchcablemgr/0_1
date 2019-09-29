@@ -88,21 +88,7 @@ var $qls;
 		
 		// Add full path names for each object... this is dependant on envTreeArray, templateArray, and objectArray
 		foreach($this->objectArray as &$object) {
-			$objectName = $object['name'];
-			$objectTemplateID = $object['template_id'];
-			$objectTemplate = $this->templateArray[$objectTemplateID];
-			$objectTemplateType = $objectTemplate['templateType'];
-			if($objectTemplateType == 'Insert') {
-				$objectParentID = $object['parent_id'];
-				$objectParent = $this->objectArray[$objectParentID];
-				$objectParentName = '.'.$objectParent['name'].'.';
-			} else {
-				$objectParentName = '.';
-			}
-			$cabinetID = $object['env_tree_id'];
-			$cabinet = $this->envTreeArray[$cabinetID];
-			$cabinetNameString = $cabinet['nameString'];
-			$nameString = $cabinetNameString.$objectParentName.$objectName;
+			$nameString = $this->generateObjectName($object['id']);
 			$object['nameString'] = $nameString;
 		}
 		
@@ -355,17 +341,17 @@ var $qls;
 		
 		// Save object name separately if it's an insert
 		if($templateType == 'Insert') {
-			array_push($locationArray, $object['name']);
+			array_unshift($locationArray, $object['name']);
 			$parentID = $object['parent_id'];
 			$object = $this->objectArray[$parentID];
 		}
-		array_push($object['name']);
+		array_unshift($locationArray, $object['name']);
 		
 		//Locations
 		$rootTreeNode = false;
 		while(!$rootTreeNode) {
 			$node = $this->envTreeArray[$envTreeID];
-			array_push($locationArray, $node['name']);
+			array_unshift($locationArray, $node['name']);
 			$envTreeID = $node['parent'];
 			$rootTreeNode = $envTreeID == '#' ? true : false;
 		}
