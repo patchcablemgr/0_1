@@ -12,4 +12,5 @@ Contents
 
 **Changes since 0.1.0
 
-[Info] Initial release
+[Fix]	Resolved errors when creating connectable template
+[Info]	Initial release

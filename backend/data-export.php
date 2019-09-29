@@ -621,7 +621,7 @@ function createTrunks(&$qls){
 				$objBID = $partition['peerID'];
 				if(!in_array($objBID, $peerArray)) {
 					//$objATemplateID = 
-					$objACompatibility = $qls->App->compatibilityArray[
+					//$objACompatibility = $qls->App->compatibilityArray[
 					$objectA = $qls->App->objectArray[$objAID]['nameString'];
 					$objectB = $qls->App->objectArray[$objBID]['nameString'];
 					
