@@ -239,21 +239,23 @@ var $qls;
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
 			$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
 				'id' => $row['id'],
+				'selfPort' => $row['a_port'],
 				'selfEndpoint' => $row['a_endpoint'],
 				'peerID' => $row['b_id'],
 				'peerFace' => $row['b_face'],
 				'peerDepth' => $row['b_depth'],
-				'peerPort' => false,
+				'peerPort' => $row['b_port'],
 				'peerEndpoint' => $row['b_endpoint'],
 				'floorplanPeer' => $row['floorplan_peer']
 			);
 			$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']] = array(
 				'id' => $row['id'],
+				'selfPort' => $row['b_port'],
 				'selfEndpoint' => $row['b_endpoint'],
 				'peerID' => $row['a_id'],
 				'peerFace' => $row['a_face'],
 				'peerDepth' => $row['a_depth'],
-				'peerPort' => false,
+				'peerPort' => $row['a_port'],
 				'peerEndpoint' => $row['a_endpoint'],
 				'floorplanPeer' => $row['floorplan_peer']
 			);
