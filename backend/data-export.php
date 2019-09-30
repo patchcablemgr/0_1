@@ -573,7 +573,6 @@ function createConnections(&$qls){
 		$objFace = $port['object_face'];
 		$objDepth = $port['object_depth'];
 		$objPort = $port['port_id'];
-		error_log('here');
 		$objectName = $qls->App->getPortNameString($objID, $objFace, $objDepth, $objPort);
 		
 		$line = array(
@@ -614,6 +613,7 @@ function createTrunks(&$qls){
 
 	$csvArray = array();
 	$peerArray = array();
+	error_log('Debug: '.json_encode($qls->App->peerArray));
 	foreach($qls->App->peerArray as $objAID => $obj) {
 		$objectA = $qls->App->objectArray[$objAID];
 		array_push($peerArray, $objAID);
@@ -623,7 +623,16 @@ function createTrunks(&$qls){
 				$objBFace = $partition['peerFace'];
 				$objBPartition = $partition['peerDepth'];
 				
-				if(!in_array($objBID, $peerArray)) {
+				$objectB = $qls->App->objectArray[$objBID];
+				$objBTemplateID = $objectB['template_id'];
+				$objBTemplate = $qls->App->templateArray[$objBTemplateID];
+				$objBTemplateType = $objBTemplate['templateType'];
+				$objATemplateID = $objectA['template_id'];
+				$objATemplate = $qls->App->templateArray[$objATemplateID];
+				$objATemplateType = $objATemplate['templateType'];
+				
+				if(!in_array($objBID, $peerArray) or $objATemplateType == 'wap') {
+					/*
 					$objectB = $qls->App->objectArray[$objBID];
 					$objBTemplateID = $objectB['template_id'];
 					$objBTemplate = $qls->App->templateArray[$objBTemplateID];
@@ -631,36 +640,38 @@ function createTrunks(&$qls){
 					$objATemplateID = $objectA['template_id'];
 					$objATemplate = $qls->App->templateArray[$objATemplateID];
 					$objATemplateType = $objATemplate['templateType'];
+					*/
 					if($partition['floorplanPeer']) {
-						if($objATemplateType == 'wap' or $objBTemplateType == 'wap') {
-							$objAFirstPort = '';
-							$objALastPort = '';
-							$objBFirstPort = '';
-							$objBLastPort = '';
+						
+						// Determine which end of the peer relationship is the system generated template
+						if($objATemplateType == 'walljack' or $objATemplateType == 'wap') {
+							$objectID = $objBID;
+							$objectFace = $objBFace;
+							$objectDepth = $objBPartition;
+							$objectTemplateID = $objBTemplateID;
+							$floorplanObjID = $objAID;
+							$floorplanObjFace = $objAFace;
+							$floorplanObjDepth = $objAPartition;
+							$floorplanObjTemplateID = $objATemplateID;
 						} else {
-							
-							// Determine object IDs for both the walljack and the object it is trunked to
-							if($objATemplateType == 'walljack') {
-								$walljackID = $objAID;
-								$objectID = $objBID;
-								$objectTemplateID = $objBTemplateID;
-							} else {
-								$walljackID = $objBID;
-								$objectID = $objAID;
-								$objectTemplateID = $objATemplateID;
-							}
-							$walljackArray = $qls->App->peerArrayWalljack[$walljackID];
-							$objectFace = $walljackArray[0]['face'];
-							$objectPartition = $walljackArray[0]['depth'];
-							$objectCompatibility = $qls->App->compatibilityArray[$objectTemplateID][$objectFace][$objectPartition];
-							$objectPortNameFormat = json_decode($objectCompatibility['portNameFormat'], true);
-							$objectPortTotal = $objectPortNameFormat['portTotal'];
-							$objectFirstPortID = $walljackArray[0]['port'];
-							$walljackPortCount = count($walljackArray)-1;
-							$objectLastPortID = $walljackArray[$walljackPortCount]['port'];
-							$objAFirstPort = $objBFirstPort = $qls->App->generatePortName($objectPortNameFormat, $objectFirstPortID, $objectPortTotal);
-							$objALastPort = $objBLastPort = $qls->App->generatePortName($objectPortNameFormat, $objectLastPortID, $objectPortTotal);
+							$objectID = $objAID;
+							$objectFace = $objAFace;
+							$objectDepth = $objAPartition;
+							$objectTemplateID = $objATemplateID;
+							$floorplanObjID = $objBID;
+							$floorplanObjFace = $objBFace;
+							$floorplanObjDepth = $objBPartition;
+							$floorplanObjTemplateID = $objBTemplateID;
 						}
+						
+						$objectCompatibility = $qls->App->compatibilityArray[$objectTemplateID][$objectFace][$objectDepth];
+						$objectPortNameFormat = json_decode($objectCompatibility['portNameFormat'], true);
+						$objectPortTotal = $objectPortNameFormat['portTotal'];
+						$objectFirstPortID = (int)$qls->App->peerArray[$floorplanObjID][$floorplanObjFace][$floorplanObjDepth]['floorplanPeerPortIDArray'][$objectID][0];
+						$objectPortCount = count($qls->App->peerArray[$floorplanObjID][$floorplanObjFace][$floorplanObjDepth]['floorplanPeerPortIDArray'][$objectID]);
+						$objectLastPortID = (int)$qls->App->peerArray[$floorplanObjID][$floorplanObjFace][$floorplanObjDepth]['floorplanPeerPortIDArray'][$objectID][$objectPortCount-1];
+						$objAFirstPort = $objBFirstPort = $qls->App->generatePortName($objectPortNameFormat, $objectFirstPortID, $objectPortTotal);
+						$objALastPort = $objBLastPort = $qls->App->generatePortName($objectPortNameFormat, $objectLastPortID, $objectPortTotal);
 					} else {
 						
 						// Create an array of data for each peer

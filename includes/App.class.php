@@ -237,28 +237,46 @@ var $qls;
 		$this->peerArrayWalljackEntry = array();
 		$query = $this->qls->SQL->select('*', 'app_object_peer');
 		while($row = $this->qls->SQL->fetch_assoc($query)) {
-			$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
-				'id' => $row['id'],
-				'selfPort' => $row['a_port'],
-				'selfEndpoint' => $row['a_endpoint'],
-				'peerID' => $row['b_id'],
-				'peerFace' => $row['b_face'],
-				'peerDepth' => $row['b_depth'],
-				'peerPort' => $row['b_port'],
-				'peerEndpoint' => $row['b_endpoint'],
-				'floorplanPeer' => $row['floorplan_peer']
-			);
-			$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']] = array(
-				'id' => $row['id'],
-				'selfPort' => $row['b_port'],
-				'selfEndpoint' => $row['b_endpoint'],
-				'peerID' => $row['a_id'],
-				'peerFace' => $row['a_face'],
-				'peerDepth' => $row['a_depth'],
-				'peerPort' => $row['a_port'],
-				'peerEndpoint' => $row['a_endpoint'],
-				'floorplanPeer' => $row['floorplan_peer']
-			);
+			if(!isset($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']])) {
+				$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
+					'id' => $row['id'],
+					'selfPort' => $row['a_port'],
+					'selfEndpoint' => $row['a_endpoint'],
+					'peerID' => $row['b_id'],
+					'peerFace' => $row['b_face'],
+					'peerDepth' => $row['b_depth'],
+					'peerEndpoint' => $row['b_endpoint'],
+					'floorplanPeer' => $row['floorplan_peer'],
+					'floorplanPeerPortIDArray' => array($row['b_id'] => array($row['b_port']))
+				);
+			} else if($row['floorplan_peer']) {
+				if(!isset($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['floorplanPeerPortIDArray'][$row['b_id']])) {
+					$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['floorplanPeerPortIDArray'][$row['b_id']] = array($row['b_port']);
+				} else {
+					array_push($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['floorplanPeerPortIDArray'][$row['b_id']], $row['b_port']);
+				}
+			}
+			
+			if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']])) {
+				$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']] = array(
+					'id' => $row['id'],
+					'selfPort' => $row['b_port'],
+					'selfEndpoint' => $row['b_endpoint'],
+					'peerID' => $row['a_id'],
+					'peerFace' => $row['a_face'],
+					'peerDepth' => $row['a_depth'],
+					'peerEndpoint' => $row['a_endpoint'],
+					'floorplanPeer' => $row['floorplan_peer'],
+					'floorplanPeerPortIDArray' => array($row['a_id'] => array($row['a_port']))
+				);
+			} else if($row['floorplan_peer']) {
+				if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['floorplanPeerPortIDArray'][$row['a_id']])) {
+					$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['floorplanPeerPortIDArray'][$row['a_id']] = array($row['a_port']);
+				} else {
+					array_push($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['floorplanPeerPortIDArray'][$row['a_id']], $row['a_port']);
+				}
+			}
+			
 			if(!$row['floorplan_peer']) {
 				$this->peerArrayStandard[$row['a_id']][$row['a_face']][$row['a_depth']] = array(
 					'rowID' => $row['id'],
