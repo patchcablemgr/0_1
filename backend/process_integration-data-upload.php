@@ -43,7 +43,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				'04 - Cabinet Cable Paths.csv',
 				'05 - Cabinet Objects.csv',
 				'06 - Object Inserts.csv',
-				'07 - Connections.csv'
+				'07 - Connections.csv',
+				'08 - Trunks.csv'
 			);
 			
 			$zipFilename = $data['data']['metas'][0]['name'];
@@ -202,6 +203,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$importedInsertArray = array();
 				$importedConnectionArray = array();
 				$importedCabinetOccupancyArray = array();
+				$importedTrunkArray = array();
 				
 				foreach($expectedFilenames as $csvFilename) {
 					if($csvFile = fopen($_SERVER['DOCUMENT_ROOT'].'/userUploads/'.$csvFilename, 'r')) {
@@ -258,7 +260,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 							while($csvLine = fgetcsv($csvFile)) {
 								$csvLineNumber++;
 								if($csvLineNumber > 1 and $csvLine[0] != '') {
-									buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, $importedConnectionArray, $existingConnectionArray);
+									buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, $importedConnectionArray);
+								}
+							}
+						} else if($csvFilename == '08 - Trunks.csv') {
+							$csvLineNumber = 0;
+							while($csvLine = fgetcsv($csvFile)) {
+								$csvLineNumber++;
+								if($csvLineNumber > 1 and $csvLine[0] != '') {
+									buildImportedTrunkArray($csvLine, $csvLineNumber, $csvFilename, $importedTrunkArray);
 								}
 							}
 						}
@@ -915,7 +925,7 @@ function buildImportedTemplateArray($csvLine, $csvLineNumber, $csvFilename, &$im
 
 
 // Connection Arrays
-function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$importedConnectionArray, $existingConnectionArray){
+function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$importedConnectionArray){
 	$portA = strtolower($csvLine[0]);
 	$aCode39 = strtolower($csvLine[1]);
 	$aConnector = strtolower($csvLine[2]);
@@ -933,6 +943,58 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 	$bConnector = ($bConnector != '' and $bConnector != 'none') ? $bConnector : false;
 	$mediaType = ($mediaType != '' and $mediaType != 'none') ? $mediaType : false;
 	$length = ($length != '' and $length != 'none') ? $length : false;
+	
+	$addConnection = false;
+	
+	if($aPortNameHash or $aCode39) {
+		$addConnection = true;
+		$workingArray = array(
+			'portNameHash' => $aPortNameHash,
+			'code39' => $aCode39,
+			'connector' => $aConnector,
+			'peerPortNameHash' => $bPortNameHash,
+			'peerCode39' => $bCode39,
+			'peerConnector' => $bConnector
+		);
+	} else if($bPortNameHash or $bCode39) {
+		$addConnection = true;
+		$workingArray = array(
+			'portNameHash' => $bPortNameHash,
+			'code39' => $bCode39,
+			'connector' => $bConnector,
+			'peerPortNameHash' => $aPortNameHash,
+			'peerCode39' => $aCode39,
+			'peerConnector' => $aConnector
+		);
+	}
+	
+	if($addConnection) {
+		$workingArray['mediaType'] = $mediaType;
+		$workingArray['length'] = $length;
+		$workingArray['line'] = $csvLineNumber;
+		$workingArray['fileName'] = $csvFilename;
+		array_push($importedConnectionArray, $workingArray);
+	}
+}
+
+
+
+
+// Trunk Arrays
+function buildImportedTrunkArray($csvLine, $csvLineNumber, $csvFilename, &$importedTrunkArray){
+	$objA = strtolower($csvLine[0]);
+	$objAStartPort = strtolower($csvLine[1]);
+	$objAEndPort = strtolower($csvLine[2]);
+	$objB = strtolower($csvLine[3]);
+	$objBStartPort = strtolower($csvLine[4]);
+	$objBEndPort = strtolower($csvLine[5]);
+	
+	$objANameHash = md5($objA);
+	$objAStartPortNameHash = md5($objAStartPort);
+	$objAEndPortNameHash = md5($objAEndPort);
+	$objBNameHash = md5($objB);
+	$objBStartPortNameHash = md5($objBStartPort);
+	$objBEndPortNameHash = md5($objBEndPort);
 	
 	$addConnection = false;
 	

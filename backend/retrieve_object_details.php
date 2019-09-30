@@ -23,8 +23,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		
 		if ($data['page'] == 'build') {
 			//Retreive object info
-			$objectInfo = $qls->SQL->select('*', 'app_object', 'id='.$objectID);
-			$objectInfo = $qls->SQL->fetch_assoc($objectInfo);
+			$objectInfo = $qls->App->objectArray[$objectID];
 			$templateID = $objectInfo['template_id'];
 			$objectName = $objectInfo['name'];
 		} else {
@@ -32,9 +31,16 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$objectName = $trunkedTo = 'N/A';
 		}
 		
+		// Retrieve template info
+		$templateInfo = $qls->App->templateArray[$templateID];
+		$categoryID = $templateInfo['templateCategory_id'];
+		
+		// Retrieve category info
+		$category = $qls->App->categoryArray[$categoryID];
+		$categoryName = $category['name'];
+		
 		//Retrieve partition info
-		$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $templateID), 'AND', 'side' => array('=', $objectFace), 'AND', 'depth' => array('=', $partitionDepth)));
-		$partitionData = $qls->SQL->fetch_assoc($query);
+		$partitionData = $qls->App->compatibilityArray[$templateID][$objectFace][$partitionDepth];
 		$partitionType = $partitionData['partitionType'];
 		$portNameFormat = $portTotal = false;
 		$peerIDArray = array();
@@ -49,10 +55,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$portIndexLast = $portTotal - 1;
 			$portNameFirst = $qls->App->generatePortName($portNameFormat, $portIndexFirst, $portTotal);
 			if($portTotal > 1) {
-				error_log('1: '.$portTotal);
 				$portNameLast = '&nbsp;&#8209;&nbsp;'.$qls->App->generatePortName($portNameFormat, $portIndexLast, $portTotal);
 			} else {
-				error_log('2: '.$portTotal);
 				$portNameLast = '';
 			}
 			$portRange = $portNameFirst.$portNameLast;
@@ -60,18 +64,24 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$portType = $portProperties['portType'][$partitionData['portType']];
 			$portOrientation = $portProperties['portOrientation'][$partitionData['portOrientation']];
 			$mediaType = $partitionData['partitionFunction'] == 'Passive' ? $portProperties['mediaType'][$partitionData['mediaType']] : 'N/A';
-			// Get peer ID
-			$query = $qls->SQL->select('*', 'app_object_peer', '(a_id ='.$objectID.' AND a_face = '.$objectFace.' AND a_depth = '.$partitionDepth.') OR (b_id = '.$objectID.' AND b_face = '.$objectFace.' AND b_depth = '.$partitionDepth.')');
-			if($qls->SQL->num_rows($query)) {
-				$peerEntry = $qls->SQL->fetch_assoc($query);
-				$peerAttrPrefix = $peerEntry['a_id'] == $objectID ? 'b' : 'a';
-				$peerID = $peerEntry[$peerAttrPrefix.'_id'];
-				$peerFace = $peerEntry[$peerAttrPrefix.'_face'];
-				$peerDepth = $peerEntry[$peerAttrPrefix.'_depth'];
+			
+			// Get peer information
+			$peerIsFloorplanObject = false;
+			if($peerData = $qls->App->peerArray[$objectID][$objectFace][$partitionDepth]) {
+				$peerID = $peerData['peerID'];
+				$peerFace = $peerData['peerFace'];
+				$peerDepth = $peerData['peerDepth'];
 				$peerID = '3-'.$peerID.'-'.$peerFace.'-'.$peerDepth.'-0';
 				array_push($peerIDArray, $peerID);
+				$peerIsFloorplanObject = $peerData['floorplanPeer'] ? true : false;
 			}
-			$trunkFlatPath = buildTrunkFlatPath($objectID, $objectFace, $partitionDepth, $qls);
+			
+			// Set object trunking properties
+			if($peerIsFloorplanObject) {
+				$trunkFlatPath = 'Floorplan object(s)';
+			} else {
+				$trunkFlatPath = buildTrunkFlatPath($objectID, $objectFace, $partitionDepth, $qls);
+			}
 			$trunkable = true;
 		} else if($partitionType == 'Enclosure'){
 			$portRange = $portType = $portOrientation = $mediaType = $trunkFlatPath = 'N/A';
@@ -81,10 +91,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$partitionType = $portRange = $portType = $mediaType = $trunkFlatPath = 'N/A';
 			$trunkable = false;
 		}
-
-		// Retrieve template info
-		$templateInfo = $qls->SQL->select('*', 'app_object_templates', 'id='.$templateID);
-		$templateInfo = $qls->SQL->fetch_assoc($templateInfo);
 		
 		if($templateInfo['templateType'] == 'Standard') {
 			$mountConfig = $templateInfo['templateMountConfig'] == 0 ? '2-Post' : '4-Post';
@@ -112,17 +118,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$templateImgPath = '';
 			$templateImgHeight = 0;
 			$templateImgWidth = 0;
-		}
-		
-		// Retrieve category info
-		$categoryArray = array();
-		$result = $qls->SQL->select('*', 'app_object_category');
-		while($row = $qls->SQL->fetch_assoc($result)){	
-			array_push($categoryArray, array('value'=>$row['id'], 'text'=>$row['name']));
-			if($row['id'] == $templateInfo['templateCategory_id']){
-				$categoryID = $row['id'];
-				$categoryName = $row['name'];
-			}
 		}
 		
 		// Compile response data
