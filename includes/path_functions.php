@@ -914,10 +914,10 @@ function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
 		// Peer variables
 		//$peerRecord = $qls->SQL->fetch_assoc($query);
 		$peerRecord = $qls->App->peerArray[$objectID][$objectFace][$objectDepth];
-		$peerAttr = $peerRecord['a_id'] == $objectID ? 'b' : 'a';
-		$peerID = $peerRecord['id'];
-		$peerFace = $peerRecord['face'];
-		$peerDepth = $peerRecord['depth'];
+		//$peerAttr = $peerRecord['a_id'] == $objectID ? 'b' : 'a';
+		$peerID = $peerRecord['peerID'];
+		$peerFace = $peerRecord['peerFace'];
+		$peerDepth = $peerRecord['peerDepth'];
 		
 		// Peer object variables
 		/*
@@ -941,7 +941,7 @@ function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
 		}
 		
 		// Partition variables
-		//error_log($peerTemplateID.'-'.$peerFace.'-'.$peerDepth);
+		error_log('Debug: '.$templateID.'-'.$face.'-'.$depth);
 		//$query = $qls->SQL->select('*', 'app_object_compatibility', array('template_id' => array('=', $peerTemplateID), 'AND', 'side' => array('=', $peerFace), 'AND', 'depth' => array('=', $peerDepth)));
 		//$partitionCompatibility = $qls->SQL->fetch_assoc($query);
 		$partitionCompatibility = $qls->App->compatibilityArray[$templateID][$face][$depth];
@@ -952,6 +952,7 @@ function buildTrunkFlatPath($objectID, $objectFace, $objectDepth, &$qls){
 		$portTotal = $partitionCompatibility['portLayoutX']*$partitionCompatibility['portLayoutY'];
 		$firstIndex = 0;
 		$lastIndex = $portTotal - 1;
+		error_log('Debug: '.json_encode($portNameFormat));
 		$firstPortName = $qls->App->generatePortName($portNameFormat, $firstIndex, $portTotal);
 		$lastPortName = $qls->App->generatePortName($portNameFormat, $lastIndex, $portTotal);
 		$portRange = $firstPortName.'&nbsp;&#8209;&nbsp;'.$lastPortName;
