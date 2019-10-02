@@ -246,15 +246,15 @@ var $qls;
 					'peerFace' => $row['b_face'],
 					'peerDepth' => $row['b_depth'],
 					'peerEndpoint' => $row['b_endpoint'],
-					'floorplanPeer' => $row['floorplan_peer'],
-					'floorplanPeerPortIDArray' => array($row['b_id'] => array($row['b_port']))
+					'floorplanPeer' => $row['floorplan_peer']
 				);
-			} else if($row['floorplan_peer']) {
-				if(!isset($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['floorplanPeerPortIDArray'][$row['b_id']])) {
-					$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['floorplanPeerPortIDArray'][$row['b_id']] = array($row['b_port']);
-				} else {
-					array_push($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['floorplanPeerPortIDArray'][$row['b_id']], $row['b_port']);
+			}
+			
+			if($row['floorplan_peer']) {
+				if(!isset($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']])) {
+					$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']] = array();
 				}
+				array_push($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']], array($row['a_port'], $row['b_port']));
 			}
 			
 			if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']])) {
@@ -266,15 +266,15 @@ var $qls;
 					'peerFace' => $row['a_face'],
 					'peerDepth' => $row['a_depth'],
 					'peerEndpoint' => $row['a_endpoint'],
-					'floorplanPeer' => $row['floorplan_peer'],
-					'floorplanPeerPortIDArray' => array($row['a_id'] => array($row['a_port']))
+					'floorplanPeer' => $row['floorplan_peer']
 				);
-			} else if($row['floorplan_peer']) {
-				if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['floorplanPeerPortIDArray'][$row['a_id']])) {
-					$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['floorplanPeerPortIDArray'][$row['a_id']] = array($row['a_port']);
-				} else {
-					array_push($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['floorplanPeerPortIDArray'][$row['a_id']], $row['a_port']);
+			}
+			
+			if($row['floorplan_peer']) {
+				if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']])) {
+					$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']] = array();
 				}
+				array_push($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']], array($row['b_port'], $row['a_port']));
 			}
 			
 			if(!$row['floorplan_peer']) {
@@ -350,8 +350,48 @@ var $qls;
 			$this->historyFunctionArray[$row['value']] = $row;
 		}
 	}
+	
+	function generateObjectPortName($objID, $objFace, $objDepth, $objPort) {
+		$obj = $this->objectArray[$objID];
+		$objName = $obj['nameString'];
+		$objTemplateID = $obj['template_id'];
+		$objCompatibility = $this->compatibilityArray[$objTemplateID][$objFace][$objDepth];
+		if($objCompatibility['templateType'] == 'walljack') {
+			if(isset($this->peerArray[$objID][$objFace][$objDepth]['peerArray'])) {
+				$peerData = $this->peerArray[$objID][$objFace][$objDepth]['peerArray'];
+				foreach($peerData as $peerID => $peer) {
+					$peerObj = $this->objectArray[$peerID];
+					$peerTemplateID = $peerObj['template_id'];
+					foreach($peer as $peerFace => $partition) {
+						foreach($partition as $peerDepth => $portPair) {
+							foreach($portPair as $port) {
+								if($port[0] == $objPort) {
+									$peerCompatibility = $this->compatibilityArray[$peerTemplateID][$peerFace][$peerDepth];
+									$peerPortNameFormat = json_decode($peerCompatibility['portNameFormat'], true);
+									$peerPortTotal = $peerCompatibility['portTotal'];
+									$peerPortID = $port[1];
+									$peerPortName = $this->generatePortName($peerPortNameFormat, $peerPortID, $peerPortTotal);
+									$objPortNameArray = array($objName, $peerPortName);
+									$objectPortName = implode('.', $objPortNameArray);
+									$objectPortName = $objectPortName.'('.$objPort.')';
+								}
+							}
+						}
+					}
+				}
+			}
+		} else {
+			$portNameFormat = json_decode($objCompatibility['portNameFormat'], true);
+			$portTotal = $objCompatibility['portTotal'];
+			$objPortName = $this->generatePortName($portNameFormat, $objPort, $portTotal);
+			$objPortNameArray = array($objName, $objPortName);
+			$objectPortName = implode('.', $objPortNameArray);
+		}
+		
+		return $objectPortName;
+	}
 
-	function generateObjectName($objID, $objFace=false, $objDepth=false, $objPort=false, $range=false) {
+	function generateObjectName($objID) {
 		$object = $this->objectArray[$objID];
 		$envTreeID = $object['env_tree_id'];
 		$objectTemplateID = $object['template_id'];

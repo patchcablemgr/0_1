@@ -534,13 +534,15 @@ function createConnections(&$qls){
 		$bConnector = $bConnectorID ? $qls->App->connectorTypeValueArray[$bConnectorID]['name'] : 'None';
 		
 		if($aObjID) {
-			$aObjectName = $qls->App->getPortNameString($aObjID, $aObjFace, $aObjDepth, $aObjPort);
+			error_log('Debug: '.$aObjID.'-'.$aObjFace.'-'.$aObjDepth.'-'.$aObjPort);
+			$aObjectName = $qls->App->generateObjectPortName($aObjID, $aObjFace, $aObjDepth, $aObjPort);
 		} else {
 			$aObjectName = 'None';
 		}
 		
 		if($bObjID) {
-			$bObjectName = $qls->App->getPortNameString($bObjID, $bObjFace, $bObjDepth, $bObjPort);
+			error_log('Debug: '.$bObjID.'-'.$bObjFace.'-'.$bObjDepth.'-'.$bObjPort);
+			$bObjectName = $qls->App->generateObjectPortName($bObjID, $bObjFace, $bObjDepth, $bObjPort);
 		} else {
 			$bObjectName = 'None';
 		}
@@ -612,79 +614,105 @@ function createTrunks(&$qls){
 	fputcsv($fileTrunks,$csvHeader);
 
 	$csvArray = array();
-	$peerArray = array();
-	error_log('Debug: '.json_encode($qls->App->peerArray));
+	$objectPeerArray = array();
+	$floorplanPeerArray = array();
+	
 	foreach($qls->App->peerArray as $objAID => $obj) {
+		
 		$objectA = $qls->App->objectArray[$objAID];
-		array_push($peerArray, $objAID);
+		$objATemplateID = $objectA['template_id'];
+		$objATemplate = $qls->App->templateArray[$objATemplateID];
+		$objATemplateType = $objATemplate['templateType'];
+		
+		array_push($objectPeerArray, $objAID);
 		foreach($obj as $objAFace => $face) {
-			foreach($face as $objAPartition => $partition) {
-				$objBID = $partition['peerID'];
-				$objBFace = $partition['peerFace'];
-				$objBPartition = $partition['peerDepth'];
+			
+			foreach($face as $objADepth => $partition) {
 				
-				$objectB = $qls->App->objectArray[$objBID];
-				$objBTemplateID = $objectB['template_id'];
-				$objBTemplate = $qls->App->templateArray[$objBTemplateID];
-				$objBTemplateType = $objBTemplate['templateType'];
-				$objATemplateID = $objectA['template_id'];
-				$objATemplate = $qls->App->templateArray[$objATemplateID];
-				$objATemplateType = $objATemplate['templateType'];
-				
-				if(!in_array($objBID, $peerArray) or $objATemplateType == 'wap') {
-					/*
-					$objectB = $qls->App->objectArray[$objBID];
-					$objBTemplateID = $objectB['template_id'];
-					$objBTemplate = $qls->App->templateArray[$objBTemplateID];
-					$objBTemplateType = $objBTemplate['templateType'];
-					$objATemplateID = $objectA['template_id'];
-					$objATemplate = $qls->App->templateArray[$objATemplateID];
-					$objATemplateType = $objATemplate['templateType'];
-					*/
-					if($partition['floorplanPeer']) {
+				if($partition['floorplanPeer']) {
+					
+					foreach($partition['peerArray'] as $objBID => $peerObj) {
 						
-						// Determine which end of the peer relationship is the system generated template
-						if($objATemplateType == 'walljack' or $objATemplateType == 'wap') {
-							$objectID = $objBID;
-							$objectFace = $objBFace;
-							$objectDepth = $objBPartition;
-							$objectTemplateID = $objBTemplateID;
-							$floorplanObjID = $objAID;
-							$floorplanObjFace = $objAFace;
-							$floorplanObjDepth = $objAPartition;
-							$floorplanObjTemplateID = $objATemplateID;
-						} else {
-							$objectID = $objAID;
-							$objectFace = $objAFace;
-							$objectDepth = $objAPartition;
-							$objectTemplateID = $objATemplateID;
-							$floorplanObjID = $objBID;
-							$floorplanObjFace = $objBFace;
-							$floorplanObjDepth = $objBPartition;
-							$floorplanObjTemplateID = $objBTemplateID;
+						foreach($peerObj as $objBFace => $peerFace) {
+							foreach($peerFace as $objBDepth => $peerPartition) {
+								$floorplanPeerArrayEntryArray = array($objAID.'-'.$objAFace.'-'.$objADepth, $objBID.'-'.$objBFace.'-'.$objBDepth);
+								if($objBID < $objAID) {
+									$floorplanPeerArrayEntryArray = array_reverse($floorplanPeerArrayEntryArray);
+								}
+								$floorplanPeerArrayEntry = implode('-',$floorplanPeerArrayEntryArray);
+								
+								if(!in_array($floorplanPeerArrayEntry, $floorplanPeerArray)) {
+									array_push($floorplanPeerArray, $floorplanPeerArrayEntry);
+									
+									// Gather objB details
+									$objectB = $qls->App->objectArray[$objBID];
+									$objBTemplateID = $objectB['template_id'];
+									$objBCompatibility = $qls->App->compatibilityArray[$objBTemplateID][$objBFace][$objBDepth];
+									$objBTemplateType = $objBCompatibility['templateType'];
+									$objBPortNameFormat = json_decode($objBCompatibility['portNameFormat'], true);
+									$objBPortTotal = $objBCompatibility['portTotal'];
+									
+									// Gather objA details
+									$objACompatibility = $qls->App->compatibilityArray[$objATemplateID][$objAFace][$objADepth];
+									$objAPortNameFormat = json_decode($objACompatibility['portNameFormat'], true);
+									$objAPortTotal = $objACompatibility['portTotal'];
+									
+									foreach($peerPartition as $portArray) {
+										$walljackPortID = $portArray[0];
+										$peerPortID = $portArray[1];
+										if($objATemplateType == 'walljack' or $objBTemplateType == 'walljack') {
+											if($objATemplateType == 'walljack') {
+												$portName = $qls->App->generatePortName($objBPortNameFormat, $peerPortID, $objBPortTotal);
+												$objAFirstPort = $objALastPort = $portName.'('.$walljackPortID.')';
+												$objBFirstPort = $objBLastPort = $portName;
+											} else {
+												$portName = $qls->App->generatePortName($objAPortNameFormat, $peerPortID, $objAPortTotal);
+												$objBFirstPort = $objBLastPort = $portName.'('.$walljackPortID.')';
+												$objAFirstPort = $objALastPort = $portName;
+											}
+										} else {
+											$objAFirstPort = $objALastPort = $qls->App->generatePortName($objAPortNameFormat, $peerPortID, $objAPortTotal);
+											$objBFirstPort = $objBLastPort = $qls->App->generatePortName($objBPortNameFormat, $peerPortID, $objBPortTotal);
+										}
+										
+										$objectAName = $qls->App->objectArray[$objAID]['nameString'];
+										$objectBName = $qls->App->objectArray[$objBID]['nameString'];
+										$line = array(
+											$objectAName,
+											$objAFirstPort,
+											$objALastPort,
+											$objectBName,
+											$objBFirstPort,
+											$objBLastPort
+										);
+										$csvArray[$objectAName.$objectBName.$objAFirstPort] = $line;
+									}
+								}
+							}
 						}
+					}
+				} else {
+					$objBID = $partition['peerID'];
+					if(!in_array($objBID, $objectPeerArray)) {
+						$objBFace = $partition['peerFace'];
+						$objBDepth = $partition['peerDepth'];
 						
-						$objectCompatibility = $qls->App->compatibilityArray[$objectTemplateID][$objectFace][$objectDepth];
-						$objectPortNameFormat = json_decode($objectCompatibility['portNameFormat'], true);
-						$objectPortTotal = $objectPortNameFormat['portTotal'];
-						$objectFirstPortID = (int)$qls->App->peerArray[$floorplanObjID][$floorplanObjFace][$floorplanObjDepth]['floorplanPeerPortIDArray'][$objectID][0];
-						$objectPortCount = count($qls->App->peerArray[$floorplanObjID][$floorplanObjFace][$floorplanObjDepth]['floorplanPeerPortIDArray'][$objectID]);
-						$objectLastPortID = (int)$qls->App->peerArray[$floorplanObjID][$floorplanObjFace][$floorplanObjDepth]['floorplanPeerPortIDArray'][$objectID][$objectPortCount-1];
-						$objAFirstPort = $objBFirstPort = $qls->App->generatePortName($objectPortNameFormat, $objectFirstPortID, $objectPortTotal);
-						$objALastPort = $objBLastPort = $qls->App->generatePortName($objectPortNameFormat, $objectLastPortID, $objectPortTotal);
-					} else {
+						$objectB = $qls->App->objectArray[$objBID];
+						$objBTemplateID = $objectB['template_id'];
+						$objBTemplate = $qls->App->templateArray[$objBTemplateID];
+						$objBTemplateType = $objBTemplate['templateType'];
 						
 						// Create an array of data for each peer
 						$portNumberArray = array(
 							'a' => array(
 								'templateID' => $objATemplateID,
 								'face' => $objAFace,
-								'partition' => $objAPartition
+								'partition' => $objADepth
 							),
 							'b' => array(
 								'templateID' => $objBTemplateID,
 								'face' => $objBFace,
-								'partition' => $objBPartition
+								'partition' => $objBDepth
 							)
 						);
 						
@@ -705,20 +733,18 @@ function createTrunks(&$qls){
 						$objALastPort = $portNumberArray['a']['lastPort'];
 						$objBFirstPort = $portNumberArray['b']['firstPort'];
 						$objBLastPort = $portNumberArray['b']['lastPort'];
+						$objectAName = $qls->App->objectArray[$objAID]['nameString'];
+						$objectBName = $qls->App->objectArray[$objBID]['nameString'];
+						$line = array(
+							$objectAName,
+							$objAFirstPort,
+							$objALastPort,
+							$objectBName,
+							$objBFirstPort,
+							$objBLastPort
+						);
+						$csvArray[$objectAName] = $line;
 					}
-					
-					$objectAName = $qls->App->objectArray[$objAID]['nameString'];
-					$objectBName = $qls->App->objectArray[$objBID]['nameString'];
-					
-					$line = array(
-						$objectAName,
-						$objAFirstPort,
-						$objALastPort,
-						$objectBName,
-						$objBFirstPort,
-						$objBLastPort
-					);
-					$csvArray[$objectAName] = $line;
 				}
 			}
 		}
