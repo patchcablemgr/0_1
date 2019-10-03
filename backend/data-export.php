@@ -410,7 +410,8 @@ function createTemplates(&$qls){
 	$csvArray = array();
 	foreach($qls->App->templateArray as $template) {
 		// Skip system generated templates
-		if($templateID > 4) {
+		$templateID = $template['id'];
+		if($templateID > 3) {
 			$templateID = $template['id'];
 			$templateCategoryID = $template['templateCategory_id'];
 			$templateName = $template['templateName'];
@@ -534,14 +535,12 @@ function createConnections(&$qls){
 		$bConnector = $bConnectorID ? $qls->App->connectorTypeValueArray[$bConnectorID]['name'] : 'None';
 		
 		if($aObjID) {
-			error_log('Debug: '.$aObjID.'-'.$aObjFace.'-'.$aObjDepth.'-'.$aObjPort);
 			$aObjectName = $qls->App->generateObjectPortName($aObjID, $aObjFace, $aObjDepth, $aObjPort);
 		} else {
 			$aObjectName = 'None';
 		}
 		
 		if($bObjID) {
-			error_log('Debug: '.$bObjID.'-'.$bObjFace.'-'.$bObjDepth.'-'.$bObjPort);
 			$bObjectName = $qls->App->generateObjectPortName($bObjID, $bObjFace, $bObjDepth, $bObjPort);
 		} else {
 			$bObjectName = 'None';
@@ -603,12 +602,8 @@ function createTrunks(&$qls){
 	$fileTrunks = fopen($_SERVER['DOCUMENT_ROOT'].'/userDownloads/Trunks.csv', 'w');
 
 	$csvHeader = array(
-		'ObjectA',
-		'ObjectA Start Port',
-		'ObjectA End Port',
-		'ObjectB',
-		'ObjectB Start Port',
-		'ObjectB End Port'
+		'Trunk Peer A',
+		'Trunk Peer B'
 	);
 
 	fputcsv($fileTrunks,$csvHeader);
@@ -663,29 +658,27 @@ function createTrunks(&$qls){
 										if($objATemplateType == 'walljack' or $objBTemplateType == 'walljack') {
 											if($objATemplateType == 'walljack') {
 												$portName = $qls->App->generatePortName($objBPortNameFormat, $peerPortID, $objBPortTotal);
-												$objAFirstPort = $objALastPort = $portName.'('.$walljackPortID.')';
-												$objBFirstPort = $objBLastPort = $portName;
+												$objAPort = $portName.'('.$walljackPortID.')';
+												$objBPort = $portName;
 											} else {
 												$portName = $qls->App->generatePortName($objAPortNameFormat, $peerPortID, $objAPortTotal);
-												$objBFirstPort = $objBLastPort = $portName.'('.$walljackPortID.')';
-												$objAFirstPort = $objALastPort = $portName;
+												$objBPort = $portName.'('.$walljackPortID.')';
+												$objAPort = $portName;
 											}
 										} else {
-											$objAFirstPort = $objALastPort = $qls->App->generatePortName($objAPortNameFormat, $peerPortID, $objAPortTotal);
-											$objBFirstPort = $objBLastPort = $qls->App->generatePortName($objBPortNameFormat, $peerPortID, $objBPortTotal);
+											$objAPort = $qls->App->generatePortName($objAPortNameFormat, $peerPortID, $objAPortTotal);
+											$objBPort = $qls->App->generatePortName($objBPortNameFormat, $peerPortID, $objBPortTotal);
 										}
 										
 										$objectAName = $qls->App->objectArray[$objAID]['nameString'];
+										$objectAPortName = $objectAName.'.'.$objAPort;
 										$objectBName = $qls->App->objectArray[$objBID]['nameString'];
+										$objectBPortName = $objectBName.'.'.$objBPort;
 										$line = array(
-											$objectAName,
-											$objAFirstPort,
-											$objALastPort,
-											$objectBName,
-											$objBFirstPort,
-											$objBLastPort
+											$objectAPortName,
+											$objectBPortName
 										);
-										$csvArray[$objectAName.$objectBName.$objAFirstPort] = $line;
+										$csvArray[$objectAName.$walljackPortID] = $line;
 									}
 								}
 							}
@@ -735,13 +728,11 @@ function createTrunks(&$qls){
 						$objBLastPort = $portNumberArray['b']['lastPort'];
 						$objectAName = $qls->App->objectArray[$objAID]['nameString'];
 						$objectBName = $qls->App->objectArray[$objBID]['nameString'];
+						$objectAPortRangeName = $objectAName.'.'.$objAFirstPort.'-'.$objALastPort;
+						$objectBPortRangeName = $objectBName.'.'.$objBFirstPort.'-'.$objBLastPort;
 						$line = array(
-							$objectAName,
-							$objAFirstPort,
-							$objALastPort,
-							$objectBName,
-							$objBFirstPort,
-							$objBLastPort
+							$objectAPortRangeName,
+							$objectBPortRangeName
 						);
 						$csvArray[$objectAName] = $line;
 					}

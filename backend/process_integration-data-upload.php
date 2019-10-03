@@ -126,9 +126,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$tableTemplateArray = array();
 				$query = $qls->SQL->select('*', 'app_object_templates');
 				while($row = $qls->SQL->fetch_assoc($query)) {
-					if($row['id'] != 1 and $row['id'] != 2 and $row['id'] != 3) {
+					//if($row['id'] != 1 and $row['id'] != 2 and $row['id'] != 3) {
 						$tableTemplateArray[$row['id']] = $row;
-					}
+					//}
 				}
 				
 				// Enclosure Compatibility
@@ -159,9 +159,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$tableObjectArray = array();
 				$query = $qls->SQL->select('*', 'app_object', array('parent_id' => array('=', 0)));
 				while($row = $qls->SQL->fetch_assoc($query)) {
-					if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
+					//if($row['template_id'] != 1 and $row['template_id'] != 2 and $row['template_id'] != 3) {
 						$tableObjectArray[$row['id']] = $row;
-					}
+					//}
 				}
 				
 				// Inserts
@@ -420,9 +420,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$portArray = buildPortArray($qls);
 					validateImportedConnections($qls, $importedConnectionArray, $portArray, $validate);
 					validateImportedTrunks($qls, $importedTrunkArray, $portArray, $validate);
-					
-					//error_log(json_encode($importedConnectionArray));
-					//$connectionAdds = findConnectionAdds($qls, $importedConnectionArray, $portArray);
+					//error_log('Debug: '.json_encode($portArray));
+					//error_log('Debug: '.json_encode($importedTrunkArray));
 					
 					if(count($validate->returnData['error']) == 0) {
 						processConnections($qls, $importedConnectionArray);
@@ -626,11 +625,18 @@ function buildExistingObjectArray(&$tableObjectArray, $envTreeArray, $tableTempl
 		$cabinetNameHash = $envTreeArray[$cabinetID]['nameHash'];
 		$objectNameString = $cabinetNameString.'.'.$objectName;
 		$objectNameHash = md5(strtolower($objectNameString));
-		$cabinetFace = $object['cabinet_front'] == 0 ? 'front' : 'rear';
 		$templateID = $object['template_id'];
-		$RUSize = $tableTemplateArray[$templateID]['templateRUSize'];
-		$topRU = $object['RU'];
-		$bottomRU = $topRU - ($RUSize - 1);
+		if($templateID > 3) {
+			// Rack objects have cabinet face and RU
+			$cabinetFace = $object['cabinet_front'] == 0 ? 'front' : 'rear';
+			$RUSize = $tableTemplateArray[$templateID]['templateRUSize'];
+			$topRU = $object['RU'];
+			$bottomRU = $topRU - ($RUSize - 1);
+		} else {
+			// floorplan objects do not have cabinet face and RU
+			$cabinetFace = null;
+			$bottomRU = null;
+		}
 		
 		$object['RU'] = $bottomRU;
 		$object['cabinetNameString'] = $cabinetNameString;
@@ -677,8 +683,8 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 		$importedObjectArray[$objectNameHash]['cabinetNameHash'] = $cabinetNameHash;
 		$importedObjectArray[$objectNameHash]['templateName'] = $templateName;
 		$importedObjectArray[$objectNameHash]['templateNameHash'] = $templateNameHash;
-		$importedObjectArray[$objectNameHash]['RU'] = $RU;
-		$importedObjectArray[$objectNameHash]['cabinetFace'] = $cabinetFace;
+		$importedObjectArray[$objectNameHash]['RU'] = $objectType == 'cabinetObject' ? $RU : null;
+		$importedObjectArray[$objectNameHash]['cabinetFace'] = $objectType == 'cabinetObject' ? $cabinetFace : null;
 		$importedObjectArray[$objectNameHash]['originalObjectName'] = $originalObjectName;
 		$importedObjectArray[$objectNameHash]['originalObjectNameHash'] = $originalObjectNameHash;
 		$importedObjectArray[$objectNameHash]['originalCabinetName'] = $originalCabinetName;
@@ -687,7 +693,7 @@ function buildImportedObjectArray($csvLine, $csvLineNumber, $csvFilename, &$impo
 		$importedObjectArray[$objectNameHash]['posLeft'] = $objectType == 'floorplanObject' ? $floorplanPosLeft : null;
 		$importedObjectArray[$objectNameHash]['posTop'] = $objectType == 'floorplanObject' ? $floorplanPosTop : null;
 		
-		if($template) {
+		if($template and $objectType == 'cabinetObject') {
 			$RUSize = $template['templateRUSize'];
 			$mountConfig = $template['templateMountConfig'];
 			$bottomRU = $RU;
@@ -937,14 +943,14 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 	$length = strtolower($csvLine[7]);
 	
 	if(preg_match('/\([0-9]\)|\([1-9]{1}[0-9]+\)/', $portA, $match)) {
-		$length = count($match[0]);
+		$length = strlen($match[0]);
 		$portAID = substr($match[0], 1, $length-2);
 		$portANameArray = array($portA, $portAID);
 		$portA = implode('.', $portANameArray);
 	}
 	
 	if(preg_match('/\([0-9]\)|\([1-9]{1}[0-9]+\)/', $portB, $match)) {
-		$length = count($match[0]);
+		$length = strlen($match[0]);
 		$portBID = substr($match[0], 1, $length-2);
 		$portBNameArray = array($portB, $portBID);
 		$portB = implode('.', $portBNameArray);
@@ -997,40 +1003,61 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 
 // Trunk Arrays
 function buildImportedTrunkArray($csvLine, $csvLineNumber, $csvFilename, &$importedTrunkArray){
-	$workingArray = array();
 	
 	$objA = strtolower($csvLine[0]);
-	$objAStartPort = strtolower($csvLine[1]);
-	$objAEndPort = strtolower($csvLine[2]);
-	$objB = strtolower($csvLine[3]);
-	$objBStartPort = strtolower($csvLine[4]);
-	$objBEndPort = strtolower($csvLine[5]);
+	$objB = strtolower($csvLine[1]);
 	
-	$objANameHash = md5($objA);
-	$objAStartPortNameHash = md5($objAStartPort);
-	$objAEndPortNameHash = md5($objAEndPort);
-	$objBNameHash = md5($objB);
-	$objBStartPortNameHash = md5($objBStartPort);
-	$objBEndPortNameHash = md5($objBEndPort);
+	$objAArray = explode('.', $objA);
+	$objAPort = array_pop($objAArray);
+	$objAName = implode('.', $objAArray);
+	$objANameHash = md5(strtolower($objAName));
 	
-	$workingArray['objAName'] = $objA;
-	$workingArray['objANameHash'] = $objANameHash;
-	$workingArray['objAStartPortName'] = $objAStartPort;
-	$workingArray['objAStartPortNameHash'] = $objAStartPortNameHash;
-	$workingArray['objAEndPortName'] = $objAEndPort;
-	$workingArray['objAEndPortNameHash'] = $objAEndPortNameHash;
+	// Extract objA portID from port name
+	if(preg_match('/\([0-9]\)|\([1-9]{1}[0-9]+\)/', $objAPort, $match)) {
+		$stringLength = strlen($objAPort);
+		$matchLength = strlen($match[0]);
+		$portID = substr($match[0], 1, $matchLength-2);
+		$portName = substr($objAPort, 0, $stringLength-$matchLength);
+		$objAPortNameArray = array($objAName, $portName, $portID);
+	} else {
+		$objAPortNameArray = array($objAName, $portName);
+	}
+	$objAPortName = implode('.', $objAPortNameArray);
+	$objAPortNameHash = md5(strtolower($objAPortName));
 	
-	$workingArray['objBName'] = $objB;
-	$workingArray['objBNameHash'] = $objBNameHash;
-	$workingArray['objBStartPortName'] = $objBStartPort;
-	$workingArray['objBStartPortNameHash'] = $objBStartPortNameHash;
-	$workingArray['objBEndPortName'] = $objBEndPort;
-	$workingArray['objBEndPortNameHash'] = $objBEndPortNameHash;
+	$objBArray = explode('.', $objB);
+	$objBPort = array_pop($objBArray);
+	$objBName = implode('.', $objBArray);
+	$objBNameHash = md5(strtolower($objBName));
 	
-	$workingArray['line'] = $csvLineNumber;
-	$workingArray['fileName'] = $csvFilename;
+	// Extract objB portID from port name
+	if(preg_match('/\([0-9]\)|\([1-9]{1}[0-9]+\)/', $objBPort, $match)) {
+		$stringLength = strlen($objBPort);
+		$matchLength = strlen($match[0]);
+		$portID = substr($match[0], 1, $matchLength-2);
+		$portName = substr($objBPort, 0, $stringLength-$matchLength);
+		$objBPortNameArray = array($objBName, $portName, $portID);
+	} else {
+		$objBPortNameArray = array($objBName, $portName);
+	}
+	$objBPortName = implode('.', $objBPortNameArray);
+	$objBPortNameHash = md5(strtolower($objBPortName));
 	
-	array_push($importedTrunkArray, $workingArray);
+	$importedTrunkArray[$objAPortNameHash]['name'] = $objAName;
+	$importedTrunkArray[$objAPortNameHash]['nameHash'] = $objANameHash;
+	$importedTrunkArray[$objAPortNameHash]['portName'] = $objAPortName;
+	$importedTrunkArray[$objAPortNameHash]['portNameHash'] = $objAPortNameHash;
+	$importedTrunkArray[$objAPortNameHash]['peerPortNameHash'] = $objBPortNameHash;
+	$importedTrunkArray[$objAPortNameHash]['line'] = $csvLineNumber;
+	$importedTrunkArray[$objAPortNameHash]['fileName'] = $csvFilename;
+	
+	$importedTrunkArray[$objBPortNameHash]['name'] = $objBName;
+	$importedTrunkArray[$objBPortNameHash]['nameHash'] = $objBNameHash;
+	$importedTrunkArray[$objBPortNameHash]['portName'] = $objBPortName;
+	$importedTrunkArray[$objBPortNameHash]['portNameHash'] = $objBPortNameHash;
+	$importedTrunkArray[$objBPortNameHash]['peerPortNameHash'] = $objAPortNameHash;
+	$importedTrunkArray[$objBPortNameHash]['line'] = $csvLineNumber;
+	$importedTrunkArray[$objBPortNameHash]['fileName'] = $csvFilename;
 }
 
 
@@ -1803,7 +1830,11 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 }
 
 function validateImportedTrunks($qls, $importedTrunkArray, $portArray, &$validate){
-	
+	foreach($importedTrunkArray as $obj) {
+		if(in_array($obj['portNameHash'], $portArray)) {
+			
+		}
+	}
 }
 
 function validateImportedImages($dir, $imageType, &$validate){
@@ -2437,6 +2468,7 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 		md5('wap') => 2,
 		md5('device') => 3
 	);
+	error_log('Debug: '.json_encode($objectAdds));
 	
 	foreach($objectAdds as $object) {
 		$objectType = $object['type'];
@@ -2474,8 +2506,7 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 			$cabinetBack = 0;
 			$cabinetFront = $mountConfig == 1 ? 1 : null;
 		}
-		
-		error_log($posTop.'-'.$posLeft);
+		error_log('Debug: '.$RU);
 		$qls->SQL->insert('app_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY', 'position_left', 'position_top'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0, $posLeft, $posTop));
 		
 		$importedObjectArray[$object['objectNameHash']]['id'] = $qls->SQL->insert_id();
@@ -2483,6 +2514,7 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 }
 
 function updateObjectEdits(&$qls, $objectEdits, $importedCabinetArray, $existingTemplateArray){
+	error_log('Debug: '.json_encode($objectEdits));
 	foreach($objectEdits as $object) {
 		$template = $existingTemplateArray[$object['templateNameHash']];
 		$cabinetID = $importedCabinetArray[$object['cabinetNameHash']]['id'];
@@ -2499,7 +2531,7 @@ function updateObjectEdits(&$qls, $objectEdits, $importedCabinetArray, $existing
 			$cabinetBack = 0;
 			$cabinetFront = $mountConfig == 1 ? 1 : null;
 		}
-		
+		error_log('Debug: '.$RU);
 		$updateArray = array(
 			'name' => $name,
 			'env_tree_id' => $cabinetID,
@@ -2572,6 +2604,7 @@ function deleteObjectDeletes(&$qls, $objectDeletes){
 
 // Process Inserts
 function insertInsertAdds(&$qls, $insertAdds, &$importedInsertArray, $importedObjectArray, $importedCabinetArray, $importedTemplateArray){
+	error_log('Debug: '.json_encode($insertAdds));
 	foreach($insertAdds as $insert) {
 		$parent = $importedObjectArray[$insert['objectNameHash']];
 		$cabinet = $importedCabinetArray[$parent['cabinetNameHash']];
@@ -3186,7 +3219,8 @@ function buildEnvTreeArray(&$qls){
 }
 
 function buildPortArray(&$qls){
-	
+	//error_log('Debug: objTemplateID = '.json_encode($qls->App->compatibilityArray));
+	error_log('Debug: buildPortArray');
 	$portArray = array();
 	
 	foreach($qls->App->objectArray as $objID => $obj) {
@@ -3194,7 +3228,7 @@ function buildPortArray(&$qls){
 		$objTemplateID = $obj['template_id'];
 		$template = $qls->App->templateArray[$objID];
 		$templateType = $template['templateType'];
-		
+		//error_log('Debug: objTemplateID = '.json_encode($qls->App->compatibilityArray[$objTemplateID]));
 		foreach($qls->App->compatibilityArray[$objTemplateID] as $face => $faceElement) {
 			foreach($faceElement as $depth => $compatibility) {
 				$partitionType = $compatibility['partitionType'];
