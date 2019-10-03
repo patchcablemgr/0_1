@@ -188,8 +188,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 				$existingCabinetArray = buildExistingCabinetArray($envTreeArray, $envAdjArray);
 				$existingPathArray = buildExistingPathArray($tableCablePathArray, $envTreeArray);
 				$existingCategoryArray = buildExistingCategoryArray($tableCategoryArray);
-				$existingTemplateArray = buildExistingTemplateArray($tableTemplateArray, $tableCategoryArray);
-				$existingObjectArray = buildExistingObjectArray($tableObjectArray, $envTreeArray, $tableTemplateArray);
+				$existingTemplateArray = buildExistingTemplateArray($qls, $tableCategoryArray);
+				$existingObjectArray = buildExistingObjectArray($qls, $tableObjectArray, $envTreeArray);
 				$existingInsertArray = buildExistingInsertArray($tableInsertArray, $envTreeArray, $tableObjectArray, $tableEnclosureCompatibilityArray);
 				//$existingConnectionArray = buildExistingConnectionArray($qls, $connectionArray);
 				$occupancyArray = array();
@@ -420,8 +420,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 					$portArray = buildPortArray($qls);
 					validateImportedConnections($qls, $importedConnectionArray, $portArray, $validate);
 					validateImportedTrunks($qls, $importedTrunkArray, $portArray, $validate);
-					//error_log('Debug: '.json_encode($portArray));
-					//error_log('Debug: '.json_encode($importedTrunkArray));
 					
 					if(count($validate->returnData['error']) == 0) {
 						processConnections($qls, $importedConnectionArray);
@@ -614,7 +612,7 @@ function buildImportedPathArray($csvLine, $csvLineNumber, $csvFilename, &$import
 
 
 // Object Arrays
-function buildExistingObjectArray(&$tableObjectArray, $envTreeArray, $tableTemplateArray){
+function buildExistingObjectArray(&$qls, &$tableObjectArray, $envTreeArray){
 	$return = array();
 	
 	foreach($tableObjectArray as &$object) {
@@ -629,7 +627,7 @@ function buildExistingObjectArray(&$tableObjectArray, $envTreeArray, $tableTempl
 		if($templateID > 3) {
 			// Rack objects have cabinet face and RU
 			$cabinetFace = $object['cabinet_front'] == 0 ? 'front' : 'rear';
-			$RUSize = $tableTemplateArray[$templateID]['templateRUSize'];
+			$RUSize = $qls->App->templateArray[$templateID]['templateRUSize'];
 			$topRU = $object['RU'];
 			$bottomRU = $topRU - ($RUSize - 1);
 		} else {
@@ -880,10 +878,10 @@ function buildImportedCategoryArray($csvLine, $csvLineNumber, $csvFilename, &$im
 
 
 // Template Arrays
-function buildExistingTemplateArray($tableTemplateArray, $tableCategoryArray){
+function buildExistingTemplateArray(&$qls, $tableCategoryArray){
 	$return = array();
 	
-	foreach($tableTemplateArray as $template) {
+	foreach($qls->App->templateArray as $template) {
 		$templateName = $template['templateName'];
 		$templateNameHash = md5(strtolower($templateName));
 		$template['templateNameHash'] = $templateNameHash;
@@ -943,17 +941,23 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 	$length = strtolower($csvLine[7]);
 	
 	if(preg_match('/\([0-9]\)|\([1-9]{1}[0-9]+\)/', $portA, $match)) {
-		$length = strlen($match[0]);
-		$portAID = substr($match[0], 1, $length-2);
+		$matchLen = strlen($match[0]);
+		$portStrLen = strlen($portA);
+		$portAID = substr($match[0], 1, $matchLen-2);
+		$portA = substr($portA, 0, $portStrLen-$matchLen);
 		$portANameArray = array($portA, $portAID);
 		$portA = implode('.', $portANameArray);
+		
 	}
 	
 	if(preg_match('/\([0-9]\)|\([1-9]{1}[0-9]+\)/', $portB, $match)) {
-		$length = strlen($match[0]);
-		$portBID = substr($match[0], 1, $length-2);
+		$matchLen = strlen($match[0]);
+		$portStrLen = strlen($portB);
+		$portBID = substr($match[0], 1, $matchLen-2);
+		$portB = substr($portB, 0, $portStrLen-$matchLen);
 		$portBNameArray = array($portB, $portBID);
 		$portB = implode('.', $portBNameArray);
+		
 	}
 	
 	$aPortNameHash = ($portA != '' and $portA != 'none') ? md5($portA) : false;
@@ -965,12 +969,17 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 	$mediaType = ($mediaType != '' and $mediaType != 'none') ? $mediaType : false;
 	$length = ($length != '' and $length != 'none') ? $length : false;
 	
+	error_log('Debug: importedConnectionArray AEntry = '.$portA.' - '.$aPortNameHash);
+	error_log('Debug: importedConnectionArray BEntry = '.$portB.' - '.$bPortNameHash);
+	
 	$addConnection = false;
 	
 	if($aPortNameHash or $aCode39) {
 		$addConnection = true;
+		// portName is used for debugging
 		$workingArray = array(
 			'portNameHash' => $aPortNameHash,
+			'portName' => $portA,
 			'code39' => $aCode39,
 			'connector' => $aConnector,
 			'peerPortNameHash' => $bPortNameHash,
@@ -981,6 +990,7 @@ function buildImportedConnectionArray($csvLine, $csvLineNumber, $csvFilename, &$
 		$addConnection = true;
 		$workingArray = array(
 			'portNameHash' => $bPortNameHash,
+			'portName' => $portB,
 			'code39' => $bCode39,
 			'connector' => $bConnector,
 			'peerPortNameHash' => $aPortNameHash,
@@ -1647,7 +1657,6 @@ function validateImportedConnections(&$qls, &$importedConnectionArray, $portArra
 		
 		// Check to see if object port exists
 		$portNameHash = $connection['portNameHash'];
-		
 		if(isset($portArray[$portNameHash])) {
 			if(!in_array($portNameHash, $portNameHashArray)) {
 				array_push($portNameHashArray, $portNameHash);
@@ -2228,21 +2237,23 @@ function findTemplateDeletes($importedTemplateArray, $existingTemplateArray){
 	
 	foreach($existingTemplateArray as $existingTemplate) {
 		
-		$existingTemplateNameHash = $existingTemplate['templateNameHash'];
-		$addTemplate = true;
-		foreach($importedTemplateArray as $importedTemplate) {
-			
-			if($importedTemplate['originalTemplateName'] != '') {
-				$originalTemplateNameHash = $importedTemplate['originalTemplateNameHash'];
+		if($existingTemplate['id'] > 3) {
+			$existingTemplateNameHash = $existingTemplate['templateNameHash'];
+			$addTemplate = true;
+			foreach($importedTemplateArray as $importedTemplate) {
 				
-				if($existingTemplateNameHash == $originalTemplateNameHash) {
-					$addTemplate = false;
+				if($importedTemplate['originalTemplateName'] != '') {
+					$originalTemplateNameHash = $importedTemplate['originalTemplateNameHash'];
+					
+					if($existingTemplateNameHash == $originalTemplateNameHash) {
+						$addTemplate = false;
+					}
 				}
 			}
-		}
-		
-		if($addTemplate) {
-			array_push($return, $existingTemplate);
+			
+			if($addTemplate) {
+				array_push($return, $existingTemplate);
+			}
 		}
 	}
 	
@@ -2468,7 +2479,6 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 		md5('wap') => 2,
 		md5('device') => 3
 	);
-	error_log('Debug: '.json_encode($objectAdds));
 	
 	foreach($objectAdds as $object) {
 		$objectType = $object['type'];
@@ -2506,7 +2516,7 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 			$cabinetBack = 0;
 			$cabinetFront = $mountConfig == 1 ? 1 : null;
 		}
-		error_log('Debug: '.$RU);
+		
 		$qls->SQL->insert('app_object', array('env_tree_id', 'name', 'template_id', 'RU', 'cabinet_front', 'cabinet_back', 'parent_id', 'parent_face', 'parent_depth', 'insertSlotX', 'insertSlotY', 'position_left', 'position_top'), array($cabinetID, $name, $templateID, $RU, $cabinetFront, $cabinetBack, 0, 0, 0, 0, 0, $posLeft, $posTop));
 		
 		$importedObjectArray[$object['objectNameHash']]['id'] = $qls->SQL->insert_id();
@@ -2514,7 +2524,7 @@ function insertObjectAdds(&$qls, $objectAdds, &$importedObjectArray, $importedCa
 }
 
 function updateObjectEdits(&$qls, $objectEdits, $importedCabinetArray, $existingTemplateArray){
-	error_log('Debug: '.json_encode($objectEdits));
+	
 	foreach($objectEdits as $object) {
 		$template = $existingTemplateArray[$object['templateNameHash']];
 		$cabinetID = $importedCabinetArray[$object['cabinetNameHash']]['id'];
@@ -2531,7 +2541,7 @@ function updateObjectEdits(&$qls, $objectEdits, $importedCabinetArray, $existing
 			$cabinetBack = 0;
 			$cabinetFront = $mountConfig == 1 ? 1 : null;
 		}
-		error_log('Debug: '.$RU);
+		
 		$updateArray = array(
 			'name' => $name,
 			'env_tree_id' => $cabinetID,
@@ -2604,7 +2614,7 @@ function deleteObjectDeletes(&$qls, $objectDeletes){
 
 // Process Inserts
 function insertInsertAdds(&$qls, $insertAdds, &$importedInsertArray, $importedObjectArray, $importedCabinetArray, $importedTemplateArray){
-	error_log('Debug: '.json_encode($insertAdds));
+	
 	foreach($insertAdds as $insert) {
 		$parent = $importedObjectArray[$insert['objectNameHash']];
 		$cabinet = $importedCabinetArray[$parent['cabinetNameHash']];
@@ -3197,7 +3207,7 @@ function buildObjectArray(&$qls){
 	
 	return $objectArray;
 }
-
+/*
 function buildTemplateArray(&$qls){
 	$templateArray = array();
 	$query = $qls->SQL->select('*', 'app_object_templates');
@@ -3207,7 +3217,7 @@ function buildTemplateArray(&$qls){
 	
 	return $templateArray;
 }
-
+*/
 function buildEnvTreeArray(&$qls){
 	$envTreeArray = array();
 	$query = $qls->SQL->select('*', 'app_env_tree');
@@ -3219,16 +3229,15 @@ function buildEnvTreeArray(&$qls){
 }
 
 function buildPortArray(&$qls){
-	//error_log('Debug: objTemplateID = '.json_encode($qls->App->compatibilityArray));
-	error_log('Debug: buildPortArray');
+	
 	$portArray = array();
 	
 	foreach($qls->App->objectArray as $objID => $obj) {
 		$objName = $qls->App->generateObjectName($objID);
 		$objTemplateID = $obj['template_id'];
-		$template = $qls->App->templateArray[$objID];
+		$template = $qls->App->templateArray[$objTemplateID];
 		$templateType = $template['templateType'];
-		//error_log('Debug: objTemplateID = '.json_encode($qls->App->compatibilityArray[$objTemplateID]));
+		
 		foreach($qls->App->compatibilityArray[$objTemplateID] as $face => $faceElement) {
 			foreach($faceElement as $depth => $compatibility) {
 				$partitionType = $compatibility['partitionType'];
@@ -3244,11 +3253,14 @@ function buildPortArray(&$qls){
 										$peerCompatibility = $qls->App->compatibilityArray[$peerTemplateID][$peerFace][$peerDepth];
 										$peerObjPortNameFormat = json_decode($peerCompatibility['portNameFormat'], true);
 										$peerObjPortTotal = $peerCompatibility['portTotal'];
-										foreach($partition as $peerPortID) {
+										foreach($partition as $portPair) {
+											$peerPortID = $portPair[1];
+											$portID = $portPair[0];
 											$peerObjPortName = $qls->App->generatePortName($peerObjPortNameFormat, $peerPortID, $peerObjPortTotal);
 											$portNameArray = array($objName, $peerObjPortName, $portID);
 											$objPortNameString = implode('.', $portNameArray);
 											$portNameStringHash = md5(strtolower($objPortNameString));
+											error_log('Debug: portArray Entry = '.$objPortNameString.' - '.$portNameStringHash);
 											$portArray[$portNameStringHash] = array(
 												'objID' => $objID,
 												'face' => $face,
@@ -3270,7 +3282,8 @@ function buildPortArray(&$qls){
 							$portName = $qls->App->generatePortName($portNameFormat, $portID, $portTotal);
 							$portNameArray = array($objName, $portName);
 							$objPortNameString = implode('.', $portNameArray);
-							$portNameStringHash = md5(strtolower($objportName));
+							$portNameStringHash = md5(strtolower($objPortNameString));
+							error_log('Debug: portArray Entry = '.$objPortNameString.' - '.$portNameStringHash);
 							$portArray[$portNameStringHash] = array(
 								'objID' => $objID,
 								'face' => $face,

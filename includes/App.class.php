@@ -254,7 +254,7 @@ var $qls;
 				if(!isset($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']])) {
 					$this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']] = array();
 				}
-				array_push($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']], array($row['a_port'], $row['b_port']));
+				array_push($this->peerArray[$row['a_id']][$row['a_face']][$row['a_depth']]['peerArray'][$row['b_id']][$row['b_face']][$row['b_depth']], array((int)$row['a_port'], (int)$row['b_port']));
 			}
 			
 			if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']])) {
@@ -274,7 +274,7 @@ var $qls;
 				if(!isset($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']])) {
 					$this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']] = array();
 				}
-				array_push($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']], array($row['b_port'], $row['a_port']));
+				array_push($this->peerArray[$row['b_id']][$row['b_face']][$row['b_depth']]['peerArray'][$row['a_id']][$row['a_face']][$row['a_depth']], array((int)$row['b_port'], (int)$row['a_port']));
 			}
 			
 			if(!$row['floorplan_peer']) {
@@ -335,6 +335,8 @@ var $qls;
 				);
 			}
 		}
+		
+		error_log('Debug: peerArray = '.json_encode($this->peerArray));
 		
 		// History Action Type
 		$this->historyActionTypeArray = array();
