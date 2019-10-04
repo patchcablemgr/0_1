@@ -508,6 +508,9 @@ var $qls;
 	}
 	
 function initialize_session($user_info, $auth_token_salt) {
+	$username = $user_info['username'];
+	$password = $auth_token_salt;
+	
 	$session_id = $this->qls->SQL->select(
 		'id',
 		'sessions',
@@ -530,17 +533,19 @@ function initialize_session($user_info, $auth_token_salt) {
 	$login = true;
 	
 	if ($this->qls->Session->fetch_session($information, $login)){
+		
 		if(session_id() != $user_info['last_session_cookie_id']) {
 			session_destroy();
+			session_id($user_info['last_session_cookie_id']);
+			session_start();
 		}
-		session_id($user_info['last_session_cookie_id']);
-		session_start();
+		
 		
 		// If the PHP session was deleted by some mysterious process I have yet
 		// to pinpoint, then regenerate the session data.
-		//if(!isset($_SESSION[$this->qls->config['cookie_prefix'] . 'user_id'])) {
-		//	$this->qls->Session->create_session($username, $password, $user_info['password']);
-		//}
+		if(!isset($_SESSION[$this->qls->config['cookie_prefix'] . 'user_id'])) {
+			$this->qls->Session->create_session($username, $password, $user_info['password']);
+		}
 		
 		//Increment the number of logins for this session
 		$auth_count = $_SESSION[$this->qls->config['cookie_prefix'] . 'auth_count'] + 1;
