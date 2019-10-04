@@ -50,11 +50,14 @@ var $qls;
 		 * These security functions are in here because of the file
 		 * included above. I'll have to change it in later versions 0.o
 		 */
+		/*
 		if(isset($qls->appHeaders['PCM_Hosted'])) {
 			include '/app/database_info.php';
 		} else {
 			include 'database_info.php';
 		}
+		*/
+		include '/app/database_info.php';
 		if (SYSTEM_INSTALLED !== true) {
 			header('Location: /install/install.php');
 		}

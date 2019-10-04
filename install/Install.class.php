@@ -894,8 +894,10 @@ define('SYSTEM_INSTALLED', true);
 ?>
 DATABASE_INFO;
 
-			if (is_writable($_SERVER['DOCUMENT_ROOT'].'/includes')) {
-				if ($file_handle = fopen($_SERVER['DOCUMENT_ROOT'].'/includes/database_info.php', 'w')) {
+			//if (is_writable($_SERVER['DOCUMENT_ROOT'].'/includes')) {
+			if (is_writable('/app')) {
+				//if ($file_handle = fopen($_SERVER['DOCUMENT_ROOT'].'/includes/database_info.php', 'w')) {
+				if ($file_handle = fopen('/app/database_info.php', 'w')) {
                     fwrite($file_handle, $database_info);
                     fclose($file_handle);
                     //die('You have successfully installed the system! Please move/rename/remove this directory and then you can access all of your pages!');
