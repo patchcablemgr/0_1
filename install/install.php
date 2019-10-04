@@ -120,7 +120,7 @@ else {
 							Database Server Name:
 						</td>
 						<td>
-							<input type="text" name="database_server_name" maxlength="255" value="<?php if (isset($_SESSION['database_server_name'])) { echo $_SESSION['database_server_name']; } else { echo 'localhost'; } ?>" />
+							<input type="text" name="database_server_name" maxlength="255" value="<?php if (isset($_SESSION['database_server_name'])) { echo $_SESSION['database_server_name']; } else { echo 'database'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -128,7 +128,7 @@ else {
 							Database Name:
 						</td>
 						<td>
-							<input type="text" name="database_name" maxlength="512" value="<?php echo $_SESSION['database_name']; ?>" />
+							<input type="text" name="database_name" maxlength="512" value="<?php if (isset($_SESSION['database_name'])) { echo $_SESSION['database_name']; } else { echo 'pcm'; } ?>" />
 						</td>
 					</tr>
 					<tr>
@@ -136,7 +136,7 @@ else {
 							Database Username:
 						</td>
 						<td>
-							<input type="text" name="database_username" maxlength="512" value="<?php echo $_SESSION['database_username']; ?>" />
+							<input type="text" name="database_username" maxlength="512" value="<?php if (isset($_SESSION['database_username'])) { echo $_SESSION['database_username']; } else { echo 'pcmuser'; } ?>" />
 						</td>
 					</tr>
 					<tr>
