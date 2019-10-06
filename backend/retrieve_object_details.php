@@ -39,6 +39,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		$category = $qls->App->categoryArray[$categoryID];
 		$categoryName = $category['name'];
 		
+		// Compile list of categories to be used for template category selection
+		$categoryArray = array();
+		foreach($qls->App->categoryArray as $categoryEntry) {
+			array_push($categoryArray, array($categoryEntry['id'] => $categoryEntry['name']));
+		}
+		
 		//Retrieve partition info
 		$partitionData = $qls->App->compatibilityArray[$templateID][$objectFace][$partitionDepth];
 		$partitionType = $partitionData['partitionType'];

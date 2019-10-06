@@ -12,5 +12,8 @@ Contents
 
 **Changes since 0.1.0
 
-[Fix]	Resolved errors when creating connectable template
-[Info]	Initial release
+[Feature]	Added import/export capabilities for template/floorplan images, floorplan objects, and trunk peer data.
+[Fix]		Resolved issue with code upgrade overwriting database_info.php resulting in initial install page.
+[Fix]		Resolved login issue preventing user login caused by PHP session cleanup.  
+[Fix]		Resolved errors when creating connectable template.
+[Info]		Initial release.

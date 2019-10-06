@@ -405,7 +405,6 @@ var $qls;
 		 * Is the user using sessions or nothing?
 		 * Make sure the {cookie_prefix}user_id is numeric
 		 */
-
 		if (isset($_SESSION[$this->qls->config['cookie_prefix'] . 'user_id'])
 			&& is_numeric($_SESSION[$this->qls->config['cookie_prefix'] . 'user_id'])) {
             $information = array(

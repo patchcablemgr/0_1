@@ -533,22 +533,22 @@ function initialize_session($user_info, $auth_token_salt) {
 	$login = true;
 	
 	if ($this->qls->Session->fetch_session($information, $login)){
-		
 		if(session_id() != $user_info['last_session_cookie_id']) {
 			session_destroy();
 			session_id($user_info['last_session_cookie_id']);
 			session_start();
 		}
 		
-		
 		// If the PHP session was deleted by some mysterious process I have yet
 		// to pinpoint, then regenerate the session data.
+		
 		if(!isset($_SESSION[$this->qls->config['cookie_prefix'] . 'user_id'])) {
 			$this->qls->Session->create_session($username, $password, $user_info['password']);
+			$auth_count = 0;
+		} else {
+			//Increment the number of logins for this session
+			$auth_count = $_SESSION[$this->qls->config['cookie_prefix'] . 'auth_count'] + 1;
 		}
-		
-		//Increment the number of logins for this session
-		$auth_count = $_SESSION[$this->qls->config['cookie_prefix'] . 'auth_count'] + 1;
 		
 		$_SESSION[$this->qls->config['cookie_prefix'] . 'auth_count'] = $auth_count;
 		

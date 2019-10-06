@@ -9,7 +9,6 @@
                     <i class="zmdi zmdi-group-work icon-c-logo"></i>
                     <span>PatchCableMgr </span>
 					<span><small id="orgName"><?php echo $qls->org_info['name']; ?></small></span>
-
                 </a>
 				
             </div>
@@ -142,6 +141,7 @@
                             <!-- item-->
                             <div class="dropdown-item noti-title">
                                 <h5 class="text-overflow"><small><?php echo $qls->user_info['username']; ?></small> </h5>
+								<small>Version: <?php echo PCM_VERSION; ?></small>
                             </div>
 
                             <!-- item-->
